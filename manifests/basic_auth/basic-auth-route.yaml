@@ -7,6 +7,7 @@ spec:
   parentRefs:
     - name: my-gateway
   rules:
+  
     - matches:
         - path:
             type: Exact
@@ -14,10 +15,29 @@ spec:
       backendRefs:
         - name: auth-service
           port: 80
+
     - matches:
         - path:
             type: PathPrefix
-            value: /
+            value: /ui
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: ui-service
+          port: 80
+    
+    # Root-level assets referenced by the UI HTML
+    - matches:
+        - path:
+            type: Exact
+            value: /styles.css
+        - path:
+            type: Exact
+            value: /app.js
       backendRefs:
         - name: ui-service
           port: 80

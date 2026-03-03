@@ -5,4 +5,4 @@ resources:
   - basic-auth-server.yaml
   - basic-auth-client.yaml
   - basic-auth-route.yaml
-  - ui-client.yaml
+  - basic-ui-client.yaml

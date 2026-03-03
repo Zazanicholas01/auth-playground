@@ -1,0 +1,332 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jwt-ui-static
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>JWT Auth Lab</title>
+      <link rel="stylesheet" href="/jwt-ui/styles.css">
+    </head>
+    <body>
+      <h1>JWT Authentication Demo</h1>
+
+      <h2>How it works</h2>
+      <ol>
+        <li>Client sends credentials to the login endpoint.</li>
+        <li>Server returns a bearer token for valid credentials.</li>
+        <li>Client stores the token locally in the page.</li>
+        <li>Client calls a protected endpoint with the bearer token.</li>
+      </ol>
+
+      <h2>Live Test</h2>
+
+      <label>Username:</label>
+      <input id="user" value="admin"><br><br>
+
+      <label>Password:</label>
+      <input id="pass" type="password" value="password123"><br><br>
+
+      <button onclick="login()">Login</button>
+      <button onclick="callProtected()">Call Protected API</button>
+
+      <h3>Token</h3>
+      <pre id="token">No token yet</pre>
+
+      <h3>API Server Response</h3>
+      <pre id="result">Click a button above to call the JWT auth server</pre>
+
+      <script src="/jwt-ui/app.js"></script>
+    </body>
+    </html>
+
+  styles.css: |
+    :root {
+      --bg: #08060f;
+      --bg-alt: #120a22;
+      --panel: rgba(22, 15, 38, 0.9);
+      --panel-border: rgba(179, 116, 255, 0.18);
+      --text: #f4ebff;
+      --muted: #c8b4ef;
+      --primary: #a855f7;
+      --primary-strong: #7e22ce;
+      --secondary: rgba(255, 255, 255, 0.08);
+      --success: #86efac;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      padding: 36px 18px;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(168, 85, 247, 0.28), transparent 34%),
+        radial-gradient(circle at top left, rgba(91, 33, 182, 0.32), transparent 38%),
+        linear-gradient(180deg, var(--bg-alt), var(--bg));
+    }
+
+    body {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 14px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: var(--shadow);
+      z-index: -1;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 2rem;
+      color: #f5d8ff;
+      letter-spacing: 0.04em;
+      text-shadow: 0 0 18px rgba(168, 85, 247, 0.25);
+    }
+
+    h1::after {
+      content: "";
+      display: block;
+      height: 1px;
+      margin-top: 16px;
+      background: linear-gradient(90deg, rgba(168, 85, 247, 0.7), transparent);
+    }
+
+    h2,
+    h3 {
+      color: #e8d4ff;
+      margin-top: 26px;
+      margin-bottom: 10px;
+    }
+
+    ol {
+      margin: 10px 0 0;
+      padding-left: 20px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    label {
+      display: inline-block;
+      min-width: 90px;
+      margin-right: 10px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    input {
+      width: min(420px, 100%);
+      padding: 11px 13px;
+      border-radius: 12px;
+      border: 1px solid var(--panel-border);
+      background: rgba(8, 6, 15, 0.75);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input:focus {
+      border-color: rgba(168, 85, 247, 0.8);
+      box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15);
+    }
+
+    br + br {
+      display: none;
+    }
+
+    button {
+      padding: 10px 14px;
+      margin: 8px 8px 0 0;
+      border: 1px solid rgba(216, 180, 254, 0.16);
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+      color: #ffffff;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      box-shadow: 0 12px 28px rgba(126, 34, 206, 0.28);
+      transition: transform 0.08s ease, filter 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:hover {
+      filter: brightness(1.08);
+      box-shadow: 0 16px 36px rgba(126, 34, 206, 0.34);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:nth-of-type(2) {
+      background: var(--secondary);
+      box-shadow: none;
+    }
+
+    pre {
+      margin: 12px 0 0;
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel);
+      color: var(--success);
+      white-space: pre-wrap;
+      line-height: 1.5;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      overflow: auto;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 24px 14px;
+      }
+
+      label {
+        display: block;
+        min-width: 0;
+        margin-bottom: 6px;
+      }
+
+      input,
+      button {
+        width: 100%;
+      }
+    }
+
+  app.js: |
+    const loginUrl = "/api/auth/jwt/login";
+    const protectedUrl = "/api/auth/jwt/protected";
+    let token = "";
+
+    function renderResult(res, body) {
+      const result = document.getElementById("result");
+      result.textContent =
+        "Status: " + res.status + "\n\n" +
+        body;
+    }
+
+    function updateTokenDisplay() {
+      const tokenBox = document.getElementById("token");
+      tokenBox.textContent = token || "No token yet";
+    }
+
+    async function login() {
+      const username = document.getElementById("user").value;
+      const password = document.getElementById("pass").value;
+      const result = document.getElementById("result");
+
+      result.textContent = "Logging in...";
+
+      try {
+        const res = await fetch(loginUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            username,
+            password
+          }),
+          cache: "no-store"
+        });
+
+        const text = await res.text();
+
+        try {
+          const parsed = JSON.parse(text);
+          token = parsed.token || "";
+        } catch (error) {
+          token = "";
+        }
+
+        updateTokenDisplay();
+        renderResult(res, text);
+      } catch (err) {
+        result.textContent = "Request failed:\n" + err;
+      }
+    }
+
+    async function callProtected() {
+      const result = document.getElementById("result");
+
+      result.textContent = "Calling protected endpoint...";
+
+      try {
+        const headers = {};
+
+        if (token) {
+          headers.Authorization = "Bearer " + token;
+        }
+
+        const res = await fetch(protectedUrl, {
+          method: "GET",
+          headers,
+          cache: "no-store"
+        });
+
+        const text = await res.text();
+        renderResult(res, text);
+      } catch (err) {
+        result.textContent = "Request failed:\n" + err;
+      }
+    }
+
+    updateTokenDisplay();
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jwt-ui-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jwt-ui-client
+  template:
+    metadata:
+      labels:
+        app: jwt-ui-client
+    spec:
+      containers:
+        - name: ui
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: ui-static
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: ui-static
+          configMap:
+            name: jwt-ui-static
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jwt-ui-service
+spec:
+  type: ClusterIP
+  selector:
+    app: jwt-ui-client
+  ports:
+    - port: 80
+      targetPort: 80

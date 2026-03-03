@@ -1,0 +1,132 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jwt-auth-server-js
+data:
+  index.js: |
+    const http = require('http')
+
+    const USER = 'admin';
+    const PASS = 'password123';
+    const DEMO_TOKEN = 'demo-jwt-token';
+
+    function sendJson(res, statusCode, payload) {
+      res.statusCode = statusCode;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify(payload));
+    }
+
+    function collectBody(req) {
+      return new Promise((resolve, reject) => {
+        let body = '';
+
+        req.on('data', chunk => {
+          body += chunk;
+        });
+
+        req.on('end', () => {
+          resolve(body);
+        });
+
+        req.on('error', reject);
+      });
+    }
+
+    const server = http.createServer(async (req, res) => {
+      const requestPath = new URL(req.url, 'http://localhost').pathname;
+
+      if (req.method === 'POST' && requestPath === '/api/auth/jwt/login') {
+        try {
+          const rawBody = await collectBody(req);
+          const body = rawBody ? JSON.parse(rawBody) : {};
+          const { username, password } = body;
+
+          if (username !== USER || password !== PASS) {
+            return sendJson(res, 401, { error: 'Invalid credentials' });
+          }
+
+          return sendJson(res, 200, {
+            token: DEMO_TOKEN,
+            token_type: 'Bearer'
+          });
+        } catch (error) {
+          return sendJson(res, 400, { error: 'Invalid JSON body' });
+        }
+      }
+
+      if (req.method === 'GET' && requestPath === '/api/auth/jwt/protected') {
+        const auth = req.headers.authorization;
+
+        if (!auth) {
+          return sendJson(res, 401, { error: 'Missing bearer token' });
+        }
+
+        const [type, token] = auth.split(' ');
+
+        if (type !== 'Bearer' || !token) {
+          return sendJson(res, 400, { error: 'Malformed Authorization Header' });
+        }
+
+        if (token !== DEMO_TOKEN) {
+          return sendJson(res, 403, { error: 'Invalid token' });
+        }
+
+        return sendJson(res, 200, {
+          message: 'JWT access granted',
+          user: USER
+        });
+      }
+
+      if (req.method === 'GET' && requestPath === '/api/auth/jwt') {
+        return sendJson(res, 200, {
+          message: 'JWT auth API',
+          endpoints: [
+            'POST /api/auth/jwt/login',
+            'GET /api/auth/jwt/protected'
+          ]
+        });
+      }
+
+      return sendJson(res, 404, { error: 'Not found' });
+    });
+
+    server.listen(8080, () => {
+      console.log('JWT auth server running on port 8080');
+    });
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jwt-auth-server
+spec:
+  selector:
+    matchLabels:
+      app: jwt-auth-server
+  template:
+    metadata:
+      labels:
+        app: jwt-auth-server
+    spec:
+      containers:
+        - name: node
+          image: node:18-alpine
+          command: ["node", "/app/index.js"]
+          volumeMounts:
+            - name: code
+              mountPath: /app
+      
+      volumes:
+        - name: code
+          configMap:
+            name: jwt-auth-server-js
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jwt-auth-service
+spec:
+  selector:
+    app: jwt-auth-server
+  ports:
+    - port: 80
+      targetPort: 8080
