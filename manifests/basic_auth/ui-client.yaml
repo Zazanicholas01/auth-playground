@@ -1,0 +1,339 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ui-static
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Basic Auth Lab</title>
+      <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+      <h1>Basic Authentication Demo</h1>
+
+      <h2>How it works</h2>
+      <ol>
+        <li>Client sends request without credentials.</li>
+        <li>Server responds with 401 and WWW-Authenticate header.</li>
+        <li>Client retries with Authorization header.</li>
+        <li>Server returns 200 (correct) or 403 (wrong).</li>
+      </ol>
+
+      <h2>Live Test</h2>
+
+      <label>Username:</label>
+      <input id="user" value="admin"><br><br>
+
+      <label>Password:</label>
+      <input id="pass" type="password" value="password123"><br><br>
+
+      <button id="auth-toggle" onclick="toggleAuth()">Authorization: Off</button>
+      <button onclick="submitCredentials()">Submit Credentials</button>
+
+      <h3>API Server Response</h3>
+      <pre id="result">Click a button above to call the auth server</pre>
+
+      <script src="app.js"></script>
+    </body>
+    </html>
+
+  styles.css: |
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6fa;
+      padding: 40px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 { color: #2b6cff; }
+    button {
+      padding: 8px 12px;
+      margin-right: 5px;
+      cursor: pointer;
+    }
+    pre {
+      background: #222;
+      color: #00ff88;
+      padding: 15px;
+    }
+    :root{
+    --bg1:#0b1020;
+    --bg2:#101a3a;
+    --card: rgba(255,255,255,.08);
+    --card2: rgba(255,255,255,.05);
+    --border: rgba(255,255,255,.14);
+    --text:#eaf0ff;
+    --muted:#a9b6de;
+
+    --primary:#2b6cff;
+    --good:#2dd4bf;
+    --warn:#fbbf24;
+    --bad:#fb7185;
+
+    --shadow: 0 18px 50px rgba(0,0,0,.45);
+    --radius: 18px;
+
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(1100px 600px at 20% 0%, rgba(43,108,255,.35) 0%, transparent 55%),
+        radial-gradient(900px 520px at 85% 10%, rgba(45,212,191,.25) 0%, transparent 50%),
+        linear-gradient(180deg, var(--bg2), var(--bg1));
+      padding: 36px 18px;
+    }
+
+    /* Make your plain HTML look like an app */
+    body > *{
+      max-width: 980px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    h1{
+      margin: 0 0 10px;
+      font-size: 1.85rem;
+      letter-spacing: .2px;
+    }
+
+    h2{
+      margin: 26px 0 10px;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+
+    ol{
+      margin: 10px 0 0 18px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    li{ margin: 8px 0; }
+
+    /* Cards & sections */
+    h1, h2, ol, label, input, button, pre{
+      position: relative;
+    }
+
+    h1::after{
+      content:"";
+      display:block;
+      height:1px;
+      margin-top: 16px;
+      background: linear-gradient(90deg, rgba(255,255,255,.22), transparent);
+    }
+
+    /* Form controls */
+    label{
+      display:inline-block;
+      font-size: .9rem;
+      color: var(--muted);
+      margin-right: 10px;
+      min-width: 90px;
+    }
+
+    input{
+      width: min(420px, 100%);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s ease, transform .05s ease;
+    }
+
+    input:focus{
+      border-color: rgba(43,108,255,.75);
+      box-shadow: 0 0 0 4px rgba(43,108,255,.18);
+    }
+
+    br + br{ display:none; } /* remove double <br> gaps look */
+    label + input{ margin-bottom: 14px; }
+
+    /* Buttons */
+    button{
+      appearance:none;
+      border: 1px solid rgba(255,255,255,.14);
+      background: var(--primary);
+      color: white;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      letter-spacing: .1px;
+      cursor: pointer;
+      margin: 6px 8px 6px 0;
+      box-shadow: 0 10px 26px rgba(43,108,255,.22);
+      transition: transform .06s ease, filter .15s ease, box-shadow .15s ease;
+    }
+
+    button:hover{
+      filter: brightness(1.06);
+      box-shadow: 0 14px 34px rgba(43,108,255,.28);
+    }
+
+    button:active{
+      transform: translateY(1px);
+    }
+
+    /* Make “Wrong” look secondary without changing HTML */
+    /* Make the submit button look secondary */
+    button:nth-of-type(2){
+      background: rgba(255,255,255,.10);
+      box-shadow: none;
+    }
+
+    /* Output box */
+    pre{
+      margin: 12px 0 0;
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px dashed rgba(255,255,255,.20);
+      background: rgba(0,0,0,.22);
+      color: #b9ffd7;
+      font-family: var(--mono);
+      font-size: .92rem;
+      line-height: 1.45;
+      overflow: auto;
+      white-space: pre-wrap;
+      box-shadow: var(--shadow);
+    }
+
+    /* Wrap everything in a “card” feel using a background behind the page */
+    body::before{
+      content:"";
+      position: fixed;
+      inset: 16px;
+      border-radius: 26px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: var(--shadow);
+      z-index: -1;
+    }
+
+    /* Small screen tweaks */
+    @media (max-width: 600px){
+      body{ padding: 24px 14px; }
+      button{ width: 100%; margin-right: 0; }
+      label{ min-width: 0; display:block; margin-bottom: 6px; }
+      input{ width: 100%; }
+    }
+
+  app.js: |
+    const url = "/api/auth";
+    let authEnabled = false;
+
+    function encode(user, pass) {
+      return btoa(user + ":" + pass);
+    }
+
+    function updateToggleButton() {
+      const toggle = document.getElementById("auth-toggle");
+      toggle.textContent = "Authorization: " + (authEnabled ? "On" : "Off");
+    }
+
+    function renderResult(res, body) {
+      const result = document.getElementById("result");
+      result.textContent =
+        "API URL: " + url + "\n" +
+        "Authorization Header: " + (authEnabled ? "sent" : "suppressed") + "\n" +
+        "Status: " + res.status + "\n" +
+        "WWW-Authenticate: " + (res.headers.get("www-authenticate") || "none") + "\n\n" +
+        "API Response Body:\n" +
+        body;
+    }
+
+    async function request(headers) {
+      const result = document.getElementById("result");
+      result.textContent = "Calling auth server...";
+
+      try {
+        const res = await fetch(url, {
+          headers: headers,
+          cache: "no-store"
+        });
+        const body = await res.text();
+        renderResult(res, body);
+      } catch (err) {
+        result.textContent = "Request failed:\n" + err;
+      }
+    }
+
+    function toggleAuth() {
+      authEnabled = !authEnabled;
+      updateToggleButton();
+    }
+
+    function submitCredentials() {
+      const user = document.getElementById("user").value;
+      const pass = document.getElementById("pass").value;
+      const headers = {};
+
+      if (authEnabled) {
+        headers.Authorization = "Basic " + encode(user, pass);
+      } else {
+        // Override browser-cached Basic auth when the toggle is off.
+        headers.Authorization = "";
+      }
+
+      request(headers);
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui-client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ui-client
+  template:
+    metadata:
+      labels:
+        app: ui-client
+    spec:
+      containers:
+        - name: ui
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: ui-static
+              mountPath: /usr/share/nginx/html
+            - name: ui-nginx-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+      volumes:
+        - name: ui-static
+          configMap:
+            name: ui-static
+        - name: ui-nginx-conf
+          configMap:
+            name: ui-nginx-conf
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ui-service
+spec:
+  type: NodePort
+  selector:
+    app: ui-client
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 31800
