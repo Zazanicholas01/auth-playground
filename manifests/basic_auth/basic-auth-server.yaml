@@ -9,6 +9,12 @@ data:
     const PASS = 'password123'
 
     const server = http.createServer((req, res) => {
+      const requestPath = new URL(req.url, 'http://localhost').pathname;
+      if (requestPath !== '/api/auth/basic') {
+        res.statusCode = 404;
+        return res.end('Not Found');
+      }
+
       const auth = req.headers.authorization;
 
       if (!auth) {

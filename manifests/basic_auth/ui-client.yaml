@@ -231,7 +231,7 @@ data:
     }
 
   app.js: |
-    const url = "/api/auth";
+    const url = "/api/auth/basic";
     let authEnabled = false;
 
     function encode(user, pass) {
@@ -313,16 +313,10 @@ spec:
           volumeMounts:
             - name: ui-static
               mountPath: /usr/share/nginx/html
-            - name: ui-nginx-conf
-              mountPath: /etc/nginx/conf.d/default.conf
-              subPath: default.conf
       volumes:
         - name: ui-static
           configMap:
             name: ui-static
-        - name: ui-nginx-conf
-          configMap:
-            name: ui-nginx-conf
 
 ---
 apiVersion: v1
@@ -330,10 +324,9 @@ kind: Service
 metadata:
   name: ui-service
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: ui-client
   ports:
     - port: 80
       targetPort: 80
-      nodePort: 31800
