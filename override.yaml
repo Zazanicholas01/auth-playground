@@ -1,0 +1,20 @@
+env:
+  INSTALL_K3S_EXEC: '--flannel-backend=none --disable-network-policy'
+provision:
+  - mode: system
+    script: |
+      #!/bin/sh
+      set -eu
+
+      # Mount bpffs for Cilium (idempotent)
+      if ! mountpoint -q /sys/fs/bpf; then
+        mount -t bpf bpffs /sys/fs/bpf
+      fi
+      mount --make-shared /sys/fs/bpf || true
+
+      # Mount a dedicated cgroupv2 for Cilium (idempotent)
+      mkdir -p /run/cilium/cgroupv2
+      if ! mountpoint -q /run/cilium/cgroupv2; then
+        mount -t cgroup2 none /run/cilium/cgroupv2
+      fi
+      mount --make-shared /run/cilium/cgroupv2 || true
