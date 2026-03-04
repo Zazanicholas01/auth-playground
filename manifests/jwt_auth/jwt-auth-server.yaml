@@ -84,10 +84,43 @@ data:
       });
     }
 
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    async function registerUser({username, email, password}) {
+      const existing = await db.query(
+        `
+        SELECT id
+        FROM users
+        WHERE username = $1 OR email = $2
+        LIMIT 1
+        `,
+        [username, email]
+      );
+
+      if (existing.rows[0]) {
+        return { error: 'User already exists' };
+      }
+
+      const passwordHash = await bcrypt.hash(password, 12);
+
+      const result = await db.query(
+        `
+        INSERT INTO users (username, email, password_hash, role)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, username, email, role
+        `,
+        [username, email, passwordHash, 'user']
+      );
+
+      return { user: result.rows[0] };
+    }
+
     async function authenticateUser(username, password) {
       const result = await db.query(
         `
-        SELECT id, username, password_hash, role, is_active
+        SELECT id, username, email, password_hash, role, is_active
         FROM users
         WHERE username = $1
         LIMIT 1
@@ -110,12 +143,68 @@ data:
       return {
         id: user.id,
         username: user.username,
+        email: user.email,
         role: user.role
       };
     }
 
     const server = http.createServer(async (req, res) => {
       const requestPath = new URL(req.url, 'http://localhost').pathname;
+
+      if (req.method === 'POST' && requestPath === '/api/auth/jwt/register') {
+        try {
+          const rawBody = await collectBody(req);
+          const body = rawBody ? JSON.parse(rawBody) : {};
+          const { username, email, password } = body;
+
+          if (!username || !email || !password) {
+            return sendJson(res, 400, {
+              ok: false,
+              error: 'Username, Email and Password are required'
+            });
+          }
+
+          if (typeof username !== 'string' || username.trim().length < 3) {
+            return sendJson(res, 400, {
+              ok: false,
+              error: 'Username must be at least 3 characters'
+            });
+          }
+
+          if (!isValidEmail(email)) {
+            return sendJson(res, 400, {
+              ok: false,
+              error: 'Invalid email address'
+            });
+          }
+
+          if (typeof password !== 'string' || password.length < 8) {
+            return sendJson(res, 400, {
+              ok: false,
+              error: 'Password must be at least 8 characters'
+            });
+          }
+
+          const result = await registerUser({
+            username: username.trim(),
+            email: email.trim().toLowerCase();
+            password
+          });
+
+          if (result.error) {
+            return sendJson(res, 409, {
+              ok: false,
+              error: result.error
+            });
+          }
+        } catch (error) {
+          console.error('Registration error:', error);
+          return sendJson(res, 400, {
+            ok: false,
+            error: 'Invalid request'
+          });
+        }
+      }
 
       if (req.method === 'POST' && requestPath === '/api/auth/jwt/login') {
         try {
@@ -130,7 +219,7 @@ data:
             });
           }
           
-          const user = await authenticateUser(username, password);
+          const user = await authenticateUser(username.trim(), password);
 
           if (!user) {
             return sendJson(res, 401, {
@@ -150,6 +239,7 @@ data:
               user: {
                 id: user.id,
                 username: user.username,
+                email: user.email,
                 role: user.role
               }
             }
@@ -184,7 +274,7 @@ data:
         });
       }
 
-      if (requestPath === '/api/auth/jwt/login' || requestPath === '/api/auth/jwt/protected') {
+      if (requestPath === '/api/auth/jwt/login' || requestPath === '/api/auth/jwt/protected' || requestPath === '/api/auth/jwt/register') {
         return sendJson(res, 405, { ok: false, error: 'Method not allowed' });
       }
 
@@ -193,15 +283,22 @@ data:
           message: 'JWT auth API',
           endpoints: [
             'POST /api/auth/jwt/login',
-            'GET /api/auth/jwt/protected'
+            'GET /api/auth/jwt/protected',
+            'POST /api/auth/jwt/register'
           ]
         });
       }
 
-      return sendJson(res, 404, { error: 'Not found' });
+      return sendJson(res, 404, { ok: false, error: 'Not found' });
     });
 
     async function start() {
+    
+      if (!JWT_SECRET) {
+        console.error('JWT_SECRET is required');
+        process.exit(1);
+      }
+
       try {
         await db.query('SELECT 1');
         console.log('Database connection estabilished');
