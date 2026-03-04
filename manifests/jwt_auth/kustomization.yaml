@@ -5,3 +5,4 @@ resources:
   - jwt-auth-server.yaml
   - jwt-auth-route.yaml
   - jwt-ui-client.yaml
+  - jwt-postgres.yaml

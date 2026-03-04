@@ -16,10 +16,10 @@ data:
 
       <h2>How it works</h2>
       <ol>
-        <li>Client sends credentials to the login endpoint.</li>
-        <li>Server returns a bearer token for valid credentials.</li>
-        <li>Client stores the token locally in the page.</li>
-        <li>Client calls a protected endpoint with the bearer token.</li>
+        <li>Register or log in with username/email and password.</li>
+        <li>Server returns a short-lived access token and a longer-lived refresh token.</li>
+        <li>Client uses the access token for protected API calls.</li>
+        <li>Client can rotate tokens with refresh and revoke the refresh token on logout.</li>
       </ol>
 
       <h2>Live Test</h2>
@@ -27,14 +27,23 @@ data:
       <label>Username:</label>
       <input id="user" value="admin"><br><br>
 
+      <label>Email:</label>
+      <input id="email" value="admin@example.com"><br><br>
+
       <label>Password:</label>
       <input id="pass" type="password" value="password123"><br><br>
 
+      <button onclick="registerUser()">Register</button>
       <button onclick="login()">Login</button>
+      <button onclick="refreshSession()">Refresh</button>
+      <button onclick="logout()">Logout</button>
       <button onclick="callProtected()">Call Protected API</button>
 
-      <h3>Token</h3>
-      <pre id="token">No token yet</pre>
+      <h3>Access Token</h3>
+      <pre id="access-token">No access token yet</pre>
+
+      <h3>Refresh Token</h3>
+      <pre id="refresh-token">No refresh token yet</pre>
 
       <h3>API Server Response</h3>
       <pre id="result">Click a button above to call the JWT auth server</pre>
@@ -176,7 +185,10 @@ data:
       transform: translateY(1px);
     }
 
-    button:nth-of-type(2) {
+    button:nth-of-type(2),
+    button:nth-of-type(3),
+    button:nth-of-type(4),
+    button:nth-of-type(5) {
       background: var(--secondary);
       box-shadow: none;
     }
@@ -212,20 +224,85 @@ data:
     }
 
   app.js: |
+    const registerUrl = "/api/auth/jwt/register";
     const loginUrl = "/api/auth/jwt/login";
+    const refreshUrl = "/api/auth/jwt/refresh";
+    const logoutUrl = "/api/auth/jwt/logout";
     const protectedUrl = "/api/auth/jwt/protected";
-    let token = "";
+
+    let accessToken = "";
+    let refreshToken = "";
 
     function renderResult(res, body) {
       const result = document.getElementById("result");
-      result.textContent =
-        "Status: " + res.status + "\n\n" +
-        body;
+      result.textContent = "Status: " + res.status + "\n\n" + body;
     }
 
     function updateTokenDisplay() {
-      const tokenBox = document.getElementById("token");
-      tokenBox.textContent = token ? "Bearer token acquired" : "No token yet";
+      document.getElementById("access-token").textContent =
+        accessToken ? "Access token acquired" : "No access token yet";
+
+      document.getElementById("refresh-token").textContent =
+        refreshToken ? "Refresh token acquired" : "No refresh token yet";
+    }
+
+    function clearTokens() {
+      accessToken = "";
+      refreshToken = "";
+      updateTokenDisplay();
+    }
+
+    function updateTokensFromParsedResponse(parsed, clearOnFailure) {
+      if (parsed?.ok) {
+        if (parsed?.data?.access_token) {
+          accessToken = parsed.data.access_token;
+        }
+        if (parsed?.data?.refresh_token) {
+          refreshToken = parsed.data.refresh_token;
+        }
+        updateTokenDisplay();
+        return;
+      }
+
+      if (clearOnFailure) {
+        clearTokens();
+      }
+    }
+
+    async function sendJson(url, payload) {
+      return fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload),
+        cache: "no-store"
+      });
+    }
+
+    async function registerUser() {
+      const username = document.getElementById("user").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("pass").value;
+      const result = document.getElementById("result");
+
+      result.textContent = "Registering...";
+
+      try {
+        const res = await sendJson(registerUrl, { username, email, password });
+        const text = await res.text();
+
+        try {
+          const parsed = JSON.parse(text);
+          updateTokensFromParsedResponse(parsed, true);
+        } catch (error) {
+          clearTokens();
+        }
+
+        renderResult(res, text);
+      } catch (err) {
+        result.textContent = "Request failed:\n" + err;
+      }
     }
 
     async function login() {
@@ -236,32 +313,70 @@ data:
       result.textContent = "Logging in...";
 
       try {
-        const res = await fetch(loginUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            username,
-            password
-          }),
-          cache: "no-store"
+        const res = await sendJson(loginUrl, { username, password });
+        const text = await res.text();
+
+        try {
+          const parsed = JSON.parse(text);
+          updateTokensFromParsedResponse(parsed, true);
+        } catch (error) {
+          clearTokens();
+        }
+
+        renderResult(res, text);
+      } catch (err) {
+        result.textContent = "Request failed:\n" + err;
+      }
+    }
+
+    async function refreshSession() {
+      const result = document.getElementById("result");
+
+      if (!refreshToken) {
+        result.textContent = "No refresh token available";
+        return;
+      }
+
+      result.textContent = "Refreshing session...";
+
+      try {
+        const res = await sendJson(refreshUrl, {
+          refresh_token: refreshToken
         });
 
         const text = await res.text();
 
         try {
           const parsed = JSON.parse(text);
-          token = parsed?.data?.token || "";
-
-          if (!parsed?.ok) {
-            token = "";
-          }
+          updateTokensFromParsedResponse(parsed, true);
         } catch (error) {
-          token = "";
+          clearTokens();
         }
 
-        updateTokenDisplay();
+        renderResult(res, text);
+      } catch (err) {
+        result.textContent = "Request failed:\n" + err;
+      }
+    }
+
+    async function logout() {
+      const result = document.getElementById("result");
+
+      if (!refreshToken) {
+        clearTokens();
+        result.textContent = "No refresh token to revoke";
+        return;
+      }
+
+      result.textContent = "Logging out...";
+
+      try {
+        const res = await sendJson(logoutUrl, {
+          refresh_token: refreshToken
+        });
+
+        const text = await res.text();
+        clearTokens();
         renderResult(res, text);
       } catch (err) {
         result.textContent = "Request failed:\n" + err;
@@ -276,8 +391,8 @@ data:
       try {
         const headers = {};
 
-        if (token) {
-          headers.Authorization = "Bearer " + token;
+        if (accessToken) {
+          headers.Authorization = "Bearer " + accessToken;
         }
 
         const res = await fetch(protectedUrl, {
@@ -289,7 +404,7 @@ data:
         const text = await res.text();
 
         if (res.status === 401 || res.status === 403) {
-          token = "";
+          accessToken = "";
           updateTokenDisplay();
         }
 
@@ -300,7 +415,6 @@ data:
     }
 
     updateTokenDisplay();
-
 ---
 apiVersion: apps/v1
 kind: Deployment
