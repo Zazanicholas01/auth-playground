@@ -39,6 +39,23 @@ data:
       <button onclick="logout()">Logout</button>
       <button onclick="callProtected()">Call Protected API</button>
 
+      <div id="session-timer" class="session-timer hidden" aria-live="polite">
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 120 120">
+            <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+            <circle class="ring-progress" cx="60" cy="60" r="52"></circle>
+          </svg>
+          <div class="ring-label">
+            <strong id="token-seconds">0s</strong>
+            <span>left</span>
+          </div>
+        </div>
+        <div class="session-copy">
+          <h3>Access Token Session</h3>
+          <p id="token-status">No active session</p>
+        </div>
+      </div>
+
       <h3>Access Token</h3>
       <pre id="access-token">No access token yet</pre>
 
@@ -223,6 +240,72 @@ data:
       }
     }
 
+    .session-timer {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin: 18px 0 8px;
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid var(--panel-border);
+      background: var(--panel);
+    }
+
+    .session-timer.hidden {
+      display: none;
+    }
+
+    .ring-wrap {
+      position: relative;
+      width: 112px;
+      height: 112px;
+      flex: 0 0 auto;
+    }
+
+    .ring {
+      width: 112px;
+      height: 112px;
+      transform: rotate(-90deg);
+    }
+
+    .ring-track,
+    .ring-progress {
+      fill: none;
+      stroke-width: 10;
+    }
+
+    .ring-track {
+      stroke: rgba(255, 255, 255, 0.08);
+    }
+
+    .ring-progress {
+      stroke: #86efac;
+      stroke-linecap: round;
+      stroke-dasharray: 326.73;
+      stroke-dashoffset: 326.73;
+      transition: stroke-dashoffset 0.9s linear, stroke 0.3s ease;
+    }
+
+    .ring-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ring-label strong {
+      font-size: 1.25rem;
+      color: var(--text);
+    }
+
+    .ring-label span,
+    .session-copy p {
+      color: var(--muted);
+    }
+
+
   app.js: |
     const registerUrl = "/api/auth/jwt/register";
     const loginUrl = "/api/auth/jwt/login";
@@ -232,6 +315,12 @@ data:
 
     let accessToken = "";
     let refreshToken = "";
+    let accessTokenExpiresAt = 0;
+    let accessTokenLifetimeMs = 0;
+    let tokenTimerHandle = null;
+
+    const ringRadius = 52;
+    const ringCircumference = 2 * Math.PI * ringRadius;
 
     function renderResult(res, body) {
       const result = document.getElementById("result");
@@ -246,10 +335,82 @@ data:
         refreshToken ? "Refresh token acquired" : "No refresh token yet";
     }
 
+    function showSessionTimer() {
+      document.getElementById("session-timer").classList.remove("hidden");
+    }
+
+    function hideSessionTimer() {
+      document.getElementById("session-timer").classList.add("hidden");
+    }
+
+    function stopTokenTimer() {
+      if (tokenTimerHandle) {
+        clearInterval(tokenTimerHandle);
+        tokenTimerHandle = null;
+      }
+    }
+
+    function resetTokenTimerUi() {
+      const ring = document.querySelector(".ring-progress");
+      ring.style.strokeDasharray = String(ringCircumference);
+      ring.style.strokeDashoffset = String(ringCircumference);
+      ring.style.stroke = "#86efac";
+
+      document.getElementById("token-seconds").textContent = "0s";
+      document.getElementById("token-status").textContent = "No active session";
+      hideSessionTimer();
+    }
+
+    function startTokenTimer(expiresInSeconds) {
+      stopTokenTimer();
+
+      accessTokenLifetimeMs = Number(expiresInSeconds || 0) * 1000;
+      accessTokenExpiresAt = Date.now() + accessTokenLifetimeMs;
+
+      if (!accessToken || accessTokenLifetimeMs <= 0) {
+        resetTokenTimerUi();
+        return;
+      }
+
+      showSessionTimer();
+
+      function render() {
+        const remainingMs = Math.max(0, accessTokenExpiresAt - Date.now());
+        const remainingSeconds = Math.ceil(remainingMs / 1000);
+        const progress = accessTokenLifetimeMs > 0 ? remainingMs / accessTokenLifetimeMs : 0;
+        const dashOffset = ringCircumference * (1 - progress);
+        const ring = document.querySelector(".ring-progress");
+
+        ring.style.strokeDashoffset = String(dashOffset);
+        ring.style.stroke = remainingSeconds <= 30 ? "#fca5a5" : "#86efac";
+
+        document.getElementById("token-seconds").textContent = remainingSeconds + "s";
+        document.getElementById("token-status").textContent =
+          remainingSeconds > 0
+            ? "Access token active for current session"
+            : "Access token expired";
+
+        if (remainingMs <= 0) {
+          accessToken = "";
+          accessTokenExpiresAt = 0;
+          accessTokenLifetimeMs = 0;
+          stopTokenTimer();
+          updateTokenDisplay();
+        }
+      }
+
+      render();
+      tokenTimerHandle = setInterval(render, 1000);
+    }
+
     function clearTokens() {
       accessToken = "";
       refreshToken = "";
+      accessTokenExpiresAt = 0;
+      accessTokenLifetimeMs = 0;
+      stopTokenTimer();
       updateTokenDisplay();
+      resetTokenTimerUi();
     }
 
     function updateTokensFromParsedResponse(parsed, clearOnFailure) {
@@ -257,10 +418,17 @@ data:
         if (parsed?.data?.access_token) {
           accessToken = parsed.data.access_token;
         }
+
         if (parsed?.data?.refresh_token) {
           refreshToken = parsed.data.refresh_token;
         }
+
         updateTokenDisplay();
+
+        if (parsed?.data?.access_token && parsed?.data?.expires_in) {
+          startTokenTimer(parsed.data.expires_in);
+        }
+
         return;
       }
 
@@ -405,7 +573,11 @@ data:
 
         if (res.status === 401 || res.status === 403) {
           accessToken = "";
+          accessTokenExpiresAt = 0;
+          accessTokenLifetimeMs = 0;
+          stopTokenTimer();
           updateTokenDisplay();
+          resetTokenTimerUi();
         }
 
         renderResult(res, text);
@@ -414,7 +586,9 @@ data:
       }
     }
 
+    resetTokenTimerUi();
     updateTokenDisplay();
+
 ---
 apiVersion: apps/v1
 kind: Deployment
