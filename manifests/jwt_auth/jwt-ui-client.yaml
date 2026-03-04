@@ -56,6 +56,23 @@ data:
         </div>
       </div>
 
+      <div id="refresh-session-timer" class="session-timer hidden" aria-live="polite">
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 120 120">
+            <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+            <circle class="ring-progress refresh-ring-progress" cx="60" cy="60" r="52"></circle>
+          </svg>
+          <div class="ring-label">
+            <strong id="refresh-token-seconds">0s</strong>
+            <span>left</span>
+          </div>
+        </div>
+        <div class="session-copy">
+          <h3>Refresh Token Session</h3>
+          <p id="refresh-token-status">No active refresh session</p>
+        </div>
+      </div>
+
       <h3>Access Token</h3>
       <pre id="access-token">No access token yet</pre>
 
@@ -305,6 +322,11 @@ data:
       color: var(--muted);
     }
 
+    .refresh-ring-progress {
+      stroke: #67e8f9;
+      filter: drop-shadow(0 0 8px rgba(103, 232, 249, 0.55));
+    }
+
 
   app.js: |
     const registerUrl = "/api/auth/jwt/register";
@@ -319,8 +341,20 @@ data:
     let accessTokenLifetimeMs = 0;
     let tokenTimerHandle = null;
 
+    let refreshInFlight = false;
+    let accessRefreshTriggeredForCurrentToken = false;
+
+    let refreshTokenExpiresAt = 0;
+    let refreshTokenLifetimeMs = 0;
+    let refreshTokenTimerHandle = null;
+    let refreshRotationTriggeredForCurrentToken = false;
+
     const ringRadius = 52;
     const ringCircumference = 2 * Math.PI * ringRadius;
+
+    const refreshTokenExpiresInSecondsDefault = 180;
+    const accessRefreshThresholdSeconds = 20;
+    const refreshRotationThresholdSeconds = 60;
 
     function renderResult(res, body) {
       const result = document.getElementById("result");
@@ -329,10 +363,10 @@ data:
 
     function updateTokenDisplay() {
       document.getElementById("access-token").textContent =
-        accessToken ? "Access token acquired" : "No access token yet";
+        accessToken ? "Bearer " + accessToken : "No access token yet";
 
       document.getElementById("refresh-token").textContent =
-        refreshToken ? "Refresh token acquired" : "No refresh token yet";
+        refreshToken ? refreshToken : "No refresh token yet";
     }
 
     function showSessionTimer() {
@@ -366,6 +400,7 @@ data:
 
       accessTokenLifetimeMs = Number(expiresInSeconds || 0) * 1000;
       accessTokenExpiresAt = Date.now() + accessTokenLifetimeMs;
+      accessRefreshTriggeredForCurrentToken = false;
 
       if (!accessToken || accessTokenLifetimeMs <= 0) {
         resetTokenTimerUi();
@@ -374,7 +409,7 @@ data:
 
       showSessionTimer();
 
-      function render() {
+      async function render() {
         const remainingMs = Math.max(0, accessTokenExpiresAt - Date.now());
         const remainingSeconds = Math.ceil(remainingMs / 1000);
         const progress = accessTokenLifetimeMs > 0 ? remainingMs / accessTokenLifetimeMs : 0;
@@ -390,17 +425,119 @@ data:
             ? "Access token active for current session"
             : "Access token expired";
 
+        if (
+          remainingSeconds <= accessRefreshThresholdSeconds &&
+          remainingSeconds > 0 &&
+          refreshToken &&
+          !refreshInFlight &&
+          !accessRefreshTriggeredForCurrentToken
+        ) {
+          accessRefreshTriggeredForCurrentToken = true;
+          await refreshSession(true);
+          return;
+        }
+
         if (remainingMs <= 0) {
           accessToken = "";
           accessTokenExpiresAt = 0;
           accessTokenLifetimeMs = 0;
           stopTokenTimer();
           updateTokenDisplay();
+
+          document.getElementById("token-status").textContent =
+            refreshToken
+              ? "Access token expired. Refresh token still available."
+              : "Refresh token expired. Login required.";
         }
       }
 
       render();
-      tokenTimerHandle = setInterval(render, 1000);
+      tokenTimerHandle = setInterval(() => {
+        render();
+      }, 1000);
+    }
+
+    function showRefreshTokenTimer() {
+      document.getElementById("refresh-session-timer").classList.remove("hidden");
+    }
+
+    function hideRefreshTokenTimer() {
+      document.getElementById("refresh-session-timer").classList.add("hidden");
+    }
+
+    function stopRefreshTokenTimer() {
+      if (refreshTokenTimerHandle) {
+        clearInterval(refreshTokenTimerHandle);
+        refreshTokenTimerHandle = null;
+      }
+    }
+
+    function resetRefreshTokenTimerUi() {
+      const ring = document.querySelector(".refresh-ring-progress");
+      ring.style.strokeDasharray = String(ringCircumference);
+      ring.style.strokeDashoffset = String(ringCircumference);
+      ring.style.stroke = "#67e8f9";
+
+      document.getElementById("refresh-token-seconds").textContent = "0s";
+      document.getElementById("refresh-token-status").textContent = "No active refresh session";
+      hideRefreshTokenTimer();
+    }
+
+    function startRefreshTokenTimer(expiresInSeconds) {
+      stopRefreshTokenTimer();
+
+      refreshTokenLifetimeMs = Number(expiresInSeconds || 0) * 1000;
+      refreshTokenExpiresAt = Date.now() + refreshTokenLifetimeMs;
+      refreshRotationTriggeredForCurrentToken = false;
+
+      if (!refreshToken || refreshTokenLifetimeMs <= 0) {
+        resetRefreshTokenTimerUi();
+        return;
+      }
+
+      showRefreshTokenTimer();
+
+      async function render() {
+        const remainingMs = Math.max(0, refreshTokenExpiresAt - Date.now());
+        const remainingSeconds = Math.ceil(remainingMs / 1000);
+        const progress = refreshTokenLifetimeMs > 0 ? remainingMs / refreshTokenLifetimeMs : 0;
+        const dashOffset = ringCircumference * (1 - progress);
+        const ring = document.querySelector(".refresh-ring-progress");
+
+        ring.style.strokeDashoffset = String(dashOffset);
+        ring.style.stroke = remainingSeconds <= 60 ? "#93c5fd" : "#67e8f9";
+
+        document.getElementById("refresh-token-seconds").textContent = remainingSeconds + "s";
+        document.getElementById("refresh-token-status").textContent =
+          remainingSeconds > 0
+            ? "Refresh token available for session renewal"
+            : "Refresh token expired";
+
+        if (
+          remainingSeconds <= refreshRotationThresholdSeconds &&
+          remainingSeconds > 0 &&
+          refreshToken &&
+          !refreshInFlight &&
+          !refreshRotationTriggeredForCurrentToken
+        ) {
+          refreshRotationTriggeredForCurrentToken = true;
+          await refreshSession(true);
+          return;
+        }
+
+        if (remainingMs <= 0) {
+          refreshToken = "";
+          refreshTokenExpiresAt = 0;
+          refreshTokenLifetimeMs = 0;
+          stopRefreshTokenTimer();
+          updateTokenDisplay();
+        }
+      }
+
+      render();
+      refreshTokenTimerHandle = setInterval(() => {
+        render();
+      }, 1000);
     }
 
     function clearTokens() {
@@ -408,25 +545,42 @@ data:
       refreshToken = "";
       accessTokenExpiresAt = 0;
       accessTokenLifetimeMs = 0;
+      refreshTokenExpiresAt = 0;
+      refreshTokenLifetimeMs = 0;
+      accessRefreshTriggeredForCurrentToken = false;
+      refreshRotationTriggeredForCurrentToken = false;
+
       stopTokenTimer();
+      stopRefreshTokenTimer();
+
       updateTokenDisplay();
       resetTokenTimerUi();
+      resetRefreshTokenTimerUi();
     }
 
     function updateTokensFromParsedResponse(parsed, clearOnFailure) {
       if (parsed?.ok) {
-        if (parsed?.data?.access_token) {
+        const hadNewAccessToken = Boolean(parsed?.data?.access_token);
+        const hadNewRefreshToken = Boolean(parsed?.data?.refresh_token);
+
+        if (hadNewAccessToken) {
           accessToken = parsed.data.access_token;
         }
 
-        if (parsed?.data?.refresh_token) {
+        if (hadNewRefreshToken) {
           refreshToken = parsed.data.refresh_token;
         }
 
         updateTokenDisplay();
 
-        if (parsed?.data?.access_token && parsed?.data?.expires_in) {
+        if (hadNewAccessToken && parsed?.data?.expires_in) {
           startTokenTimer(parsed.data.expires_in);
+        }
+
+        if (hadNewRefreshToken) {
+          startRefreshTokenTimer(
+            parsed?.data?.refresh_expires_in || refreshTokenExpiresInSecondsDefault
+          );
         }
 
         return;
@@ -497,15 +651,25 @@ data:
       }
     }
 
-    async function refreshSession() {
+    async function refreshSession(silent) {
       const result = document.getElementById("result");
 
       if (!refreshToken) {
-        result.textContent = "No refresh token available";
+        if (!silent) {
+          result.textContent = "No refresh token available";
+        }
         return;
       }
 
-      result.textContent = "Refreshing session...";
+      if (refreshInFlight) {
+        return;
+      }
+
+      refreshInFlight = true;
+
+      if (!silent) {
+        result.textContent = "Refreshing session...";
+      }
 
       try {
         const res = await sendJson(refreshUrl, {
@@ -517,13 +681,26 @@ data:
         try {
           const parsed = JSON.parse(text);
           updateTokensFromParsedResponse(parsed, true);
+
+          if (!silent) {
+            renderResult(res, text);
+          } else if (!parsed?.ok) {
+            result.textContent = "Automatic refresh failed.\n\n" + text;
+          }
         } catch (error) {
           clearTokens();
+          if (!silent) {
+            result.textContent = "Refresh response parsing failed";
+          }
         }
-
-        renderResult(res, text);
       } catch (err) {
-        result.textContent = "Request failed:\n" + err;
+        if (!silent) {
+          result.textContent = "Request failed:\n" + err;
+        } else {
+          clearTokens();
+        }
+      } finally {
+        refreshInFlight = false;
       }
     }
 
@@ -587,6 +764,7 @@ data:
     }
 
     resetTokenTimerUi();
+    resetRefreshTokenTimerUi();
     updateTokenDisplay();
 
 ---

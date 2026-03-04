@@ -18,8 +18,8 @@ data:
     const { Pool } = require('pg');
     const crypto = require('crypto');
 
-    const JWT_SECRET = process.env.JWT_SECRET
-    const ACCESS_TOKEN_EXPIRES_IN_SECONDS = Number(process.env.ACCESS_TOKEN_EXPIRES_IN_SECONDS || 900);
+    const JWT_SECRET = process.env.JWT_SECRET;
+    const ACCESS_TOKEN_EXPIRES_IN_SECONDS = Number(process.env.ACCESS_TOKEN_EXPIRES_IN_SECONDS || 60);
     const REFRESH_TOKEN_EXPIRES_IN_SECONDS = Number(process.env.REFRESH_TOKEN_EXPIRES_IN_SECONDS || 604800);
 
     const db = new Pool({
@@ -53,7 +53,7 @@ data:
       const [type, token] = authHeader.split(' ');
 
       if (type !== 'Bearer' || !token) {
-        return { status: 400, error: 'Malformed Authorization header'};
+        return { status: 400, error: 'Malformed Authorization header' };
       }
 
       try {
@@ -98,7 +98,7 @@ data:
       return crypto.createHash('sha256').update(token).digest('hex');
     }
 
-    async function registerUser({username, email, password}) {
+    async function registerUser({ username, email, password }) {
       const existing = await db.query(
         `
         SELECT id
@@ -128,7 +128,6 @@ data:
     }
 
     async function authenticateUser(login, password) {
-
       const normalizedLogin = login.trim().toLowerCase();
 
       const result = await db.query(
@@ -141,9 +140,9 @@ data:
         [normalizedLogin]
       );
 
-      const user = result.rows[0]
+      const user = result.rows[0];
 
-      if (!user || !user.is_active ){
+      if (!user || !user.is_active) {
         return null;
       }
 
@@ -211,6 +210,7 @@ data:
         UPDATE refresh_tokens
         SET revoked_at = NOW()
         WHERE id = $1
+          AND revoked_at IS NULL
         `,
         [id]
       );
@@ -228,6 +228,68 @@ data:
         `,
         [tokenHash]
       );
+    }
+
+    async function rotateRefreshToken(storedToken) {
+      const rawToken = generateRefreshToken();
+      const tokenHash = hashToken(rawToken);
+      const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRES_IN_SECONDS * 1000);
+
+      await db.query('BEGIN');
+
+      try {
+        await db.query(
+          `
+          UPDATE refresh_tokens
+          SET revoked_at = NOW()
+          WHERE id = $1
+            AND revoked_at IS NULL
+          `,
+          [storedToken.id]
+        );
+
+        await db.query(
+          `
+          INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
+          VALUES ($1, $2, $3)
+          `,
+          [storedToken.user_id, tokenHash, expiresAt]
+        );
+
+        await db.query('COMMIT');
+
+        return {
+          refreshToken: rawToken,
+          expiresAt
+        };
+      } catch (error) {
+        await db.query('ROLLBACK');
+        throw error;
+      }
+    }
+
+    async function validateRefreshTokenForRotation(refreshToken) {
+      const storedToken = await findRefreshToken(refreshToken);
+
+      if (!storedToken) {
+        return { status: 401, error: 'Invalid refresh token' };
+      }
+
+      if (storedToken.revoked_at) {
+        return { status: 401, error: 'Refresh token revoked' };
+      }
+
+      if (new Date(storedToken.expires_at).getTime() <= Date.now()) {
+        await revokeRefreshTokenById(storedToken.id);
+        return { status: 401, error: 'Refresh token expired' };
+      }
+
+      if (!storedToken.is_active) {
+        await revokeRefreshTokenById(storedToken.id);
+        return { status: 403, error: 'User is inactive' };
+      }
+
+      return { storedToken };
     }
 
     const server = http.createServer(async (req, res) => {
@@ -290,10 +352,10 @@ data:
               access_token: accessToken,
               token_type: 'Bearer',
               expires_in: ACCESS_TOKEN_EXPIRES_IN_SECONDS,
-              refresh_token: refreshToken
+              refresh_token: refreshToken,
+              refresh_expires_in: REFRESH_TOKEN_EXPIRES_IN_SECONDS
             }
           });
-
         } catch (error) {
           console.error('Registration error:', error);
           return sendJson(res, 400, {
@@ -310,12 +372,12 @@ data:
           const { username, password } = body;
 
           if (!username || !password) {
-            return sendJson(res, 400, { 
+            return sendJson(res, 400, {
               ok: false,
-              error: 'Username and Password are required' 
+              error: 'Username and Password are required'
             });
           }
-          
+
           const user = await authenticateUser(username, password);
 
           if (!user) {
@@ -335,6 +397,7 @@ data:
               token_type: 'Bearer',
               expires_in: ACCESS_TOKEN_EXPIRES_IN_SECONDS,
               refresh_token: refreshToken,
+              refresh_expires_in: REFRESH_TOKEN_EXPIRES_IN_SECONDS,
               user: {
                 id: user.id,
                 username: user.username,
@@ -344,10 +407,10 @@ data:
             }
           });
         } catch (error) {
-          console.error('Login error: ', error);
-          return sendJson(res, 500, { 
+          console.error('Login error:', error);
+          return sendJson(res, 500, {
             ok: false,
-            error: 'Server Error' 
+            error: 'Server Error'
           });
         }
       }
@@ -365,38 +428,16 @@ data:
             });
           }
 
-          const storedToken = await findRefreshToken(refreshToken);
+          const validation = await validateRefreshTokenForRotation(refreshToken);
 
-          if (!storedToken) {
-            return sendJson(res, 401, {
+          if (validation.error) {
+            return sendJson(res, validation.status, {
               ok: false,
-              error: 'Invalid refresh token'
+              error: validation.error
             });
           }
 
-          if (storedToken.revoked_at) {
-            return sendJson(res, 401, {
-              ok: false,
-              error: 'Refresh token revoked'
-            });
-          }
-
-          if (new Date(storedToken.expires_at).getTime() <= Date.now()) {
-            return sendJson(res, 401, {
-              ok: false,
-              error: 'Refresh token expired'
-            });
-          }
-
-          if (!storedToken.is_active) {
-            return sendJson(res, 403, {
-              ok: false,
-              error: 'User is inactive'
-            });
-          }
-
-          await revokeRefreshTokenById(storedToken.id);
-
+          const storedToken = validation.storedToken;
           const user = {
             id: storedToken.user_id,
             username: storedToken.username,
@@ -405,7 +446,7 @@ data:
           };
 
           const accessToken = issueAccessToken(user);
-          const { refreshToken: nextRefreshToken } = await createRefreshToken(user.id);
+          const rotated = await rotateRefreshToken(storedToken);
 
           return sendJson(res, 200, {
             ok: true,
@@ -413,7 +454,8 @@ data:
               access_token: accessToken,
               token_type: 'Bearer',
               expires_in: ACCESS_TOKEN_EXPIRES_IN_SECONDS,
-              refresh_token: nextRefreshToken
+              refresh_token: rotated.refreshToken,
+              refresh_expires_in: REFRESH_TOKEN_EXPIRES_IN_SECONDS
             }
           });
         } catch (error) {
@@ -459,9 +501,9 @@ data:
         const verification = verifyBearerToken(req.headers.authorization);
 
         if (verification.error) {
-          return sendJson(res, verification.status, { 
-            ok: false, 
-            error: verification.error 
+          return sendJson(res, verification.status, {
+            ok: false,
+            error: verification.error
           });
         }
 
@@ -503,7 +545,7 @@ data:
             }
           });
         } catch (error) {
-          console.error('Debug DB Error: ', error);
+          console.error('Debug DB Error:', error);
           return sendJson(res, 500, {
             ok: false,
             error: 'Failed to read database'
@@ -512,16 +554,16 @@ data:
       }
 
       if (
-        requestPath === '/api/auth/jwt/login' || 
-        requestPath === '/api/auth/jwt/protected' || 
+        requestPath === '/api/auth/jwt/login' ||
+        requestPath === '/api/auth/jwt/protected' ||
         requestPath === '/api/auth/jwt/register' ||
         requestPath === '/api/auth/jwt/refresh' ||
         requestPath === '/api/auth/jwt/logout' ||
         requestPath === '/api/auth/jwt/debug/db'
       ) {
-        return sendJson(res, 405, { 
-          ok: false, 
-          error: 'Method not allowed' 
+        return sendJson(res, 405, {
+          ok: false,
+          error: 'Method not allowed'
         });
       }
 
@@ -543,7 +585,6 @@ data:
     });
 
     async function start() {
-
       if (!JWT_SECRET) {
         console.error('JWT_SECRET is required');
         process.exit(1);
@@ -557,12 +598,13 @@ data:
           console.log('JWT Auth Server running on port 8080');
         });
       } catch (error) {
-        console.error('Failed to start server: ', error);
+        console.error('Failed to start server:', error);
         process.exit(1);
       }
     }
 
     start();
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -590,9 +632,9 @@ spec:
                   name: jwt-auth-secret
                   key: jwt-secret
             - name: ACCESS_TOKEN_EXPIRES_IN_SECONDS
-              value: "900"
+              value: "60"
             - name: REFRESH_TOKEN_EXPIRES_IN_SECONDS
-              value: "604800"
+              value: "180"
             - name: DB_HOST
               value: postgres
             - name: DB_PORT
