@@ -28,3 +28,17 @@ spec:
       backendRefs:
         - name: jwt-ui-service
           port: 80
+
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /jwt-pg-ui-debug
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: jwt-pg-ui-debug-service
+          port: 80

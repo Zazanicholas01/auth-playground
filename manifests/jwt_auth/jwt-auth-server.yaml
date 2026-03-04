@@ -476,12 +476,48 @@ data:
         });
       }
 
+      if (req.method === 'GET' && requestPath === '/api/auth/jwt/debug/db') {
+        try {
+          const usersResult = await db.query(
+            `
+            SELECT id, username, email, role, is_active, created_at
+            FROM users
+            ORDER BY id ASC
+            `
+          );
+
+          const refreshTokensResult = await db.query(
+            `
+            SELECT id, user_id, token_hash, expires_at, revoked_at, created_at
+            FROM refresh_tokens
+            ORDER BY id ASC
+            `
+          );
+
+          return sendJson(res, 200, {
+            ok: true,
+            data: {
+              users: usersResult.rows,
+              refresh_tokens: refreshTokensResult.rows,
+              refreshed_at: new Date().toISOString()
+            }
+          });
+        } catch (error) {
+          console.error('Debug DB Error: ', error);
+          return sendJson(res, 500, {
+            ok: false,
+            error: 'Failed to read database'
+          });
+        }
+      }
+
       if (
         requestPath === '/api/auth/jwt/login' || 
         requestPath === '/api/auth/jwt/protected' || 
         requestPath === '/api/auth/jwt/register' ||
         requestPath === '/api/auth/jwt/refresh' ||
-        requestPath === '/api/auth/jwt/logout'
+        requestPath === '/api/auth/jwt/logout' ||
+        requestPath === '/api/auth/jwt/debug/db'
       ) {
         return sendJson(res, 405, { 
           ok: false, 
@@ -497,7 +533,8 @@ data:
             'GET /api/auth/jwt/protected',
             'POST /api/auth/jwt/register',
             'POST /api/auth/jwt/refresh',
-            'POST /api/auth/jwt/logout'
+            'POST /api/auth/jwt/logout',
+            'GET /api/auth/jwt/debug/db'
           ]
         });
       }

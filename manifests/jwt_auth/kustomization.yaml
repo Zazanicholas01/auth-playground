@@ -6,3 +6,4 @@ resources:
   - jwt-auth-route.yaml
   - jwt-ui-client.yaml
   - jwt-postgres.yaml
+  - jwt-pg-ui-debug.yaml
