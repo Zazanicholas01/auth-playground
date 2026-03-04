@@ -1,13 +1,13 @@
-FROM node:18-alpine
+FROM oven/bun:1
 
 WORKDIR /opt/deps
 
 COPY package.json ./
-RUN npm install --omit=dev
+RUN bun install --production
 
 ENV NODE_PATH=/opt/deps/node_modules
 WORKDIR /app
 
-USER node
+USER bun
 
-CMD ["node", "/app/index.js"]
+CMD ["bun", "/app/index.js"]

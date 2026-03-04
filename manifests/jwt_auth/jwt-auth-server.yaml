@@ -622,9 +622,9 @@ spec:
     spec:
       containers:
         - name: node
-          image: jwt-auth-server:dev-v2
+          image: jwt-auth-server-bun:1.0.0
           imagePullPolicy: IfNotPresent
-          command: ["/usr/local/bin/node", "/app/index.js"]
+          command: ["bun", "/app/index.js"]
           env:
             - name: JWT_SECRET
               valueFrom:
