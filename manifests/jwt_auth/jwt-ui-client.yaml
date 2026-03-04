@@ -225,7 +225,7 @@ data:
 
     function updateTokenDisplay() {
       const tokenBox = document.getElementById("token");
-      tokenBox.textContent = token || "No token yet";
+      tokenBox.textContent = token ? "Bearer token acquired" : "No token yet";
     }
 
     async function login() {
@@ -252,7 +252,11 @@ data:
 
         try {
           const parsed = JSON.parse(text);
-          token = parsed.token || "";
+          token = parsed?.data?.token || "";
+
+          if (!parsed?.ok) {
+            token = "";
+          }
         } catch (error) {
           token = "";
         }
@@ -283,6 +287,12 @@ data:
         });
 
         const text = await res.text();
+
+        if (res.status === 401 || res.status === 403) {
+          token = "";
+          updateTokenDisplay();
+        }
+
         renderResult(res, text);
       } catch (err) {
         result.textContent = "Request failed:\n" + err;

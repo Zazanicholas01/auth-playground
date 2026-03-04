@@ -1,14 +1,51 @@
 apiVersion: v1
+kind: Secret
+metadata:
+  name: jwt-auth-secret
+type: Opaque
+stringData:
+  jwt-secret: password123
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: jwt-auth-server-js
 data:
   index.js: |
-    const http = require('http')
+    const jwt = require('jsonwebtoken');
+    const http = require('http');
 
     const USER = 'admin';
     const PASS = 'password123';
-    const DEMO_TOKEN = 'demo-jwt-token';
+    const JWT_SECRET = process.env.JWT_SECRET
+    const JWT_EXPIRES_IN_SECONDS = Number(process.env.JWT_EXPIRES_IN_SECONDS || 900);
+
+    function issueToken(username) {
+      return jwt.sign(
+        { sub: username, role: 'user' },
+        JWT_SECRET,
+        { expiresIn: JWT_EXPIRES_IN_SECONDS, issuer: 'jwt-auth-demo' }
+      );
+    }
+
+    function verifyBearerToken(authHeader) {
+      if (!authHeader) {
+        return { status: 401, error: 'Missing bearer token' };
+      }
+
+      const [type, token] = authHeader.split(' ');
+
+      if (type !== 'Bearer' || !token) {
+        return { status: 400, error: 'Malformed Authorization header'};
+      }
+
+      try {
+        const payload = jwt.verify(token, JWT_SECRET, { issuer: 'jwt-auth-demo' });
+        return { payload };
+      } catch (error) {
+        return { status: 403, error: 'Invalid or expired token' };
+      }
+    }
 
     function sendJson(res, statusCode, payload) {
       res.statusCode = statusCode;
@@ -44,10 +81,16 @@ data:
           if (username !== USER || password !== PASS) {
             return sendJson(res, 401, { error: 'Invalid credentials' });
           }
+          
+          const token = issueToken(username);
 
           return sendJson(res, 200, {
-            token: DEMO_TOKEN,
-            token_type: 'Bearer'
+            ok: true,
+            data: {
+              token,
+              token_type: 'Bearer',
+              expires_in: JWT_EXPIRES_IN_SECONDS
+            }
           });
         } catch (error) {
           return sendJson(res, 400, { error: 'Invalid JSON body' });
@@ -55,26 +98,24 @@ data:
       }
 
       if (req.method === 'GET' && requestPath === '/api/auth/jwt/protected') {
-        const auth = req.headers.authorization;
+        const verification = verifyBearerToken(req.headers.authorization);
 
-        if (!auth) {
-          return sendJson(res, 401, { error: 'Missing bearer token' });
-        }
-
-        const [type, token] = auth.split(' ');
-
-        if (type !== 'Bearer' || !token) {
-          return sendJson(res, 400, { error: 'Malformed Authorization Header' });
-        }
-
-        if (token !== DEMO_TOKEN) {
-          return sendJson(res, 403, { error: 'Invalid token' });
+        if (verification.error) {
+          return sendJson(res, verification.status, { ok: false, error: verification.error });
         }
 
         return sendJson(res, 200, {
-          message: 'JWT access granted',
-          user: USER
+          ok: true,
+          data: {
+            message: 'JWT access granted',
+            user: verification.payload.sub,
+            role: verification.payload.role
+          }
         });
+      }
+
+      if (requestPath === '/api/auth/jwt/login' || requestPath === '/api/auth/jwt/protected') {
+        return sendJson(res, 405, { ok: false, error: 'Method not allowed' });
       }
 
       if (req.method === 'GET' && requestPath === '/api/auth/jwt') {
@@ -109,11 +150,46 @@ spec:
     spec:
       containers:
         - name: node
-          image: node:18-alpine
-          command: ["node", "/app/index.js"]
+          image: jwt-auth-server:dev
+          imagePullPolicy: IfNotPresent
+          command: ["/usr/local/bin/node", "/app/index.js"]
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-auth-secret
+                  key: jwt-secret
+            - name: JWT_EXPIRES_IN_SECONDS
+              value: "900"
+
           volumeMounts:
             - name: code
               mountPath: /app
+          
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            allowPrivilegeEscalation: false
       
       volumes:
         - name: code
