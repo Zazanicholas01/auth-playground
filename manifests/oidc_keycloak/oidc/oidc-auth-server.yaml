@@ -115,7 +115,10 @@ data:
 
       const res = await fetch(`${OIDC_INTERNAL_ISSUER}/protocol/openid-connect/token`, {
         method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+          ...oidcProxyHeaders(),
+        },
         body,
       });
 
@@ -130,6 +133,7 @@ data:
       const res = await fetch(`${OIDC_INTERNAL_ISSUER}/protocol/openid-connect/userinfo`, {
         headers: {
           authorization: `Bearer ${accessToken}`,
+          ...oidcProxyHeaders(),
         },
       });
 
@@ -150,7 +154,10 @@ data:
 
       const res = await fetch(`${OIDC_INTERNAL_ISSUER}/protocol/openid-connect/logout`, {
         method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+          ...oidcProxyHeaders(),
+        },
         body,
       });
 
@@ -248,6 +255,21 @@ data:
       }
     }
 
+    function oidcProxyHeaders() {
+      try {
+        const u = new URL(OIDC_PUBLIC_ISSUER);
+        const proto = u.protocol.replace(":", "");
+        const port = u.port || (proto === "https" ? "443" : "80");
+        return {
+          "x-forwarded-proto": proto,
+          "x-forwarded-host": u.host,
+          "x-forwarded-port": port,
+        };
+      } catch {
+        return {};
+      }
+    }
+
     async function refreshTokens(refreshToken) {
       if (!OIDC_INTERNAL_ISSUER) {
         throw new OidcUpstreamError({ status: 500, error: "missing_oidc_internal_issuer" });
@@ -262,7 +284,10 @@ data:
 
       const res = await fetch(`${OIDC_INTERNAL_ISSUER}/protocol/openid-connect/token`, {
         method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+          ...oidcProxyHeaders(),
+        },
         body,
       });
 
@@ -664,7 +689,10 @@ data:
               at: toIso(nowMs()),
               type: "refresh_token_exchange",
               status: "failed",
-              details: String(err?.message || err),
+              details:
+                err?.name === "OidcUpstreamError"
+                  ? `${err.message}${err.details ? `: ${err.details}` : ""}`
+                  : String(err?.message || err),
             });
             refreshState.last_error = String(err?.message || err);
 

@@ -1,0 +1,18 @@
+PROBLEM:
+    - UI calls POST /api/auth/oidc/refresh on the Auth Server
+    - Calls Keycloak's Token endpoint at OIDC_INTERNAL_ISSUER
+    - Keycloak is exposed publicly as OIDC_PUBLIC_ISSUER
+
+    - Keycloak embeds an issuer in tokens and ties refresh tokens to the issuer context
+    - Server talked over the internal URL in Plain HTTP + Cluster DNS, Keycloak treated the issuer as internal issuer
+    - The refresh token was minted when the browser was using the public-facing issuer
+    - On refresh, Keycloak compared the refresh token's issuer against it's expected and rejected it
+
+    - Split-brain issuer problem: Public HTTPS issuer for interactive login, HTTP issuer for backchannel token operations
+
+SOLUTION:
+
+    - Added Proxy headerrs to the internal backchannel requests to make it seems like it was the public issuer
+    - Those headers are dervied from OIDC_PUBLIC_ISSUER
+    - APplied to every Auth Sevrer fetch that hits Keycloak internal issuer
+    
