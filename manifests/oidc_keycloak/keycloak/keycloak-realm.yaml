@@ -23,6 +23,7 @@ spec:
           authorizationUrl: "https://github.com/login/oauth/authorize"
           tokenUrl: "https://github.com/login/oauth/access_token"
           defaultScope: "read:user user:email"
+          
     clients:
       - clientId: demo-app
         enabled: true

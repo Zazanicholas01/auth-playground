@@ -18,8 +18,28 @@ data:
     const CLIENT_SECRET = process.env.OIDC_CLIENT_SECRET || "password123";
     const BASE_URL = process.env.BASE_URL || "http://demo-keycloak-service.keycloak.svc.cluster.local:8080/realms/demo";
     const REDIRECT_URI = `${BASE_URL}/api/auth/oidc/callback`;
+    const SESSION_TTL_SECONDS = Number(process.env.SESSION_TTL_SECONDS || 3600);
 
     const sessions = new Map();
+
+    function nowMs() {
+      return Date.now();
+    }
+
+    function toIso(ts) {
+      return typeof ts === "number" ? new Date(ts).toISOString() : null;
+    }
+
+    function secondsRemaining(ts) {
+      if (typeof ts !== "number") return null;
+      return Math.max(0, Math.floor((ts - nowMs()) / 1000));
+    }
+
+    function tokenPreview(token) {
+      if (!token) return null;
+      if (token.length <= 16) return token;
+      return `${token.slice(0, 12)}...${token.slice(-4)}`;
+    }
 
     function randomId() {
       return crypto.randomUUID();
@@ -210,6 +230,55 @@ data:
       return res.json();
     }
 
+    class OidcUpstreamError extends Error {
+      constructor({ status, error, details }) {
+        super(error || "oidc_upstream_error");
+        this.name = "OidcUpstreamError";
+        this.status = status;
+        this.details = details || null;
+      }
+    }
+
+    async function readJsonOrText(res) {
+      const raw = await res.text();
+      try {
+        return { raw, json: JSON.parse(raw) };
+      } catch {
+        return { raw, json: null };
+      }
+    }
+
+    async function refreshTokens(refreshToken) {
+      if (!OIDC_INTERNAL_ISSUER) {
+        throw new OidcUpstreamError({ status: 500, error: "missing_oidc_internal_issuer" });
+      }
+
+      const body = new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+      });
+
+      const res = await fetch(`${OIDC_INTERNAL_ISSUER}/protocol/openid-connect/token`, {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body,
+      });
+
+      const { raw, json } = await readJsonOrText(res);
+
+      if (!res.ok) {
+        throw new OidcUpstreamError({
+          status: res.status,
+          error: json?.error || "token_refresh_failed",
+          details: json?.error_description || raw,
+        });
+      }
+
+      return json || JSON.parse(raw);
+    }
+
     async function searchRealmUsers(adminToken, username) {
       const qs = new URLSearchParams({
         username,
@@ -262,9 +331,167 @@ data:
       }
     }
 
+    function parseJwtPart(jwt, index) {
+      if (!jwt) return null;
+      const parts = jwt.split(".");
+      if (parts.length < 2 || !parts[index]) return null;
+      try {
+        return JSON.parse(Buffer.from(parts[index], "base64url").toString("utf8"));
+      } catch {
+        return null;
+      }
+    }
+
     function parseJwt(jwt) {
-      const payload = jwt.split(".")[1];
-      return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+      return parseJwtPart(jwt, 1);
+    }
+
+    function parseJwtHeader(jwt) {
+      return parseJwtPart(jwt, 0);
+    }
+
+    function normalizeTokenData(tokenResponse, previousTokens) {
+      const receivedAt = nowMs();
+      const idClaims = parseJwt(tokenResponse.id_token || previousTokens?.id_token);
+      const accessClaims = parseJwt(tokenResponse.access_token || previousTokens?.access_token);
+      const idHeader = parseJwtHeader(tokenResponse.id_token || previousTokens?.id_token);
+      const accessHeader = parseJwtHeader(tokenResponse.access_token || previousTokens?.access_token);
+
+      const accessExpiresAt =
+        typeof tokenResponse.expires_in === "number"
+          ? receivedAt + (tokenResponse.expires_in * 1000)
+          : (accessClaims?.exp ? accessClaims.exp * 1000 : previousTokens?.access_expires_at || null);
+      const refreshExpiresAt =
+        typeof tokenResponse.refresh_expires_in === "number"
+          ? receivedAt + (tokenResponse.refresh_expires_in * 1000)
+          : previousTokens?.refresh_expires_at || null;
+      const idExpiresAt = idClaims?.exp ? idClaims.exp * 1000 : previousTokens?.id_expires_at || null;
+
+      const accessToken = tokenResponse.access_token || previousTokens?.access_token || null;
+      const idToken = tokenResponse.id_token || previousTokens?.id_token || null;
+      const refreshToken = tokenResponse.refresh_token || previousTokens?.refresh_token || null;
+
+      return {
+        token_type: tokenResponse.token_type || previousTokens?.token_type || null,
+        scope: tokenResponse.scope || previousTokens?.scope || null,
+        access_token: accessToken,
+        id_token: idToken,
+        refresh_token: refreshToken,
+        access_expires_at: accessExpiresAt,
+        refresh_expires_at: refreshExpiresAt,
+        id_expires_at: idExpiresAt,
+        received_at: receivedAt,
+        token_types_received: {
+          access_token: Boolean(accessToken),
+          id_token: Boolean(idToken),
+          refresh_token: Boolean(refreshToken),
+        },
+        headers: {
+          access_token: accessHeader ? { alg: accessHeader.alg || null, kid: accessHeader.kid || null, typ: accessHeader.typ || null } : null,
+          id_token: idHeader ? { alg: idHeader.alg || null, kid: idHeader.kid || null, typ: idHeader.typ || null } : null,
+        },
+        claims: {
+          access_token: accessClaims
+            ? {
+                iss: accessClaims.iss || null,
+                sub: accessClaims.sub || null,
+                aud: accessClaims.aud || null,
+                azp: accessClaims.azp || null,
+                scope: accessClaims.scope || null,
+                sid: accessClaims.sid || null,
+                auth_time: accessClaims.auth_time || null,
+                acr: accessClaims.acr || null,
+                iat: accessClaims.iat || null,
+                exp: accessClaims.exp || null,
+              }
+            : null,
+          id_token: idClaims
+            ? {
+                iss: idClaims.iss || null,
+                sub: idClaims.sub || null,
+                aud: idClaims.aud || null,
+                azp: idClaims.azp || null,
+                sid: idClaims.sid || null,
+                auth_time: idClaims.auth_time || null,
+                acr: idClaims.acr || null,
+                iat: idClaims.iat || null,
+                exp: idClaims.exp || null,
+              }
+            : null,
+        },
+      };
+    }
+
+    function touchSession(session) {
+      if (!session) return;
+      session.updated_at = nowMs();
+    }
+
+    function hasSessionExpired(session) {
+      return !session?.local_expires_at || nowMs() >= session.local_expires_at;
+    }
+
+    function ensureActiveSession(req, sid, session) {
+      if (!session) return null;
+      if (!hasSessionExpired(session)) return null;
+      if (sid) sessions.delete(sid);
+      return json(
+        { error: "local_session_expired" },
+        {
+          status: 401,
+          headers: {
+            "set-cookie": sessionCookie(req, "", 0),
+          },
+        }
+      );
+    }
+
+    function sessionDiagnostics(sid, session) {
+      if (!sid || !session) {
+        return {
+          authenticated: false,
+        };
+      }
+
+      return {
+        authenticated: Boolean(session.user),
+        session_id: sid,
+        created_at: toIso(session.created_at),
+        updated_at: toIso(session.updated_at),
+        local_session_expires_at: toIso(session.local_expires_at),
+        local_session_expires_in_seconds: secondsRemaining(session.local_expires_at),
+      };
+    }
+
+    function tokenDiagnostics(session) {
+      const tokens = session?.tokens;
+      if (!tokens) return null;
+      return {
+        token_type: tokens.token_type,
+        token_types_received: tokens.token_types_received,
+        scope: tokens.scope,
+        received_at: toIso(tokens.received_at),
+        headers: tokens.headers,
+        claims: tokens.claims,
+        access_token_preview: tokenPreview(tokens.access_token),
+        id_token_preview: tokenPreview(tokens.id_token),
+        refresh_token_preview: tokenPreview(tokens.refresh_token),
+        access_token_expires_at: toIso(tokens.access_expires_at),
+        access_token_expires_in_seconds: secondsRemaining(tokens.access_expires_at),
+        id_token_expires_at: toIso(tokens.id_expires_at),
+        id_token_expires_in_seconds: secondsRemaining(tokens.id_expires_at),
+        refresh_token_expires_at: toIso(tokens.refresh_expires_at),
+        refresh_token_expires_in_seconds: secondsRemaining(tokens.refresh_expires_at),
+      };
+    }
+
+    function ensureRefreshState(session) {
+      session.__refresh = session.__refresh || {
+        in_flight: false,
+        last_ok_at: null,
+        last_error: null,
+      };
+      return session.__refresh;
     }
 
     Bun.serve({
@@ -279,7 +506,14 @@ data:
         if (url.pathname === "/api/auth/oidc/login" && req.method === "GET") {
           const state = randomId();
           const nextSid = randomId(); // always new session per login attempt
-          sessions.set(nextSid, { state });
+          const createdAt = nowMs();
+          sessions.set(nextSid, {
+            state,
+            created_at: createdAt,
+            updated_at: createdAt,
+            local_expires_at: createdAt + (SESSION_TTL_SECONDS * 1000),
+            refresh_events: [],
+          });
           const idpHint = (url.searchParams.get("idp") || "").trim();
 
           const authUrl = new URL(`${OIDC_PUBLIC_ISSUER}/protocol/openid-connect/auth`);
@@ -293,7 +527,7 @@ data:
           }
 
           return redirect(authUrl.toString(), {
-            "set-cookie": sessionCookie(req, nextSid),
+            "set-cookie": sessionCookie(req, nextSid, SESSION_TTL_SECONDS),
           });
         }
 
@@ -308,6 +542,7 @@ data:
           if (!code || state !== session.state) return new Response("invalid callback", { status: 400 });
 
           delete session.state; // consume state once, prevents replay
+          touchSession(session);
 
           try {
             const tokens = await exchangeCode(code);
@@ -322,47 +557,140 @@ data:
               email: claims.email,
               name: claims.name,
             };
-            session.tokens = {
-              access_token: tokens.access_token || null,
-              refresh_token: tokens.refresh_token || null,
-              expires_at: Date.now() + ((tokens.expires_in || 0) * 1000),
-            };
-            return redirect("/");
+            session.tokens = normalizeTokenData(tokens, session.tokens);
+            session.refresh_events = session.refresh_events || [];
+            session.refresh_events.unshift({
+              at: toIso(nowMs()),
+              type: "authorization_code_exchange",
+              status: "success",
+            });
+
+            return redirect("/", {
+              "set-cookie": sessionCookie(req, sid, SESSION_TTL_SECONDS),
+            });
           } catch (err) {
             console.error("callback failed", err);
             return redirect("/?error=oidc_callback_failed");
           }
         }
 
+        if (url.pathname === "/api/auth/oidc/diagnostics" && req.method === "GET") {
+          if (session) {
+            const expiredResponse = ensureActiveSession(req, sid, session);
+            if (expiredResponse) return expiredResponse;
+            touchSession(session);
+          }
+
+          const endpoints = {
+            issuer: OIDC_PUBLIC_ISSUER,
+            authorization_endpoint: `${OIDC_PUBLIC_ISSUER}/protocol/openid-connect/auth`,
+            token_endpoint: `${OIDC_PUBLIC_ISSUER}/protocol/openid-connect/token`,
+            userinfo_endpoint: `${OIDC_PUBLIC_ISSUER}/protocol/openid-connect/userinfo`,
+            end_session_endpoint: `${OIDC_PUBLIC_ISSUER}/protocol/openid-connect/logout`,
+            jwks_uri: `${OIDC_PUBLIC_ISSUER}/protocol/openid-connect/certs`,
+            well_known: `${OIDC_PUBLIC_ISSUER}/.well-known/openid-configuration`,
+          };
+
+          return json({
+            now: new Date().toISOString(),
+            oidc: {
+              client_id: CLIENT_ID,
+              redirect_uri: REDIRECT_URI,
+              session_ttl_seconds: SESSION_TTL_SECONDS,
+              endpoints,
+            },
+            session: sessionDiagnostics(sid, session),
+            user: session?.user || null,
+            tokens: tokenDiagnostics(session),
+            refresh_events: (session?.refresh_events || []).slice(0, 20),
+          });
+        }
+
         if (url.pathname === "/api/auth/oidc/me" && req.method === "GET") {
           if (!session?.user) {
             return json({ authenticated: false }, { status: 401 });
           }
-
+          const expiredResponse = ensureActiveSession(req, sid, session);
+          if (expiredResponse) return expiredResponse;
+          touchSession(session);
           return json({
             authenticated: true,
             user: session.user,
           });
         }
 
+        if (url.pathname === "/api/auth/oidc/refresh" && req.method === "POST") {
+          if (!session?.user) {
+            return json({ error: "not_authenticated" }, { status: 401 });
+          }
+          const expiredResponse = ensureActiveSession(req, sid, session);
+          if (expiredResponse) return expiredResponse;
+
+          const existingRefreshToken = session.tokens?.refresh_token;
+          if (!existingRefreshToken) {
+            return json({ error: "missing_refresh_token" }, { status: 400 });
+          }
+
+          if (session.tokens?.refresh_expires_at && nowMs() >= session.tokens.refresh_expires_at) {
+            return json({ error: "refresh_token_expired" }, { status: 401 });
+          }
+
+          const refreshState = ensureRefreshState(session);
+          if (refreshState.in_flight) {
+            return json({ error: "refresh_in_flight" }, { status: 409 });
+          }
+          refreshState.in_flight = true;
+
+          try {
+            const refreshed = await refreshTokens(existingRefreshToken);
+            session.tokens = normalizeTokenData(refreshed, session.tokens);
+            touchSession(session);
+            session.refresh_events = session.refresh_events || [];
+            session.refresh_events.unshift({
+              at: toIso(nowMs()),
+              type: "refresh_token_exchange",
+              status: "success",
+            });
+            refreshState.last_ok_at = toIso(nowMs());
+            refreshState.last_error = null;
+            return json({
+              refreshed: true,
+              access_token_expires_at: toIso(session.tokens.access_expires_at),
+              refresh_token_expires_at: toIso(session.tokens.refresh_expires_at),
+            });
+          } catch (err) {
+            session.refresh_events = session.refresh_events || [];
+            session.refresh_events.unshift({
+              at: toIso(nowMs()),
+              type: "refresh_token_exchange",
+              status: "failed",
+              details: String(err?.message || err),
+            });
+            refreshState.last_error = String(err?.message || err);
+
+            if (err?.name === "OidcUpstreamError") {
+              const isInvalidGrant = err.message === "invalid_grant";
+              const status = isInvalidGrant ? 401 : (err.status || 502);
+              return json({ error: err.message, details: err.details }, { status });
+            }
+
+            return json({ error: "refresh_failed", details: String(err?.message || err) }, { status: 502 });
+
+          } finally {
+            refreshState.in_flight = false;
+          }
+        }
+
         if (url.pathname === "/api/auth/oidc/protected" && req.method === "GET") {
           if (!session?.user) {
             return json({ error: "not_authenticated" }, { status: 401 });
           }
+          const expiredResponse = ensureActiveSession(req, sid, session);
+          if (expiredResponse) return expiredResponse;
+          touchSession(session);
 
-          if (!session.tokens?.access_token || !session.tokens?.expires_at || Date.now() >= session.tokens.expires_at) {
-            if (sid) {
-              sessions.delete(sid);
-            }
-            return json(
-              { error: "session_expired" },
-              {
-                status: 401,
-                headers: {
-                  "set-cookie": sessionCookie(req, "", 0),
-                },
-              }
-            );
+          if (!session.tokens?.access_token || !session.tokens?.access_expires_at || nowMs() >= session.tokens.access_expires_at) {
+            return json({ error: "access_token_expired" }, { status: 401 });
           }
 
           return json({
@@ -440,6 +768,9 @@ data:
           if (!session?.user) {
             return json({ error: "not_authenticated" }, { status: 401 });
           }
+          const expiredResponse = ensureActiveSession(req, sid, session);
+          if (expiredResponse) return expiredResponse;
+          touchSession(session);
 
           try {
             const adminToken = await getAdminAccessToken();

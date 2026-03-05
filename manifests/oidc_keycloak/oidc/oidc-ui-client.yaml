@@ -15,97 +15,607 @@ data:
       </head>
       <body>
         <main class="page">
-          <h1>OIDC Flow Demo</h1>
-          <p>Login happens in Keycloak. You can also register a new user directly from this page.</p>
-          <div class="actions">
-            <button id="login">Login with Keycloak</button>
-            <button id="login-github">Login with GitHub</button>
-            <button id="logout">Logout</button>
-            <button id="revoke">Revoke Current Keycloak Session</button>
-            <button id="call-protected">Call Protected API</button>
-          </div>
-          <p id="auth-status" class="status"></p>
-          <section class="panel">
-            <h2>Create User</h2>
-            <form id="register-form">
-              <div class="grid">
-                <label>
-                  Username
-                  <input id="reg-username" name="username" type="text" required />
-                </label>
-                <label>
-                  Email
-                  <input id="reg-email" name="email" type="email" required />
-                </label>
-                <label>
-                  First name
-                  <input id="reg-first-name" name="firstName" type="text" />
-                </label>
-                <label>
-                  Last name
-                  <input id="reg-last-name" name="lastName" type="text" />
-                </label>
-                <label class="full">
-                  Password
-                  <input id="reg-password" name="password" type="password" minlength="8" required />
-                </label>
+          <header class="hero">
+            <p class="eyebrow">Identity and Access Demo</p>
+            <h1>OIDC Flow Demo</h1>
+            <p class="lead">This lab shows login, session handling, and protected API access using Keycloak as OpenID Connect provider.</p>
+          </header>
+
+          <section class="panel guide-panel">
+            <h2>Quick Start</h2>
+            <div class="guide-grid">
+              <div>
+                <h3>Flow</h3>
+                <ol class="flow-list">
+                  <li>If you don't have an account, create a user below.</li>
+                  <li>Click <strong>Login</strong> to authenticate with Keycloak.</li>
+                  <li>Call the protected API to verify session + access token.</li>
+                  <li>Use refresh to rotate tokens without re-authentication.</li>
+                  <li>Logout clears the local app session; revoke ends the Keycloak session too.</li>
+                </ol>
               </div>
-              <div class="actions">
-                <button type="submit">Register User</button>
-              </div>
-              <p id="register-status" class="status"></p>
-            </form>
+            </div>
           </section>
-          <h2>Session</h2>
-          <pre id="output">Loading...</pre>
-          <h2>Protected API Result</h2>
-          <pre id="protected-output">Not called yet.</pre>
+
+          <section class="panel action-panel">
+            <div class="actions">
+              <button id="login" class="primary">
+                <span class="btn-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 17l5-5-5-5" />
+                    <path d="M15 12H3" />
+                    <path d="M21 21V3" />
+                  </svg>
+                </span>
+                <span class="btn-label">Login</span>
+              </button>
+              <button id="login-github" class="secondary">
+                <span class="btn-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 19c-5 1.5-5-2.5-7-3" />
+                    <path d="M16 22v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+                  </svg>
+                </span>
+                <span class="btn-label">Login with GitHub</span>
+              </button>
+              <button id="call-protected" class="primary">
+                <span class="btn-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <path d="M9 12l2 2 4-4" />
+                  </svg>
+                </span>
+                <span class="btn-label">Call protected API</span>
+              </button>
+              <button id="refresh-tokens">
+                <span class="btn-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 4v6h-6" />
+                    <path d="M1 20v-6h6" />
+                    <path d="M3.51 9a9 9 0 0 1 14.13-3.36L23 10" />
+                    <path d="M1 14l5.36 4.36A9 9 0 0 0 20.49 15" />
+                  </svg>
+                </span>
+                <span class="btn-label">Refresh tokens</span>
+              </button>
+              <button id="logout">
+                <span class="btn-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <path d="M16 17l5-5-5-5" />
+                    <path d="M21 12H9" />
+                  </svg>
+                </span>
+                <span class="btn-label">Logout</span>
+              </button>
+              <button id="revoke" class="danger">
+                <span class="btn-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M15 9l-6 6" />
+                    <path d="M9 9l6 6" />
+                  </svg>
+                </span>
+                <span class="btn-label">Revoke Keycloak session</span>
+              </button>
+            </div>
+            <p id="auth-status" class="status" role="status" aria-live="polite"></p>
+          </section>
+
+          <section class="dashboard-grid">
+            <!-- Row 1 -->
+            <section class="panel register-panel">
+              <h2>Create User</h2>
+              <form id="register-form">
+                <div class="grid">
+                  <label>
+                    Username
+                    <input id="reg-username" name="username" type="text" required />
+                  </label>
+                  <label>
+                    Email
+                    <input id="reg-email" name="email" type="email" required />
+                  </label>
+                  <label>
+                    First name
+                    <input id="reg-first-name" name="firstName" type="text" />
+                  </label>
+                  <label>
+                    Last name
+                    <input id="reg-last-name" name="lastName" type="text" />
+                  </label>
+                  <label class="full">
+                    Password
+                    <input id="reg-password" name="password" type="password" minlength="8" required />
+                  </label>
+                </div>
+                <div class="actions">
+                  <button type="submit">Register User</button>
+                </div>
+                <p id="register-status" class="status"></p>
+              </form>
+            </section>
+
+            <section class="panel session-panel">
+              <div class="panel-header">
+                <h2>Session</h2>
+                <span id="session-badge" class="badge">Loading...</span>
+              </div>
+              <dl class="kv">
+                <div><dt>User</dt><dd id="user-name">-</dd></div>
+                <div><dt>Email</dt><dd id="user-email">-</dd></div>
+                <div><dt>Session ID</dt><dd><code id="session-id">-</code></dd></div>
+                <div><dt>Created</dt><dd id="session-created">-</dd></div>
+                <div><dt>Updated</dt><dd id="session-updated">-</dd></div>
+                <div>
+                  <dt>Expires</dt>
+                  <dd>
+                    <span id="session-expires-at">-</span>
+                    <span id="session-expires-in" class="muted-inline"></span>
+                  </dd>
+                </div>
+              </dl>
+            </section>
+
+            <!-- Row 2 -->
+            <section class="panel api-panel">
+              <div class="panel-header">
+                <h2>Protected API</h2>
+                <span id="api-badge" class="badge">Not called</span>
+              </div>
+              <dl class="kv compact">
+                <div><dt>Status</dt><dd id="api-status">-</dd></div>
+                <div><dt>Message</dt><dd id="api-message">-</dd></div>
+                <div><dt>User</dt><dd id="api-user">-</dd></div>
+                <div><dt>At</dt><dd id="api-at">-</dd></div>
+              </dl>
+            </section>
+
+            <section class="panel protected-panel">
+              <div class="panel-header">
+                <h2>Tokens</h2>
+                <span id="tokens-badge" class="badge">-</span>
+              </div>
+
+              <div class="token-meta">
+                <div class="token-row"><span class="label">Type</span><span id="token-type">-</span></div>
+                <div class="token-row"><span class="label">Scope</span><span id="token-scope">-</span></div>
+              </div>
+
+              <div class="token-grid">
+                <section class="token-card">
+                  <h3>Access token</h3>
+                  <p id="access-preview" class="mono">-</p>
+                  <p class="muted"><span id="access-exp-at">-</span><span id="access-exp-in" class="muted-inline"></span></p>
+                </section>
+                <section class="token-card">
+                  <h3>ID token</h3>
+                  <p id="id-preview" class="mono">-</p>
+                  <p class="muted"><span id="id-exp-at">-</span><span id="id-exp-in" class="muted-inline"></span></p>
+                </section>
+                <section class="token-card">
+                  <h3>Refresh token</h3>
+                  <p id="refresh-preview" class="mono">-</p>
+                  <p class="muted"><span id="refresh-exp-at">-</span><span id="refresh-exp-in" class="muted-inline"></span></p>
+                </section>
+              </div>
+
+            </section>
+
+            <!-- Row 3 -->
+            <section class="panel refresh-panel">
+              <div class="panel-header">
+                <h2>Refresh History</h2>
+                <span id="refresh-count" class="badge">0</span>
+              </div>
+              <div class="table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr><th>When</th><th>Type</th><th>Status</th><th>Details</th></tr>
+                  </thead>
+                  <tbody id="refresh-events-body"></tbody>
+                </table>
+              </div>
+              <p id="refresh-events-empty" class="status">No events yet.</p>
+            </section>
+
+            <section class="panel timers-panel">
+              <h2>Token expiry</h2>
+
+              <div class="rings">
+                <!-- Access + ID together -->
+                <div class="ring-row">
+                  <div class="ring-card">
+                    <div class="ring-wrap" role="group" aria-label="Access token expiry">
+                      <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+                        <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+                        <circle id="access-ring-progress" class="ring-progress" cx="60" cy="60" r="52"></circle>
+                      </svg>
+                      <div class="ring-center">
+                        <div id="access-ring-value" class="ring-value">-</div>
+                        <div class="ring-label">Access</div>
+                      </div>
+                    </div>
+                    <div class="ring-meta">
+                      <div id="access-ring-meta" class="muted">-</div>
+                    </div>
+                  </div>
+
+                  <div class="ring-card">
+                    <div class="ring-wrap" role="group" aria-label="ID token expiry">
+                      <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+                        <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+                        <circle id="id-ring-progress" class="ring-progress" cx="60" cy="60" r="52"></circle>
+                      </svg>
+                      <div class="ring-center">
+                        <div id="id-ring-value" class="ring-value">-</div>
+                        <div class="ring-label">ID</div>
+                      </div>
+                    </div>
+                    <div class="ring-meta">
+                      <div id="id-ring-meta" class="muted">-</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Refresh -->
+                <div class="ring-card">
+                  <div class="ring-wrap" role="group" aria-label="Refresh token expiry">
+                    <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+                      <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+                      <circle id="refresh-ring-progress" class="ring-progress" cx="60" cy="60" r="52"></circle>
+                    </svg>
+                    <div class="ring-center">
+                      <div id="refresh-ring-value" class="ring-value">-</div>
+                      <div class="ring-label">Refresh</div>
+                    </div>
+                  </div>
+                  <div class="ring-meta">
+                    <div id="refresh-ring-meta" class="muted">-</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+          </section>
+
         </main>
         <script src="/app.js"></script>
       </body>
     </html>
   app.js: |
-    const output = document.getElementById("output");
-    const protectedOutput = document.getElementById("protected-output");
+    const authStatus = document.getElementById("auth-status");
     const registerForm = document.getElementById("register-form");
     const registerStatus = document.getElementById("register-status");
-    const authStatus = document.getElementById("auth-status");
 
-    async function refreshSession() {
-      const res = await fetch("/api/auth/oidc/me", { credentials: "include" });
+    const sessionBadge = document.getElementById("session-badge");
+    const userName = document.getElementById("user-name");
+    const userEmail = document.getElementById("user-email");
+    const sessionId = document.getElementById("session-id");
+    const sessionCreated = document.getElementById("session-created");
+    const sessionUpdated = document.getElementById("session-updated");
+    const sessionExpiresAt = document.getElementById("session-expires-at");
+    const sessionExpiresIn = document.getElementById("session-expires-in");
 
-      if (res.status === 401) {
-        output.textContent = JSON.stringify({ authenticated: false }, null, 2);
+    const tokensBadge = document.getElementById("tokens-badge");
+    const tokenType = document.getElementById("token-type");
+    const tokenScope = document.getElementById("token-scope");
+    const accessPreview = document.getElementById("access-preview");
+    const idPreview = document.getElementById("id-preview");
+    const refreshPreview = document.getElementById("refresh-preview");
+    const accessExpAt = document.getElementById("access-exp-at");
+    const idExpAt = document.getElementById("id-exp-at");
+    const refreshExpAt = document.getElementById("refresh-exp-at");
+    const accessExpIn = document.getElementById("access-exp-in");
+    const idExpIn = document.getElementById("id-exp-in");
+    const refreshExpIn = document.getElementById("refresh-exp-in");
+
+    const nowTime = document.getElementById("now-time");
+    const localSessionRemaining = document.getElementById("local-session-remaining");
+    const accessTokenRemaining = document.getElementById("access-token-remaining");
+    const idTokenRemaining = document.getElementById("id-token-remaining");
+    const refreshTokenRemaining = document.getElementById("refresh-token-remaining");
+
+    const refreshCount = document.getElementById("refresh-count");
+    const refreshEventsBody = document.getElementById("refresh-events-body");
+    const refreshEventsEmpty = document.getElementById("refresh-events-empty");
+
+    const apiBadge = document.getElementById("api-badge");
+    const apiStatus = document.getElementById("api-status");
+    const apiMessage = document.getElementById("api-message");
+    const apiUser = document.getElementById("api-user");
+    const apiAt = document.getElementById("api-at");
+
+    const loginBtn = document.getElementById("login");
+    const loginGithubBtn = document.getElementById("login-github");
+    const logoutBtn = document.getElementById("logout");
+    const revokeBtn = document.getElementById("revoke");
+    const refreshTokensBtn = document.getElementById("refresh-tokens");
+    const callProtectedBtn = document.getElementById("call-protected");
+    let latestDiagnostics = null;
+    let diagnosticsAvailable = true;
+
+    const accessRingProgress = document.getElementById("access-ring-progress");
+    const idRingProgress = document.getElementById("id-ring-progress");
+    const refreshRingProgress = document.getElementById("refresh-ring-progress");
+
+    const accessRingValue = document.getElementById("access-ring-value");
+    const idRingValue = document.getElementById("id-ring-value");
+    const refreshRingValue = document.getElementById("refresh-ring-value");
+
+    const accessRingMeta = document.getElementById("access-ring-meta");
+    const idRingMeta = document.getElementById("id-ring-meta");
+    const refreshRingMeta = document.getElementById("refresh-ring-meta");
+
+    const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "medium",
+    });
+
+    const relativeTimeFormat = new Intl.RelativeTimeFormat(undefined, {
+      numeric: "auto",
+    });
+
+    function setAuthStatus(message, kind) {
+      authStatus.textContent = message;
+      authStatus.classList.remove("ok");
+      authStatus.classList.remove("error");
+      if (kind) {
+        authStatus.classList.add(kind);
+      }
+    }
+
+    function setBadge(el, text, kind) {
+      if (!el) return;
+      el.textContent = text;
+      el.classList.remove("ok");
+      el.classList.remove("error");
+      el.classList.remove("muted");
+      if (kind) el.classList.add(kind);
+    }
+
+    function setText(el, value, fallback = "-") {
+      if (!el) return;
+      const isEmpty = value === null || value === undefined || value === "";
+      el.textContent = isEmpty ? fallback : String(value);
+    }
+
+    function formatIso(iso) {
+      if (!iso) return "-";
+      const ts = new Date(iso);
+      if (!Number.isFinite(ts.getTime())) return String(iso);
+      return dateTimeFormat.format(ts);
+    }
+
+    function formatHms(totalSeconds) {
+      if (!Number.isFinite(totalSeconds)) return "-";
+      const s = Math.max(0, Math.floor(totalSeconds));
+      const hours = Math.floor(s / 3600);
+      const minutes = Math.floor((s % 3600) / 60);
+      const seconds = s % 60;
+      if (hours > 0) return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+      return `${minutes}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function relativeFromIso(iso) {
+      if (!iso) return "-";
+      const ts = new Date(iso).getTime();
+      if (!Number.isFinite(ts)) return String(iso);
+      const deltaSeconds = Math.round((ts - Date.now()) / 1000);
+      const absSeconds = Math.abs(deltaSeconds);
+      if (absSeconds < 10) return "just now";
+      if (absSeconds < 60) return relativeTimeFormat.format(deltaSeconds, "second");
+      if (absSeconds < 3600) return relativeTimeFormat.format(Math.round(deltaSeconds / 60), "minute");
+      if (absSeconds < 86400) return relativeTimeFormat.format(Math.round(deltaSeconds / 3600), "hour");
+      return relativeTimeFormat.format(Math.round(deltaSeconds / 86400), "day");
+    }
+
+    function remainingSecondsFromIso(isoTimestamp) {
+      if (!isoTimestamp) return null;
+      const ts = new Date(isoTimestamp).getTime();
+      if (!Number.isFinite(ts)) return null;
+      return Math.max(0, Math.floor((ts - Date.now()) / 1000));
+    }
+
+    function renderKv(dl, value) {
+      while (dl.firstChild) dl.removeChild(dl.firstChild);
+      const entries = value && typeof value === "object" ? Object.entries(value) : [];
+      if (entries.length === 0) {
+        const row = document.createElement("div");
+        const dt = document.createElement("dt");
+        const dd = document.createElement("dd");
+        dt.textContent = "-";
+        dd.textContent = "No data";
+        row.append(dt, dd);
+        dl.append(row);
         return;
       }
 
-      const data = await res.json();
-      output.textContent = JSON.stringify(data, null, 2);
+      for (const [key, raw] of entries) {
+        const row = document.createElement("div");
+        const dt = document.createElement("dt");
+        const dd = document.createElement("dd");
+        dt.textContent = String(key).split("_").join(" ");
+        dd.textContent = raw === null || raw === undefined || raw === "" ? "-" : String(raw);
+        row.append(dt, dd);
+        dl.append(row);
+      }
     }
 
-    document.getElementById("login").addEventListener("click", () => {
+    function updateActions(authenticated) {
+      loginBtn.disabled = authenticated;
+      loginGithubBtn.disabled = authenticated;
+      logoutBtn.disabled = !authenticated;
+      revokeBtn.disabled = !authenticated;
+      refreshTokensBtn.disabled = !authenticated;
+      callProtectedBtn.disabled = !authenticated;
+      document.body.dataset.authenticated = authenticated ? "true" : "false";
+    }
+
+    function totalSeconds(receivedAtIso, expiresAtIso) {
+      if (!receivedAtIso || !expiresAtIso) return null;
+      const a = new Date(receivedAtIso).getTime();
+      const b = new Date(expiresAtIso).getTime();
+      if (!Number.isFinite(a) || !Number.isFinite(b) || b <= a) return null;
+      return Math.floor((b - a) / 1000);
+    }
+
+    function setRing(progressEl, valueEl, metaEl, receivedAtIso, expiresAtIso) {
+      const remaining = remainingSecondsFromIso(expiresAtIso);
+      const total = totalSeconds(receivedAtIso, expiresAtIso);
+
+      const ratio =
+        Number.isFinite(remaining) && Number.isFinite(total) && total > 0
+          ? Math.max(0, Math.min(1, remaining / total))
+          : 0;
+
+      progressEl.style.setProperty("--p", String(ratio));
+      valueEl.textContent = remaining === null ? "-" : formatHms(remaining);
+      metaEl.textContent = !expiresAtIso ? "-" : `Expires ${relativeFromIso(expiresAtIso)} (${formatIso(expiresAtIso)})`;
+    }
+
+    function renderCountdowns(data) {
+      if (!data) return;
+
+      const receivedAt = data?.tokens?.received_at; // from /diagnostics payload
+
+      setRing(accessRingProgress, accessRingValue, accessRingMeta, receivedAt, data?.tokens?.access_token_expires_at);
+      setRing(idRingProgress, idRingValue, idRingMeta, receivedAt, data?.tokens?.id_token_expires_at);
+      setRing(refreshRingProgress, refreshRingValue, refreshRingMeta, receivedAt, data?.tokens?.refresh_token_expires_at);
+    }
+
+
+    function renderRefreshEvents(events) {
+      while (refreshEventsBody.firstChild) refreshEventsBody.removeChild(refreshEventsBody.firstChild);
+      const rows = Array.isArray(events) ? events : [];
+      setBadge(refreshCount, String(rows.length), "muted");
+
+      if (rows.length === 0) {
+        refreshEventsEmpty.style.display = "block";
+        return;
+      }
+
+      refreshEventsEmpty.style.display = "none";
+      for (const evt of rows) {
+        const tr = document.createElement("tr");
+
+        const when = document.createElement("td");
+        when.textContent = relativeFromIso(evt?.at);
+        when.title = formatIso(evt?.at);
+
+        const type = document.createElement("td");
+        type.textContent = evt?.type ? String(evt.type).split("_").join(" ") : "-";
+
+        const status = document.createElement("td");
+        status.textContent = evt?.status || "-";
+        status.className = evt?.status === "success" ? "ok" : evt?.status === "failed" ? "error" : "";
+
+        const details = document.createElement("td");
+        details.textContent = evt?.details || "-";
+
+        tr.append(when, type, status, details);
+        refreshEventsBody.append(tr);
+      }
+    }
+
+    function renderDiagnostics(data) {
+      latestDiagnostics = data;
+      const authenticated = Boolean(data?.session?.authenticated);
+      updateActions(authenticated);
+
+      if (!diagnosticsAvailable) {
+        setBadge(sessionBadge, "Offline", "error");
+      } else if (authenticated) {
+        setBadge(sessionBadge, "Authenticated", "ok");
+      } else {
+        setBadge(sessionBadge, "Not signed in", "muted");
+      }
+
+      setText(userName, data?.user?.name || data?.user?.username || "-");
+      setText(userEmail, data?.user?.email || "-");
+
+      setText(sessionId, data?.session?.session_id || "-");
+      setText(sessionCreated, formatIso(data?.session?.created_at));
+      setText(sessionUpdated, formatIso(data?.session?.updated_at));
+      setText(sessionExpiresAt, formatIso(data?.session?.local_session_expires_at));
+
+      const tokens = data?.tokens;
+      const tokensReady = Boolean(tokens && (tokens.access_token_preview || tokens.id_token_preview || tokens.refresh_token_preview));
+      if (!diagnosticsAvailable) {
+        setBadge(tokensBadge, "Offline", "error");
+      } else if (tokensReady) {
+        setBadge(tokensBadge, "Available", "ok");
+      } else {
+        setBadge(tokensBadge, "None", "muted");
+      }
+
+      setText(tokenType, tokens?.token_type || "-");
+      setText(tokenScope, tokens?.scope || "-");
+      setText(accessPreview, tokens?.access_token_preview || "-");
+      setText(idPreview, tokens?.id_token_preview || "-");
+      setText(refreshPreview, tokens?.refresh_token_preview || "-");
+
+      setText(accessExpAt, formatIso(tokens?.access_token_expires_at));
+      setText(idExpAt, formatIso(tokens?.id_token_expires_at));
+      setText(refreshExpAt, formatIso(tokens?.refresh_token_expires_at));
+
+      renderRefreshEvents(data?.refresh_events || []);
+      renderCountdowns(data);
+    }
+
+    async function refreshDiagnostics() {
+      try {
+        const res = await fetch("/api/auth/oidc/diagnostics", { credentials: "include" });
+        if (!res.ok) {
+          diagnosticsAvailable = false;
+          setAuthStatus("Diagnostics unavailable.", "error");
+          renderDiagnostics({
+            now: new Date().toISOString(),
+            oidc: { endpoints: null, client_id: null, redirect_uri: null },
+            session: { authenticated: false },
+            user: null,
+            tokens: null,
+            refresh_events: [],
+          });
+          return;
+        }
+
+        diagnosticsAvailable = true;
+        const data = await res.json();
+        renderDiagnostics(data);
+      } catch {
+        diagnosticsAvailable = false;
+        setAuthStatus("Diagnostics unavailable.", "error");
+        renderDiagnostics({
+          now: new Date().toISOString(),
+          oidc: { endpoints: null, client_id: null, redirect_uri: null },
+          session: { authenticated: false },
+          user: null,
+          tokens: null,
+          refresh_events: [],
+        });
+      }
+    }
+
+    loginBtn.addEventListener("click", () => {
       window.location.href = "/api/auth/oidc/login";
     });
 
-    document.getElementById("login-github").addEventListener("click", () => {
+    loginGithubBtn.addEventListener("click", () => {
       window.location.href = "/api/auth/oidc/login?idp=github";
     });
 
-    document.getElementById("logout").addEventListener("click", async () => {
+    logoutBtn.addEventListener("click", async () => {
       await fetch("/api/auth/oidc/logout", {
         method: "POST",
         credentials: "include",
       });
-      authStatus.textContent = "Local session cleared.";
-      authStatus.classList.remove("error");
-      authStatus.classList.add("ok");
-      await refreshSession();
+      setAuthStatus("Local session cleared.", "ok");
+      await refreshDiagnostics();
     });
 
-    document.getElementById("revoke").addEventListener("click", async () => {
-      authStatus.textContent = "Revoking current Keycloak session...";
-      authStatus.classList.remove("error");
-      authStatus.classList.remove("ok");
+    revokeBtn.addEventListener("click", async () => {
+      setAuthStatus("Revoking current Keycloak session...");
 
       const res = await fetch("/api/auth/oidc/revoke-session", {
         method: "POST",
@@ -115,26 +625,46 @@ data:
       if (res.ok) {
         const body = await res.json();
         const strategy = body.strategy ? ` (${body.strategy})` : "";
-        authStatus.textContent = `Keycloak session revoked and local session cleared${strategy}.`;
-        authStatus.classList.add("ok");
+        setAuthStatus(`Keycloak session revoked and local session cleared${strategy}.`, "ok");
       } else if (res.status === 401) {
-        authStatus.textContent = "No authenticated user session found.";
-        authStatus.classList.add("error");
+        setAuthStatus("No authenticated user session found.", "error");
       } else {
         try {
           const body = await res.json();
           const details = body.details ? ` (${body.details})` : "";
-          authStatus.textContent = `Failed to revoke Keycloak session: ${body.error || "unknown_error"}${details}. Local session cleared.`;
+          setAuthStatus(`Failed to revoke Keycloak session: ${body.error || "unknown_error"}${details}. Local session cleared.`, "error");
         } catch {
-          authStatus.textContent = "Failed to revoke Keycloak session. Local session cleared.";
+          setAuthStatus("Failed to revoke Keycloak session. Local session cleared.", "error");
         }
-        authStatus.classList.add("error");
       }
 
-      await refreshSession();
+      await refreshDiagnostics();
     });
 
-    document.getElementById("call-protected").addEventListener("click", async () => {
+    refreshTokensBtn.addEventListener("click", async () => {
+      setAuthStatus("Refreshing tokens...");
+      const res = await fetch("/api/auth/oidc/refresh", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      let body = null;
+      try {
+        body = await res.json();
+      } catch {
+        body = {};
+      }
+
+      if (res.ok) {
+        setAuthStatus("Token refresh succeeded.", "ok");
+      } else {
+        setAuthStatus(`Token refresh failed (${body.error || "unknown_error"}).`, "error");
+      }
+
+      await refreshDiagnostics();
+    });
+
+    callProtectedBtn.addEventListener("click", async () => {
       const res = await fetch("/api/auth/oidc/protected", {
         method: "GET",
         credentials: "include",
@@ -147,27 +677,23 @@ data:
         body = { error: "invalid_json_response" };
       }
 
-      protectedOutput.textContent = JSON.stringify(
-        {
-          status: res.status,
-          ok: res.ok,
-          body,
-        },
-        null,
-        2
-      );
+      const message = body?.message || body?.error || (res.ok ? "OK" : "Request failed");
+      const when = body?.now || new Date().toISOString();
+      const who = body?.user?.email || body?.user?.name || body?.user?.username || "-";
+
+      setBadge(apiBadge, `${res.status} ${res.ok ? "OK" : "Error"}`, res.ok ? "ok" : "error");
+      setText(apiStatus, `${res.status} (${res.ok ? "ok" : "failed"})`);
+      setText(apiMessage, message);
+      setText(apiUser, who);
+      setText(apiAt, formatIso(when));
 
       if (res.ok) {
-        authStatus.textContent = "Protected API call succeeded.";
-        authStatus.classList.remove("error");
-        authStatus.classList.add("ok");
+        setAuthStatus("Protected API call succeeded.", "ok");
       } else {
-        authStatus.textContent = `Protected API call failed (${body.error || "unknown_error"}).`;
-        authStatus.classList.remove("ok");
-        authStatus.classList.add("error");
+        setAuthStatus(`Protected API call failed (${body.error || "unknown_error"}).`, "error");
       }
 
-      await refreshSession();
+      await refreshDiagnostics();
     });
 
     registerForm.addEventListener("submit", async (event) => {
@@ -194,6 +720,7 @@ data:
         registerStatus.textContent = "User created in Keycloak. You can now login.";
         registerStatus.classList.add("ok");
         registerForm.reset();
+        await refreshDiagnostics();
         return;
       }
 
@@ -209,120 +736,586 @@ data:
 
       registerStatus.textContent = message;
       registerStatus.classList.add("error");
+      await refreshDiagnostics();
     });
 
-    refreshSession();
+    refreshDiagnostics();
+    setInterval(() => {
+      if (!latestDiagnostics) return;
+      renderCountdowns(latestDiagnostics);
+    }, 1000);
   styles.css: |
     :root {
-      --bg: #05070b;
-      --panel: #0b1220;
-      --panel-border: #12324a;
-      --text: #d9f7ff;
-      --muted: #86cfe3;
-      --neon: #38e8ff;
-      --neon-strong: #00cfff;
-      --shadow: rgba(0, 207, 255, 0.28);
+      --bg-0: #01050d;
+      --bg-1: #030b18;
+      --bg-2: #07172b;
+      --panel: rgba(5, 15, 30, 0.78);
+      --panel-strong: rgba(4, 11, 22, 0.94);
+      --panel-border: rgba(93, 210, 255, 0.25);
+      --text: #e4f8ff;
+      --muted: #97c9dc;
+      --neon: #7de9ff;
+      --neon-strong: #2acfff;
+      --neon-soft: rgba(42, 207, 255, 0.24);
+      --ok: #6fffc9;
+      --error: #ff99b0;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --shadow-lg: 0 28px 64px rgba(0, 0, 0, 0.52);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     }
 
     * {
       box-sizing: border-box;
     }
 
+    html,
+    body {
+      min-height: 100%;
+    }
+
     body {
       margin: 0;
-      min-height: 100vh;
-      background:
-        radial-gradient(circle at top right, rgba(0, 207, 255, 0.12), transparent 28%),
-        radial-gradient(circle at bottom left, rgba(56, 232, 255, 0.1), transparent 30%),
-        linear-gradient(180deg, #020409 0%, #05070b 45%, #020409 100%);
       color: var(--text);
-      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      background:
+        radial-gradient(980px 520px at 14% 6%, rgba(34, 187, 255, 0.24), transparent 54%),
+        radial-gradient(900px 620px at 90% 10%, rgba(125, 233, 255, 0.2), transparent 57%),
+        radial-gradient(840px 540px at 50% 100%, rgba(16, 126, 173, 0.2), transparent 56%),
+        linear-gradient(180deg, var(--bg-2), var(--bg-1) 42%, var(--bg-0));
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    body::before {
+      inset: -20% -10%;
+      background:
+        radial-gradient(circle at 24% 34%, rgba(74, 223, 255, 0.14), transparent 30%),
+        radial-gradient(circle at 78% 62%, rgba(0, 171, 244, 0.14), transparent 34%),
+        radial-gradient(circle at 62% 22%, rgba(167, 245, 255, 0.1), transparent 28%);
+      filter: blur(34px) saturate(120%);
+      animation: auroraShift 18s ease-in-out infinite alternate;
+    }
+
+    body::after {
+      inset: 0;
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.013) 0px,
+        rgba(255, 255, 255, 0.013) 1px,
+        transparent 2px,
+        transparent 4px
+      );
+      mix-blend-mode: soft-light;
+      opacity: 0.5;
     }
 
     .page {
-      max-width: 760px;
-      margin: 48px auto;
-      padding: 32px;
-      background: linear-gradient(180deg, rgba(11, 18, 32, 0.96), rgba(7, 12, 22, 0.96));
+      max-width: 1320px;
+      margin: 40px auto;
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
       border: 1px solid var(--panel-border);
-      border-radius: 18px;
+      border-radius: var(--radius-lg);
+      background:
+        linear-gradient(140deg, rgba(125, 233, 255, 0.08), transparent 24%),
+        linear-gradient(180deg, var(--panel), var(--panel-strong));
       box-shadow:
-        0 0 0 1px rgba(56, 232, 255, 0.06) inset,
-        0 0 28px var(--shadow),
-        0 24px 60px rgba(0, 0, 0, 0.45);
+        0 0 0 1px rgba(125, 233, 255, 0.08) inset,
+        0 0 40px rgba(42, 207, 255, 0.16),
+        var(--shadow-lg);
+      backdrop-filter: blur(8px);
+      animation: fadeInUp 560ms ease-out;
     }
 
     h1,
     h2 {
       margin-top: 0;
       color: var(--neon);
+      letter-spacing: 0.05em;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      text-shadow: 0 0 14px rgba(56, 232, 255, 0.28);
+      text-shadow: 0 0 20px rgba(74, 223, 255, 0.35);
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin-top: 30px;
+      margin-bottom: 12px;
+      font-size: 1.15rem;
+    }
+
+    h3 {
+      margin: 0 0 12px;
+      color: #c7f5ff;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    h1::after {
+      content: "";
+      display: block;
+      height: 1px;
+      margin-top: 14px;
+      background: linear-gradient(90deg, rgba(125, 233, 255, 0.7), transparent);
+    }
+
+    .hero {
+      margin-bottom: 10px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #b4f1ff;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .lead {
+      max-width: 70ch;
+      margin: 0 0 6px;
     }
 
     p {
+      margin: 0 0 12px;
       color: var(--muted);
-      line-height: 1.6;
+      line-height: 1.65;
+    }
+
+    .panel-note {
+      margin-bottom: 14px;
     }
 
     .actions {
       display: flex;
-      gap: 12px;
-      margin: 20px 0 28px;
       flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 16px 0 18px;
+      width: 100%;
+    }
+
+    .actions button {
+      flex: 1 1 180px;
+      min-width: 160px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: 0.92rem;
     }
 
     button {
-      padding: 12px 16px;
-      border: 1px solid var(--neon-strong);
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 1px solid rgba(125, 233, 255, 0.5);
       border-radius: 10px;
-      background: rgba(0, 207, 255, 0.08);
+      padding: 11px 15px;
+      background: linear-gradient(135deg, rgba(42, 207, 255, 0.18), rgba(42, 207, 255, 0.04));
       color: var(--neon);
       font-weight: 700;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.02em;
       cursor: pointer;
-      box-shadow: 0 0 12px rgba(0, 207, 255, 0.14);
-      transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+      box-shadow:
+        0 0 0 1px rgba(42, 207, 255, 0.1) inset,
+        0 0 20px rgba(42, 207, 255, 0.14);
+      transition: transform 130ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+
+    .btn-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    @media (min-width: 900px) {
+      .actions button {
+        flex-basis: calc((100% - 5 * 10px) / 6); /* 6 buttons, 5 gaps */
+        min-width: 0;
+      }
+
+      .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: minmax(0, auto);
+      }
+    }
+
+    .dashboard-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .btn-label {
+      line-height: 1.05;
     }
 
     button:hover {
       transform: translateY(-1px);
-      background: rgba(0, 207, 255, 0.14);
-      box-shadow: 0 0 18px rgba(0, 207, 255, 0.24);
+      border-color: rgba(125, 233, 255, 0.85);
+      background: linear-gradient(135deg, rgba(42, 207, 255, 0.26), rgba(42, 207, 255, 0.08));
+      box-shadow:
+        0 0 0 1px rgba(125, 233, 255, 0.2) inset,
+        0 0 26px rgba(42, 207, 255, 0.26);
     }
 
     button:active {
       transform: translateY(0);
     }
 
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    button.primary {
+      border-color: rgba(111, 255, 201, 0.55);
+      color: var(--ok);
+      background: linear-gradient(135deg, rgba(111, 255, 201, 0.16), rgba(42, 207, 255, 0.04));
+    }
+
+    button.primary:hover {
+      border-color: rgba(111, 255, 201, 0.85);
+      background: linear-gradient(135deg, rgba(111, 255, 201, 0.22), rgba(42, 207, 255, 0.08));
+    }
+
+    button.secondary {
+      border-color: rgba(125, 233, 255, 0.55);
+      color: #d5fbff;
+      background: linear-gradient(135deg, rgba(125, 233, 255, 0.14), rgba(42, 207, 255, 0.03));
+    }
+
+    button.danger {
+      border-color: rgba(255, 153, 176, 0.6);
+      color: var(--error);
+      background: linear-gradient(135deg, rgba(255, 153, 176, 0.14), rgba(42, 207, 255, 0.03));
+    }
+
+    button.danger:hover {
+      border-color: rgba(255, 153, 176, 0.85);
+      background: linear-gradient(135deg, rgba(255, 153, 176, 0.2), rgba(42, 207, 255, 0.06));
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: none;
+      box-shadow:
+        0 0 0 2px rgba(3, 11, 24, 0.95),
+        0 0 0 4px var(--neon-soft);
+    }
+
     pre {
       margin: 0;
-      padding: 18px;
-      background: #030814;
-      border: 1px solid rgba(56, 232, 255, 0.18);
-      border-radius: 12px;
-      color: #baf6ff;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(125, 233, 255, 0.2);
+      background:
+        linear-gradient(180deg, rgba(9, 26, 47, 0.84), rgba(3, 11, 24, 0.94));
+      color: #c5f4ff;
+      font-family: var(--mono);
+      line-height: 1.55;
       overflow: auto;
-      box-shadow: inset 0 0 18px rgba(0, 207, 255, 0.06);
+      box-shadow:
+        inset 0 0 20px rgba(42, 207, 255, 0.08),
+        0 10px 24px rgba(0, 0, 0, 0.28);
     }
 
     .panel {
-      margin-bottom: 28px;
-      padding: 18px;
-      border: 1px solid rgba(56, 232, 255, 0.2);
-      border-radius: 12px;
-      background: rgba(2, 10, 20, 0.72);
+      margin-bottom: 0;
+      padding: 20px;
+      border: 1px solid rgba(125, 233, 255, 0.24);
+      border-radius: var(--radius-md);
+      background: linear-gradient(180deg, rgba(6, 20, 38, 0.8), rgba(3, 11, 24, 0.9));
+      box-shadow:
+        0 0 0 1px rgba(42, 207, 255, 0.07) inset,
+        0 14px 30px rgba(0, 0, 0, 0.3);
     }
 
-    form {
-      display: block;
+    .panel h2 {
+      margin-top: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .panel-header h2 {
+      margin: 0;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(125, 233, 255, 0.28);
+      background: rgba(3, 15, 30, 0.72);
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      font-size: 0.82rem;
+      white-space: nowrap;
+    }
+
+    .badge.ok {
+      color: var(--ok);
+      border-color: rgba(111, 255, 201, 0.45);
+      background: rgba(5, 28, 24, 0.6);
+    }
+
+    .badge.error {
+      color: var(--error);
+      border-color: rgba(255, 153, 176, 0.45);
+      background: rgba(33, 7, 14, 0.55);
+    }
+
+    .badge.muted {
+      opacity: 0.9;
+    }
+
+    .muted-inline {
+      margin-left: 6px;
+      color: var(--muted);
+    }
+
+    .mono,
+    code {
+      font-family: var(--mono);
+      color: #c5f4ff;
+      letter-spacing: 0.01em;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(125, 233, 255, 0.18);
+      background: rgba(3, 15, 30, 0.72);
+    }
+
+    .kv {
+      margin: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .kv > div {
+      display: grid;
+      grid-template-columns: 140px minmax(0, 1fr);
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(125, 233, 255, 0.12);
+    }
+
+    .kv > div:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .kv dt {
+      color: var(--muted);
+      font-size: 0.86rem;
+      letter-spacing: 0.02em;
+    }
+
+    .kv dd {
+      margin: 0;
+      color: var(--text);
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .kv.compact > div {
+      grid-template-columns: 120px minmax(0, 1fr);
+      padding: 6px 0;
+    }
+
+    .token-meta {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .token-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(125, 233, 255, 0.14);
+      background: rgba(3, 15, 30, 0.55);
+    }
+
+    .token-row .label {
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .token-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .token-card {
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(125, 233, 255, 0.16);
+      background: rgba(3, 15, 30, 0.55);
+      box-shadow: inset 0 0 22px rgba(42, 207, 255, 0.05);
+    }
+
+    .token-card h3 {
+      margin-bottom: 10px;
+    }
+
+    .token-card .mono {
+      margin-bottom: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    details.claims {
+      margin-top: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(125, 233, 255, 0.16);
+      background: rgba(3, 15, 30, 0.45);
+      padding: 10px 12px;
+    }
+
+    details.claims summary {
+      cursor: pointer;
+      color: var(--text);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .claims-grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(125, 233, 255, 0.16);
+      background: rgba(3, 15, 30, 0.45);
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .table th,
+    .table td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(125, 233, 255, 0.12);
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    .table td:last-child,
+    .table th:last-child {
+      white-space: normal;
+      width: 100%;
+    }
+
+    .table thead th {
+      color: var(--text);
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: rgba(3, 11, 24, 0.55);
+      border-bottom-color: rgba(125, 233, 255, 0.18);
+    }
+
+    .table td.ok {
+      color: var(--ok);
+      font-weight: 800;
+    }
+
+    .table td.error {
+      color: var(--error);
+      font-weight: 800;
+    }
+
+    @media (min-width: 900px) {
+      .token-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .token-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .claims-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .flow-list {
+      margin: 0;
+      padding-left: 22px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .flow-list li {
+      margin-bottom: 6px;
+    }
+
+    .guide-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .button-guide p {
+      margin-bottom: 10px;
+    }
+
+    .button-guide strong {
+      color: var(--text);
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
 
     label {
@@ -330,7 +1323,8 @@ data:
       flex-direction: column;
       gap: 6px;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 0.9rem;
+      letter-spacing: 0.01em;
     }
 
     .full {
@@ -338,32 +1332,209 @@ data:
     }
 
     input {
-      border: 1px solid rgba(56, 232, 255, 0.3);
-      border-radius: 8px;
-      background: #041326;
+      padding: 11px;
+      border: 1px solid rgba(125, 233, 255, 0.3);
+      border-radius: 9px;
+      background: rgba(3, 15, 30, 0.92);
       color: var(--text);
-      padding: 10px;
-      outline: none;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
     }
 
-    input:focus {
-      border-color: var(--neon);
-      box-shadow: 0 0 0 2px rgba(0, 207, 255, 0.2);
+    input:hover {
+      border-color: rgba(125, 233, 255, 0.5);
+      background: rgba(4, 18, 35, 0.95);
+    }
+
+    input::placeholder {
+      color: #7eb6ca;
     }
 
     .status {
+      margin: 4px 0 0;
       min-height: 1.2em;
-      margin: 0;
       color: var(--muted);
+      text-shadow: 0 0 10px rgba(42, 207, 255, 0.2);
     }
 
     .status.ok {
-      color: #67ffbf;
+      color: var(--ok);
+      text-shadow: 0 0 10px rgba(111, 255, 201, 0.25);
     }
 
     .status.error {
-      color: #ff8f8f;
+      color: var(--error);
+      text-shadow: 0 0 10px rgba(255, 153, 176, 0.24);
     }
+
+    .results-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .diagnostics-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    @keyframes auroraShift {
+      0% {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+      50% {
+        transform: translate3d(-2%, -1%, 0) scale(1.05);
+      }
+      100% {
+        transform: translate3d(2%, 2%, 0) scale(1.08);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .page {
+        margin: 20px 14px;
+        padding: 22px 18px;
+      }
+
+      .actions button {
+        width: 100%;
+      }
+    }
+
+    @media (min-width: 900px) {
+      .guide-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .results-grid {
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+      }
+
+      .results-grid .register-panel {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .results-grid .session-panel {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .results-grid .protected-panel {
+        grid-column: 2;
+        grid-row: 2;
+      }
+
+      .diagnostics-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      pre {
+        min-height: 190px;
+      }
+    }
+
+    .rings {
+      display: grid;
+      gap: 14px;
+    }
+
+    .ring-row {
+      display: grid;
+      gap: 14px;
+    }
+
+    @media (min-width: 900px) {
+      .ring-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .ring-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(125, 233, 255, 0.16);
+      background: rgba(3, 15, 30, 0.55);
+    }
+
+    .ring-wrap {
+      position: relative;
+      width: 92px;
+      height: 92px;
+      flex: 0 0 auto;
+    }
+
+    .ring {
+      width: 92px;
+      height: 92px;
+    }
+
+    .ring-track {
+      fill: none;
+      stroke: rgba(125, 233, 255, 0.14);
+      stroke-width: 10;
+    }
+
+    .ring-progress {
+      --p: 0; /* 0..1 */
+      fill: none;
+      stroke: var(--neon);
+      stroke-width: 10;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: 60px 60px;
+      stroke-dasharray: 327; /* 2*pi*52 ~= 326.7 */
+      stroke-dashoffset: calc(327 * (1 - var(--p)));
+      transition: stroke-dashoffset 300ms ease;
+    }
+
+    .ring-center {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding-top: 2px;
+    }
+
+    .ring-value {
+      font-family: var(--mono);
+      font-weight: 900;
+      color: var(--text);
+      font-size: 0.95rem;
+      line-height: 1.1;
+    }
+
+    .ring-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: -2px;
+    }
+
+    .ring-meta {
+      min-width: 0;
+    }
+
+    .ring-meta .muted {
+      margin: 0;
+    }
+
 
 ---
 apiVersion: apps/v1
