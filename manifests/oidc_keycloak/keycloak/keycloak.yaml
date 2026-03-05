@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keycloak-bootstrap-admin
+type: Opaque
+stringData:
+  username: admin
+  password: admin123
+---
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: demo-keycloak
+  namespace: keycloak
+spec:
+  instances: 1
+  http:
+    httpEnabled: true
+  bootstrapAdmin:
+    user:
+      secret: keycloak-bootstrap-admin
+  db:
+    vendor: postgres
+    host: postgres-db
+    usernameSecret:
+      name: keycloak-db-secret
+      key: username
+    passwordSecret:
+      name: keycloak-db-secret
+      key: password
+  hostname:
+    hostname: keycloak.demo.local
+    strict: false
+    backchannelDynamic: false
+  proxy:
+    headers: xforwarded

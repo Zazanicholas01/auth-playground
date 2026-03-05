@@ -1,0 +1,244 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oidc-auth-code
+  namespace: default
+data:
+  server.js: |
+    const OIDC_PUBLIC_ISSUER = process.env.OIDC_PUBLIC_ISSUER || "https://keycloak.demo.local/realms/demo";
+    const OIDC_INTERNAL_ISSUER = process.env.OIDC_INTERNAL_ISSUER;
+
+    const CLIENT_ID = process.env.OIDC_CLIENT_ID || "oidc-demo-web";
+    const CLIENT_SECRET = process.env.OIDC_CLIENT_SECRET || "password123";
+    const BASE_URL = process.env.BASE_URL || "http://demo-keycloak-service.keycloak.svc.cluster.local:8080/realms/demo";
+    const REDIRECT_URI = `${BASE_URL}/api/auth/oidc/callback`;
+
+    const sessions = new Map();
+
+    function randomId() {
+      return crypto.randomUUID();
+    }
+
+    function readCookies(req) {
+      const raw = req.headers.get("cookie") || "";
+      const out = {};
+      for (const part of raw.split(";")) {
+        const [k, ...v] = part.trim().split("=");
+        if (!k) continue;
+        out[k] = decodeURIComponent(v.join("="));
+      }
+
+      return out;
+    }
+
+    function json(data, init = {}) {
+      return new Response(JSON.stringify(data, null, 2), {
+        ...init,
+        headers: {
+          "content-type": "application/json",
+          ...(init.headers || {}),
+        },
+      });
+    }
+
+    function redirect(url, headers = {}) {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          location: url,
+          ...headers,
+        },
+      });
+    }
+
+    async function exchangeCode(code) {
+      const body = new URLSearchParams({
+        grant_type: "authorization_code",
+        code,
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        redirect_uri: REDIRECT_URI,
+      });
+
+      const res = await fetch(`${OIDC_INTERNAL_ISSUER}/protocol/openid-connect/token`, {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body,
+      });
+
+      if (!res.ok) {
+        throw new Error(`token exchange failed: ${await res.text()}`);
+      }
+
+      return res.json();
+    }
+
+    async function fetchUserInfo(accessToken) {
+      const res = await fetch(`${OIDC_INTERNAL_ISSUER}/protocol/openid-connect/userinfo`, {
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`userinfo failed: status=${res.status} body=${body}`);
+      }
+
+      return res.json();
+    }
+
+    function parseJwt(jwt) {
+      const payload = jwt.split(".")[1];
+      return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    }
+
+    Bun.serve({
+      port: 3000,
+      async fetch(req) {
+        const url = new URL(req.url);
+        console.log(req.method, url.pathname, url.search)
+        const cookies = readCookies(req);
+        const sid = cookies.sid;
+        const session = sid ? sessions.get(sid) : null;
+
+        if (url.pathname === "/api/auth/oidc/login" && req.method === "GET") {
+          const state = randomId();
+          const nextSid = randomId(); // always new session per login attempt
+          sessions.set(nextSid, { state });
+
+          const authUrl = new URL(`${OIDC_PUBLIC_ISSUER}/protocol/openid-connect/auth`);
+          authUrl.searchParams.set("client_id", CLIENT_ID);
+          authUrl.searchParams.set("response_type", "code");
+          authUrl.searchParams.set("scope", "openid profile email");
+          authUrl.searchParams.set("redirect_uri", REDIRECT_URI);
+          authUrl.searchParams.set("state", state);
+
+          return redirect(authUrl.toString(), {
+            "set-cookie": `sid=${encodeURIComponent(nextSid)}; Path=/; HttpOnly; Secure; SameSite=Lax`,
+          });
+        }
+
+        if (url.pathname === "/api/auth/oidc/callback" && req.method === "GET") {
+          if (!session) return new Response("missing session", { status: 400 });
+
+          const kcError = url.searchParams.get("error");
+          if (kcError) return redirect(`/?error=${encodeURIComponent(kcError)}`);
+
+          const code = url.searchParams.get("code");
+          const state = url.searchParams.get("state");
+          if (!code || state !== session.state) return new Response("invalid callback", { status: 400 });
+
+          delete session.state; // consume state once, prevents replay
+
+          try {
+            const tokens = await exchangeCode(code);
+            if (!tokens.id_token) {
+              throw new Error("missing id_token");
+            }
+
+            const claims = parseJwt(tokens.id_token);
+            session.user = {
+              sub: claims.sub,
+              preferred_username: claims.preferred_username,
+              email: claims.email,
+              name: claims.name,
+            };
+            return redirect("/");
+          } catch (err) {
+            console.error("callback failed", err);
+            return redirect("/?error=oidc_callback_failed");
+          }
+        }
+
+        if (url.pathname === "/api/auth/oidc/me" && req.method === "GET") {
+          if (!session?.user) {
+            return json({ authenticated: false }, { status: 401 });
+          }
+
+          return json({
+            authenticated: true,
+            user: session.user,
+          });
+        }
+
+        if (url.pathname === "/api/auth/oidc/logout" && req.method === "POST") {
+          if (sid) {
+            sessions.delete(sid);
+          }
+
+          return new Response(null, {
+            status: 204,
+            headers: {
+              "set-cookie": "sid=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax",
+            },
+          });
+        }
+
+        if (url.pathname === "/healthz") {
+          return new Response("ok");
+        }
+
+        return new Response("Not found", { status: 404 });
+      },
+    });
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oidc-auth-server
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oidc-auth-server
+  template:
+    metadata:
+      labels:
+        app: oidc-auth-server
+    spec:
+      containers:
+        - name: bun
+          image: oven/bun:1.2
+          command: ["bun", "/app/server.js"]
+          ports:
+            - containerPort: 3000
+          env:
+            - name: OIDC_PUBLIC_ISSUER
+              value: "https://keycloak.demo.local/realms/demo"
+            - name: OIDC_INTERNAL_ISSUER
+              value: "http://demo-keycloak-service.keycloak.svc.cluster.local:8080/realms/demo"
+            - name: OIDC_CLIENT_ID
+              value: "oidc-demo-web"
+            - name: OIDC_CLIENT_SECRET
+              value: "password123"
+            - name: BASE_URL
+              value: "https://oidclab.local:8443"
+          
+          volumeMounts:
+            - name: app-code
+              mountPath: /app
+              readOnly: true
+          
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+          
+      volumes:
+        - name: app-code
+          configMap:
+            name: oidc-auth-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oidc-auth-service
+  namespace: default
+spec:
+  selector:
+    app: oidc-auth-server
+  ports:
+    - port: 80
+      targetPort: 3000

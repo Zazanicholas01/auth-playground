@@ -6,6 +6,9 @@ metadata:
 spec:
   parentRefs:
     - name: my-gateway
+      sectionName: https
+  hostnames:
+    - jwtlab.local
   rules:
   
     - matches:

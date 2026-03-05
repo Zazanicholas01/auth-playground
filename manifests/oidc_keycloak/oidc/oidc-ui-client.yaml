@@ -1,0 +1,193 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oidc-ui-files
+  namespace: default
+data:
+  index.html: |
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>OIDC Lab</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="/styles.css" />
+      </head>
+      <body>
+        <main class="page">
+          <h1>OIDC Flow Demo</h1>
+          <p>Login happens in Keycloak. This page only talks to the backend session API.</p>
+          <div class="actions">
+            <button id="login">Login with Keycloak</button>
+            <button id="logout">Logout</button>
+          </div>
+          <h2>Session</h2>
+          <pre id="output">Loading...</pre>
+        </main>
+        <script src="/app.js"></script>
+      </body>
+    </html>
+  app.js: |
+    const output = document.getElementById("output");
+
+    async function refreshSession() {
+      const res = await fetch("/api/auth/oidc/me", { credentials: "include" });
+
+      if (res.status === 401) {
+        output.textContent = JSON.stringify({ authenticated: false }, null, 2);
+        return;
+      }
+
+      const data = await res.json();
+      output.textContent = JSON.stringify(data, null, 2);
+    }
+
+    document.getElementById("login").addEventListener("click", () => {
+      window.location.href = "/api/auth/oidc/login";
+    });
+
+    document.getElementById("logout").addEventListener("click", async () => {
+      await fetch("/api/auth/oidc/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      await refreshSession();
+    });
+
+    refreshSession();
+  styles.css: |
+    :root {
+      --bg: #05070b;
+      --panel: #0b1220;
+      --panel-border: #12324a;
+      --text: #d9f7ff;
+      --muted: #86cfe3;
+      --neon: #38e8ff;
+      --neon-strong: #00cfff;
+      --shadow: rgba(0, 207, 255, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top right, rgba(0, 207, 255, 0.12), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(56, 232, 255, 0.1), transparent 30%),
+        linear-gradient(180deg, #020409 0%, #05070b 45%, #020409 100%);
+      color: var(--text);
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+    }
+
+    .page {
+      max-width: 760px;
+      margin: 48px auto;
+      padding: 32px;
+      background: linear-gradient(180deg, rgba(11, 18, 32, 0.96), rgba(7, 12, 22, 0.96));
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      box-shadow:
+        0 0 0 1px rgba(56, 232, 255, 0.06) inset,
+        0 0 28px var(--shadow),
+        0 24px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    h1,
+    h2 {
+      margin-top: 0;
+      color: var(--neon);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      text-shadow: 0 0 14px rgba(56, 232, 255, 0.28);
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin: 20px 0 28px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 12px 16px;
+      border: 1px solid var(--neon-strong);
+      border-radius: 10px;
+      background: rgba(0, 207, 255, 0.08);
+      color: var(--neon);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(0, 207, 255, 0.14);
+      transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      background: rgba(0, 207, 255, 0.14);
+      box-shadow: 0 0 18px rgba(0, 207, 255, 0.24);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px;
+      background: #030814;
+      border: 1px solid rgba(56, 232, 255, 0.18);
+      border-radius: 12px;
+      color: #baf6ff;
+      overflow: auto;
+      box-shadow: inset 0 0 18px rgba(0, 207, 255, 0.06);
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oidc-ui
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oidc-ui
+  template:
+    metadata:
+      labels:
+        app: oidc-ui
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: ui-files
+              mountPath: /usr/share/nginx/html
+              readOnly: true
+      volumes:
+        - name: ui-files
+          configMap:
+            name: oidc-ui-files
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oidc-ui-service
+  namespace: default
+spec:
+  selector:
+    app: oidc-ui
+  ports:
+    - port: 80
+      targetPort: 80

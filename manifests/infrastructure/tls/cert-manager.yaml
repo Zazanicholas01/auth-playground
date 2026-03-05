@@ -60,3 +60,31 @@ spec:
     namespaceSelector:
       matchLabels:
         trust.local/enabled: "true"
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: keycloak-gateway-tls
+  namespace: default
+spec:
+  secretName: keycloak-gateway-tls
+  dnsNames:
+    - keycloak.demo.local
+  issuerRef:
+    name: local-ca
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: oidclab-gateway-tls
+  namespace: default
+spec:
+  secretName: oidclab-gateway-tls
+  dnsNames:
+    - oidclab.local
+  issuerRef:
+    name: local-ca
+    kind: ClusterIssuer
+    group: cert-manager.io
