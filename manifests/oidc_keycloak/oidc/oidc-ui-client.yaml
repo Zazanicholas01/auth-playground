@@ -347,6 +347,46 @@ data:
     const idRingMeta = document.getElementById("id-ring-meta");
     const refreshRingMeta = document.getElementById("refresh-ring-meta");
 
+    let autoRotateEnabled = true;
+    let autoRotateInFlight = false;
+    let lastAutoRotateAtMs = 0;
+
+    async function maybeAutoRotateAccessToken() {
+      if (!autoRotateEnabled) return;
+      if (autoRotateInFlight) return;
+      if (!latestDiagnostics?.session?.authenticated) return;
+
+      const remaining = remainingSecondsFromIso(latestDiagnostics?.tokens?.access_token_expires_at);
+      if (remaining === null) return;
+
+      // Rotate 1 minute before expiry
+      if (remaining > 60) return;
+
+      // Avoid hammering if diagnostics lags / retries happen
+      const now = Date.now();
+      if (now - lastAutoRotateAtMs < 30_000) return;
+
+      autoRotateInFlight = true;
+      lastAutoRotateAtMs = now;
+
+      try {
+        const res = await fetch("/api/auth/oidc/refresh", {
+          method: "POST",
+          credentials: "include",
+        });
+
+        // Optional: surface failures
+        if (!res.ok) {
+          let body = {};
+          try { body = await res.json(); } catch {}
+          setAuthStatus(`Auto refresh failed (${body.error || res.status}).`, "error");
+        }
+      } finally {
+        autoRotateInFlight = false;
+        await refreshDiagnostics();
+      }
+    }
+
     const dateTimeFormat = new Intl.DateTimeFormat(undefined, {
       dateStyle: "medium",
       timeStyle: "medium",
@@ -561,6 +601,7 @@ data:
 
       renderRefreshEvents(data?.refresh_events || []);
       renderCountdowns(data);
+      maybeAutoRotateAccessToken();
     }
 
     async function refreshDiagnostics() {
@@ -738,6 +779,8 @@ data:
       registerStatus.classList.add("error");
       await refreshDiagnostics();
     });
+
+    setInterval(maybeAutoRotateAccessToken, 10_000);
 
     refreshDiagnostics();
     setInterval(() => {
