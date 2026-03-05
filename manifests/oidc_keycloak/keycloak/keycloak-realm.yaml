@@ -10,6 +10,19 @@ spec:
     realm: demo
     enabled: true
     displayName: Demo Realm
+    identityProviders:
+      - alias: github
+        providerId: github
+        enabled: true
+        trustEmail: true
+        firstBrokerLoginFlowAlias: first broker login
+        config:
+          clientId: "Ov23liQieIS8ufWc6afo"
+          clientSecret: "d3761e4f585a8148801fc357a2be4c6dd15fbcc4"
+          userInfoUrl: "https://api.github.com/user"
+          authorizationUrl: "https://github.com/login/oauth/authorize"
+          tokenUrl: "https://github.com/login/oauth/access_token"
+          defaultScope: "read:user user:email"
     clients:
       - clientId: demo-app
         enabled: true

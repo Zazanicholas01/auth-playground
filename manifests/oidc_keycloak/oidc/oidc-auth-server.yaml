@@ -7,6 +7,12 @@ data:
   server.js: |
     const OIDC_PUBLIC_ISSUER = process.env.OIDC_PUBLIC_ISSUER || "https://keycloak.demo.local/realms/demo";
     const OIDC_INTERNAL_ISSUER = process.env.OIDC_INTERNAL_ISSUER;
+    const KEYCLOAK_BASE_URL = process.env.KEYCLOAK_BASE_URL || "http://demo-keycloak-service.keycloak.svc.cluster.local:8080";
+    const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM || "demo";
+    const KEYCLOAK_ADMIN_REALM = process.env.KEYCLOAK_ADMIN_REALM || "master";
+    const KEYCLOAK_ADMIN_CLIENT_ID = process.env.KEYCLOAK_ADMIN_CLIENT_ID || "admin-cli";
+    const KEYCLOAK_ADMIN_USERNAME = process.env.KEYCLOAK_ADMIN_USERNAME || "admin";
+    const KEYCLOAK_ADMIN_PASSWORD = process.env.KEYCLOAK_ADMIN_PASSWORD || "admin123";
 
     const CLIENT_ID = process.env.OIDC_CLIENT_ID || "oidc-demo-web";
     const CLIENT_SECRET = process.env.OIDC_CLIENT_SECRET || "password123";
@@ -51,6 +57,33 @@ data:
       });
     }
 
+    function isHttps(req) {
+      const proto = (req.headers.get("x-forwarded-proto") || "").toLowerCase();
+      if (proto) {
+        return proto.split(",")[0].trim() === "https";
+      }
+      return new URL(req.url).protocol === "https:";
+    }
+
+    function sessionCookie(req, value, maxAge) {
+      const attrs = [
+        `sid=${encodeURIComponent(value)}`,
+        "Path=/",
+        "HttpOnly",
+        "SameSite=Lax",
+      ];
+
+      if (isHttps(req)) {
+        attrs.push("Secure");
+      }
+
+      if (typeof maxAge === "number") {
+        attrs.push(`Max-Age=${maxAge}`);
+      }
+
+      return attrs.join("; ");
+    }
+
     async function exchangeCode(code) {
       const body = new URLSearchParams({
         grant_type: "authorization_code",
@@ -88,6 +121,147 @@ data:
       return res.json();
     }
 
+    async function revokeOidcSession(refreshToken) {
+      const body = new URLSearchParams({
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        refresh_token: refreshToken,
+      });
+
+      const res = await fetch(`${OIDC_INTERNAL_ISSUER}/protocol/openid-connect/logout`, {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body,
+      });
+
+      if (!res.ok) {
+        throw new Error(`oidc logout failed: ${await res.text()}`);
+      }
+    }
+
+    async function getAdminAccessToken() {
+      const body = new URLSearchParams({
+        grant_type: "password",
+        client_id: KEYCLOAK_ADMIN_CLIENT_ID,
+        username: KEYCLOAK_ADMIN_USERNAME,
+        password: KEYCLOAK_ADMIN_PASSWORD,
+      });
+
+      const res = await fetch(`${KEYCLOAK_BASE_URL}/realms/${KEYCLOAK_ADMIN_REALM}/protocol/openid-connect/token`, {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body,
+      });
+
+      if (!res.ok) {
+        throw new Error(`admin token failed: ${await res.text()}`);
+      }
+
+      const tokenData = await res.json();
+      if (!tokenData.access_token) {
+        throw new Error("admin token response missing access_token");
+      }
+
+      return tokenData.access_token;
+    }
+
+    async function createKeycloakUser(payload) {
+      const adminToken = await getAdminAccessToken();
+      const res = await fetch(`${KEYCLOAK_BASE_URL}/admin/realms/${KEYCLOAK_REALM}/users`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${adminToken}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.status === 201) {
+        return { ok: true };
+      }
+
+      if (res.status === 409) {
+        return { ok: false, reason: "exists" };
+      }
+
+      return {
+        ok: false,
+        reason: "unexpected",
+        details: await res.text(),
+      };
+    }
+
+    async function getRealmUserById(adminToken, userId) {
+      const res = await fetch(`${KEYCLOAK_BASE_URL}/admin/realms/${KEYCLOAK_REALM}/users/${encodeURIComponent(userId)}`, {
+        method: "GET",
+        headers: {
+          authorization: `Bearer ${adminToken}`,
+        },
+      });
+
+      if (res.status === 404) {
+        return null;
+      }
+
+      if (!res.ok) {
+        throw new Error(`get user by id failed: ${await res.text()}`);
+      }
+
+      return res.json();
+    }
+
+    async function searchRealmUsers(adminToken, username) {
+      const qs = new URLSearchParams({
+        username,
+        exact: "true",
+      });
+
+      const res = await fetch(`${KEYCLOAK_BASE_URL}/admin/realms/${KEYCLOAK_REALM}/users?${qs.toString()}`, {
+        method: "GET",
+        headers: {
+          authorization: `Bearer ${adminToken}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`search users failed: ${await res.text()}`);
+      }
+
+      return res.json();
+    }
+
+    async function resolveRealmUserId(adminToken, user) {
+      if (user?.sub) {
+        const byId = await getRealmUserById(adminToken, user.sub);
+        if (byId?.id) {
+          return byId.id;
+        }
+      }
+
+      if (user?.preferred_username) {
+        const matches = await searchRealmUsers(adminToken, user.preferred_username);
+        const exact = (matches || []).find((u) => u.username === user.preferred_username);
+        if (exact?.id) {
+          return exact.id;
+        }
+      }
+
+      return null;
+    }
+
+    async function adminLogoutUserSessions(adminToken, userId) {
+      const res = await fetch(`${KEYCLOAK_BASE_URL}/admin/realms/${KEYCLOAK_REALM}/users/${encodeURIComponent(userId)}/logout`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${adminToken}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`admin user logout failed: ${await res.text()}`);
+      }
+    }
+
     function parseJwt(jwt) {
       const payload = jwt.split(".")[1];
       return JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
@@ -106,6 +280,7 @@ data:
           const state = randomId();
           const nextSid = randomId(); // always new session per login attempt
           sessions.set(nextSid, { state });
+          const idpHint = (url.searchParams.get("idp") || "").trim();
 
           const authUrl = new URL(`${OIDC_PUBLIC_ISSUER}/protocol/openid-connect/auth`);
           authUrl.searchParams.set("client_id", CLIENT_ID);
@@ -113,9 +288,12 @@ data:
           authUrl.searchParams.set("scope", "openid profile email");
           authUrl.searchParams.set("redirect_uri", REDIRECT_URI);
           authUrl.searchParams.set("state", state);
+          if (idpHint) {
+            authUrl.searchParams.set("kc_idp_hint", idpHint);
+          }
 
           return redirect(authUrl.toString(), {
-            "set-cookie": `sid=${encodeURIComponent(nextSid)}; Path=/; HttpOnly; Secure; SameSite=Lax`,
+            "set-cookie": sessionCookie(req, nextSid),
           });
         }
 
@@ -144,6 +322,11 @@ data:
               email: claims.email,
               name: claims.name,
             };
+            session.tokens = {
+              access_token: tokens.access_token || null,
+              refresh_token: tokens.refresh_token || null,
+              expires_at: Date.now() + ((tokens.expires_in || 0) * 1000),
+            };
             return redirect("/");
           } catch (err) {
             console.error("callback failed", err);
@@ -162,6 +345,84 @@ data:
           });
         }
 
+        if (url.pathname === "/api/auth/oidc/protected" && req.method === "GET") {
+          if (!session?.user) {
+            return json({ error: "not_authenticated" }, { status: 401 });
+          }
+
+          if (!session.tokens?.access_token || !session.tokens?.expires_at || Date.now() >= session.tokens.expires_at) {
+            if (sid) {
+              sessions.delete(sid);
+            }
+            return json(
+              { error: "session_expired" },
+              {
+                status: 401,
+                headers: {
+                  "set-cookie": sessionCookie(req, "", 0),
+                },
+              }
+            );
+          }
+
+          return json({
+            ok: true,
+            message: "Protected API call succeeded",
+            user: session.user,
+            now: new Date().toISOString(),
+          });
+        }
+
+        if (url.pathname === "/api/auth/oidc/register" && req.method === "POST") {
+          let body;
+          try {
+            body = await req.json();
+          } catch {
+            return json({ error: "invalid_json" }, { status: 400 });
+          }
+
+          const username = (body.username || "").trim();
+          const email = (body.email || "").trim();
+          const password = body.password || "";
+          const firstName = (body.firstName || "").trim();
+          const lastName = (body.lastName || "").trim();
+
+          if (!username || !email || !password) {
+            return json({ error: "username_email_password_required" }, { status: 400 });
+          }
+
+          if (password.length < 8) {
+            return json({ error: "password_too_short", minLength: 8 }, { status: 400 });
+          }
+
+          const result = await createKeycloakUser({
+            username,
+            email,
+            firstName,
+            lastName,
+            enabled: true,
+            emailVerified: false,
+            credentials: [
+              {
+                type: "password",
+                value: password,
+                temporary: false,
+              },
+            ],
+          });
+
+          if (result.ok) {
+            return json({ created: true }, { status: 201 });
+          }
+
+          if (result.reason === "exists") {
+            return json({ error: "user_exists" }, { status: 409 });
+          }
+
+          console.error("user creation failed", result.details);
+          return json({ error: "user_creation_failed" }, { status: 500 });
+        }
+
         if (url.pathname === "/api/auth/oidc/logout" && req.method === "POST") {
           if (sid) {
             sessions.delete(sid);
@@ -170,9 +431,53 @@ data:
           return new Response(null, {
             status: 204,
             headers: {
-              "set-cookie": "sid=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax",
+              "set-cookie": sessionCookie(req, "", 0),
             },
           });
+        }
+
+        if (url.pathname === "/api/auth/oidc/revoke-session" && req.method === "POST") {
+          if (!session?.user) {
+            return json({ error: "not_authenticated" }, { status: 401 });
+          }
+
+          try {
+            const adminToken = await getAdminAccessToken();
+            const userId = await resolveRealmUserId(adminToken, session.user);
+            if (!userId) {
+              return json({ error: "user_not_found_in_realm" }, { status: 404 });
+            }
+
+            await adminLogoutUserSessions(adminToken, userId);
+
+            if (sid) {
+              sessions.delete(sid);
+            }
+
+            return json(
+              { revoked: true, strategy: "admin_user_logout", userId },
+              {
+                status: 200,
+                headers: {
+                  "set-cookie": sessionCookie(req, "", 0),
+                },
+              }
+            );
+          } catch (err) {
+            console.error("revoke session failed", err);
+            if (sid) {
+              sessions.delete(sid);
+            }
+            return json(
+              { error: "revoke_failed", details: String(err?.message || err) },
+              {
+                status: 502,
+                headers: {
+                  "set-cookie": sessionCookie(req, "", 0),
+                },
+              }
+            );
+          }
         }
 
         if (url.pathname === "/healthz") {
@@ -215,6 +520,18 @@ spec:
               value: "password123"
             - name: BASE_URL
               value: "https://oidclab.local:8443"
+            - name: KEYCLOAK_BASE_URL
+              value: "http://demo-keycloak-service.keycloak.svc.cluster.local:8080"
+            - name: KEYCLOAK_REALM
+              value: "demo"
+            - name: KEYCLOAK_ADMIN_REALM
+              value: "master"
+            - name: KEYCLOAK_ADMIN_CLIENT_ID
+              value: "admin-cli"
+            - name: KEYCLOAK_ADMIN_USERNAME
+              value: "admin"
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              value: "admin123"
           
           volumeMounts:
             - name: app-code

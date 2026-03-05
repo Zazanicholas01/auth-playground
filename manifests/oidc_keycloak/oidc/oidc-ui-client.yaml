@@ -16,19 +16,60 @@ data:
       <body>
         <main class="page">
           <h1>OIDC Flow Demo</h1>
-          <p>Login happens in Keycloak. This page only talks to the backend session API.</p>
+          <p>Login happens in Keycloak. You can also register a new user directly from this page.</p>
           <div class="actions">
             <button id="login">Login with Keycloak</button>
+            <button id="login-github">Login with GitHub</button>
             <button id="logout">Logout</button>
+            <button id="revoke">Revoke Current Keycloak Session</button>
+            <button id="call-protected">Call Protected API</button>
           </div>
+          <p id="auth-status" class="status"></p>
+          <section class="panel">
+            <h2>Create User</h2>
+            <form id="register-form">
+              <div class="grid">
+                <label>
+                  Username
+                  <input id="reg-username" name="username" type="text" required />
+                </label>
+                <label>
+                  Email
+                  <input id="reg-email" name="email" type="email" required />
+                </label>
+                <label>
+                  First name
+                  <input id="reg-first-name" name="firstName" type="text" />
+                </label>
+                <label>
+                  Last name
+                  <input id="reg-last-name" name="lastName" type="text" />
+                </label>
+                <label class="full">
+                  Password
+                  <input id="reg-password" name="password" type="password" minlength="8" required />
+                </label>
+              </div>
+              <div class="actions">
+                <button type="submit">Register User</button>
+              </div>
+              <p id="register-status" class="status"></p>
+            </form>
+          </section>
           <h2>Session</h2>
           <pre id="output">Loading...</pre>
+          <h2>Protected API Result</h2>
+          <pre id="protected-output">Not called yet.</pre>
         </main>
         <script src="/app.js"></script>
       </body>
     </html>
   app.js: |
     const output = document.getElementById("output");
+    const protectedOutput = document.getElementById("protected-output");
+    const registerForm = document.getElementById("register-form");
+    const registerStatus = document.getElementById("register-status");
+    const authStatus = document.getElementById("auth-status");
 
     async function refreshSession() {
       const res = await fetch("/api/auth/oidc/me", { credentials: "include" });
@@ -46,12 +87,128 @@ data:
       window.location.href = "/api/auth/oidc/login";
     });
 
+    document.getElementById("login-github").addEventListener("click", () => {
+      window.location.href = "/api/auth/oidc/login?idp=github";
+    });
+
     document.getElementById("logout").addEventListener("click", async () => {
       await fetch("/api/auth/oidc/logout", {
         method: "POST",
         credentials: "include",
       });
+      authStatus.textContent = "Local session cleared.";
+      authStatus.classList.remove("error");
+      authStatus.classList.add("ok");
       await refreshSession();
+    });
+
+    document.getElementById("revoke").addEventListener("click", async () => {
+      authStatus.textContent = "Revoking current Keycloak session...";
+      authStatus.classList.remove("error");
+      authStatus.classList.remove("ok");
+
+      const res = await fetch("/api/auth/oidc/revoke-session", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        const body = await res.json();
+        const strategy = body.strategy ? ` (${body.strategy})` : "";
+        authStatus.textContent = `Keycloak session revoked and local session cleared${strategy}.`;
+        authStatus.classList.add("ok");
+      } else if (res.status === 401) {
+        authStatus.textContent = "No authenticated user session found.";
+        authStatus.classList.add("error");
+      } else {
+        try {
+          const body = await res.json();
+          const details = body.details ? ` (${body.details})` : "";
+          authStatus.textContent = `Failed to revoke Keycloak session: ${body.error || "unknown_error"}${details}. Local session cleared.`;
+        } catch {
+          authStatus.textContent = "Failed to revoke Keycloak session. Local session cleared.";
+        }
+        authStatus.classList.add("error");
+      }
+
+      await refreshSession();
+    });
+
+    document.getElementById("call-protected").addEventListener("click", async () => {
+      const res = await fetch("/api/auth/oidc/protected", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      let body = null;
+      try {
+        body = await res.json();
+      } catch {
+        body = { error: "invalid_json_response" };
+      }
+
+      protectedOutput.textContent = JSON.stringify(
+        {
+          status: res.status,
+          ok: res.ok,
+          body,
+        },
+        null,
+        2
+      );
+
+      if (res.ok) {
+        authStatus.textContent = "Protected API call succeeded.";
+        authStatus.classList.remove("error");
+        authStatus.classList.add("ok");
+      } else {
+        authStatus.textContent = `Protected API call failed (${body.error || "unknown_error"}).`;
+        authStatus.classList.remove("ok");
+        authStatus.classList.add("error");
+      }
+
+      await refreshSession();
+    });
+
+    registerForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      registerStatus.textContent = "Creating user...";
+      registerStatus.classList.remove("error");
+      registerStatus.classList.remove("ok");
+
+      const payload = {
+        username: document.getElementById("reg-username").value,
+        email: document.getElementById("reg-email").value,
+        firstName: document.getElementById("reg-first-name").value,
+        lastName: document.getElementById("reg-last-name").value,
+        password: document.getElementById("reg-password").value,
+      };
+
+      const res = await fetch("/api/auth/oidc/register", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        registerStatus.textContent = "User created in Keycloak. You can now login.";
+        registerStatus.classList.add("ok");
+        registerForm.reset();
+        return;
+      }
+
+      let message = "Registration failed";
+      try {
+        const body = await res.json();
+        if (body.error === "user_exists") message = "User already exists.";
+        if (body.error === "password_too_short") message = "Password must have at least 8 characters.";
+        if (body.error === "username_email_password_required") message = "Username, email and password are required.";
+      } catch {
+        // ignore parse errors and keep default message
+      }
+
+      registerStatus.textContent = message;
+      registerStatus.classList.add("error");
     });
 
     refreshSession();
@@ -148,6 +305,64 @@ data:
       color: #baf6ff;
       overflow: auto;
       box-shadow: inset 0 0 18px rgba(0, 207, 255, 0.06);
+    }
+
+    .panel {
+      margin-bottom: 28px;
+      padding: 18px;
+      border: 1px solid rgba(56, 232, 255, 0.2);
+      border-radius: 12px;
+      background: rgba(2, 10, 20, 0.72);
+    }
+
+    form {
+      display: block;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    input {
+      border: 1px solid rgba(56, 232, 255, 0.3);
+      border-radius: 8px;
+      background: #041326;
+      color: var(--text);
+      padding: 10px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--neon);
+      box-shadow: 0 0 0 2px rgba(0, 207, 255, 0.2);
+    }
+
+    .status {
+      min-height: 1.2em;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .status.ok {
+      color: #67ffbf;
+    }
+
+    .status.error {
+      color: #ff8f8f;
     }
 
 ---
