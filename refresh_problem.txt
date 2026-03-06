@@ -16,3 +16,26 @@ SOLUTION:
     - Those headers are dervied from OIDC_PUBLIC_ISSUER
     - APplied to every Auth Sevrer fetch that hits Keycloak internal issuer
     
+
+TOKENS DISTINCTION:
+
+    - Access Token
+        - Used by the client to call APIs
+        - Meant for the resource server/API
+        - Carries authorization info like scopes, audience and roles/permissions
+    
+    - ID Token 
+        - Used by the client application to know who authenticated
+        - Meant for the client, not for APIs
+        - Carries identity / authentication claims like sub, email, name, auth_time...
+    
+    - Refresh Token
+        - Used only to get new access / ID Tokens from the Auth Server
+        - Not sent to APIs
+        - Longer-lived
+
+    - Not the same token
+    - Can look similar because issued often together
+        - Access Token --> Call APIs - What can this client do?
+        - ID Token --> Client App - Who just signed in?
+        - Refresh Token --> Authorization Server - How do i get a fresh token set?

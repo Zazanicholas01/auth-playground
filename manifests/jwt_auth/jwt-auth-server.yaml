@@ -1,12 +1,4 @@
 apiVersion: v1
-kind: Secret
-metadata:
-  name: jwt-auth-secret
-type: Opaque
-stringData:
-  jwt-secret: password123
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: jwt-auth-server-js
