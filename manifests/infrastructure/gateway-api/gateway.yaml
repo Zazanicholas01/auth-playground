@@ -63,3 +63,32 @@ spec:
         - kind: Secret
           group: ""
           name: oidclab-gateway-tls
+
+  - name: emqx-http
+    protocol: HTTP
+    port: 80
+    hostname: emqx.local
+    allowedRoutes:
+      namespaces:
+        from: All
+      kinds:
+        - kind: HTTPRoute
+  
+  - name: emqx-mqtt
+    protocol: TCP
+    port: 1883
+    allowedRoutes:
+      namespaces:
+        from: All
+      kinds:
+        - kind: TCPRoute
+
+  - name: iot-http
+    protocol: HTTP
+    port: 80
+    hostname: iot.local
+    allowedRoutes:
+      namespaces:
+        from: All
+      kinds:
+        - kind: HTTPRoute

@@ -1,0 +1,225 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iot-api-code
+  namespace: iot-playground
+data:
+  package.json: |
+    {
+      "name": "iot-api",
+      "private": true,
+      "type": "module",
+      "dependencies": {
+        "mqtt": "^5.13.3"
+      }
+    }
+  index.js: |
+    import mqtt from "mqtt";
+
+    const port = Number(process.env.API_PORT || 8080);
+    const mqttUrl = process.env.MQTT_URL || "mqtt://emqx-listeners:1883";
+    const topicRoot = process.env.MQTT_TOPIC_ROOT || "site/alpha/devices";
+    const historySize = Number(process.env.EVENT_HISTORY_SIZE || 250);
+
+    const devices = new Map();
+    const events = [];
+
+    const mqttClient = mqtt.connect(mqttUrl, {
+      reconnectPeriod: 3000,
+      connectTimeout: 10000,
+    });
+
+    mqttClient.on("connect", () => {
+      console.log("api connected to mqtt broker:", mqttUrl);
+
+      mqttClient.subscribe(`${topicRoot}/+/telemetry`, (err) => {
+        if (err) console.error("subscribe telemetry failed:", err.message);
+        else console.log("subscribed to telemetry");
+      });
+
+      mqttClient.subscribe(`${topicRoot}/+/alerts`, (err) => {
+        if (err) console.error("subscribe alerts failed:", err.message);
+        else console.log("subscribed to alerts");
+      });
+
+      mqttClient.subscribe(`${topicRoot}/+/status`, (err) => {
+        if (err) console.error("subscribe status failed:", err.message);
+        else console.log("subscribed to status");
+      });
+    });
+
+    mqttClient.on("reconnect", () => {
+      console.log("api reconnecting to mqtt broker:", mqttUrl);
+    });
+
+    mqttClient.on("close", () => {
+      console.log("api mqtt connection closed");
+    });
+
+    mqttClient.on("offline", () => {
+      console.log("api mqtt client offline");
+    });
+
+    mqttClient.on("error", (error) => {
+      console.error("api mqtt error:", error.message);
+    });
+
+    mqttClient.on("message", (topic, payload) => {
+      try {
+        const message = JSON.parse(payload.toString());
+
+        const event = {
+          topic,
+          type: topic.split("/").at(-1),
+          receivedAt: new Date().toISOString(),
+          payload: message,
+        };
+
+        console.log("api received message:", topic);
+
+        if (event.type === "telemetry" || event.type === "status") {
+          const deviceId = message.deviceId || topic.split("/").at(-2);
+          devices.set(deviceId, {
+            deviceId,
+            ...devices.get(deviceId),
+            ...message,
+            lastTopic: topic,
+            lastSeen: event.receivedAt,
+          });
+        }
+
+        events.unshift(event);
+        if (events.length > historySize) {
+          events.length = historySize;
+        }
+      } catch (error) {
+        console.error("failed to process message:", topic, error.message);
+      }
+    });
+
+
+    const corsHeaders = {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "GET, POST, OPTIONS",
+      "access-control-allow-headers": "content-type",
+    };
+
+    const json = (payload, status = 200) =>
+      new Response(JSON.stringify(payload, null, 2), {
+        status,
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          ...corsHeaders,
+        },
+      });
+    
+    Bun.serve({
+      port,
+      fetch(request) {
+        const url = new URL(request.url);
+
+        if (request.method === "OPTIONS") {
+          return new Response(null, {
+            status: 204,
+            headers: corsHeaders,
+          });
+        }
+
+        if (url.pathname === "/health") {
+          return json({
+            ok: true,
+            mqttUrl,
+            mqttConnected: mqttClient.connected,
+            devices: devices.size,
+            events: events.length,
+          });
+        }
+
+        if (url.pathname === "/devices") {
+          return json([...devices.values()].sort((a, b) => a.deviceId.localeCompare(b.deviceId)));
+        }
+
+        if (url.pathname === "/events") {
+          return json(events);
+        }
+
+        return json({ error: "not found" }, 404);
+      },
+    });
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-api
+  namespace: iot-playground
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-api
+  template:
+    metadata:
+      labels:
+        app: iot-api
+    spec:
+      containers:
+        - name: api
+          image: oven/bun:1
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -lc
+            - cp -R /src/. /work && cd /work && bun install --no-save && bun run index.js
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: API_PORT
+              value: "8080"
+            - name: MQTT_URL
+              value: mqtt://emqx-listeners:1883
+            - name: MQTT_TOPIC_ROOT
+              value: site/alpha/devices
+            - name: EVENT_HISTORY_SIZE
+              value: "250"
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          
+          volumeMounts:
+            - name: api-code
+              mountPath: /src
+              readOnly: true
+            - name: api-workdir
+              mountPath: /work
+      
+      volumes:
+        - name: api-code
+          configMap:
+            name: iot-api-code
+        - name: api-workdir
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-api
+  namespace: iot-playground
+spec:
+  selector:
+    app: iot-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

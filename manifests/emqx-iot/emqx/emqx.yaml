@@ -1,0 +1,53 @@
+apiVersion: apps.emqx.io/v2
+kind: EMQX
+metadata:
+  name: emqx
+  namespace: iot-playground
+spec:
+  image: emqx/emqx:6.1.1
+
+  config:
+    data: |
+      log.console.level = info
+
+      dashboard {
+        default_password = "public"
+      }
+
+      listeners.tcp.default {
+        bind = "0.0.0.0:1883"
+        max_connections = 1024000
+      }
+
+      mqtt.max_packet_size = 1MB
+      mqtt.allow_anonymous = true
+
+      authorization {
+        no_match = allow
+      }
+  
+  coreTemplate:
+    spec:
+      replicas: 1
+  
+  dashboardServiceTemplate:
+    metadata:
+      name: emqx-dashboard
+    spec:
+      type: ClusterIP
+
+  listenersServiceTemplate:
+    metadata:
+      name: emqx-listeners
+    spec:
+      type: ClusterIP
+      ports:
+        - name: tcp-default
+          protocol: TCP
+          port: 1883
+          targetPort: 1883
+        
+        - name: ws
+          protocol: TCP
+          port: 8083
+          targetPort: 8083

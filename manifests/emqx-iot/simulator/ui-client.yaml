@@ -1,0 +1,451 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iot-ui-code
+  namespace: iot-playground
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>EMQX IoT Playground</title>
+        <link rel="stylesheet" href="/styles.css" />
+      </head>
+      <body>
+        <main>
+          <aside class="panel left">
+            <h3 class="section-title">Fleet</h3>
+            <div id="fleet" class="event-list"></div>
+          </aside>
+
+          <section class="center">
+            <div class="panel hero">
+              <div>
+                <div class="muted">Industrial operations console</div>
+                <h1>EMQX IoT Playground</h1>
+              </div>
+              <div id="broker" class="pill normal">Broker unknown</div>
+            </div>
+
+            <div class="controls panel">
+              <button data-scenario="normal">Normal</button>
+              <button data-scenario="warning-spike">Warning Spike</button>
+              <button data-scenario="incident">Incident</button>
+              <span id="scenario-label" class="muted">Scenario: unknown</span>
+            </div>
+
+            <div id="stats" class="stats"></div>
+            <div id="devices" class="device-grid"></div>
+          </section>
+
+          <aside class="panel right">
+            <h3 class="section-title">Event Stream</h3>
+            <div id="events" class="event-list"></div>
+          </aside>
+        </main>
+
+        <script>
+          window.__IOT_CONFIG__ = {
+            apiBase: "http://localhost:8090",
+            simulatorBase: "http://localhost:8091"
+          };
+        </script>
+        <script src="/index.js" type="module"></script>
+      </body>
+    </html>
+
+  styles.css: |
+    :root {
+      --bg: #0f1317;
+      --panel: rgba(23, 31, 38, 0.92);
+      --panel-2: rgba(15, 23, 30, 0.92);
+      --line: rgba(117, 152, 176, 0.18);
+      --text: #edf4f8;
+      --muted: #8ea2b1;
+      --cyan: #67e8f9;
+      --amber: #fbbf24;
+      --red: #fb7185;
+      --green: #34d399;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(103, 232, 249, 0.10), transparent 30%),
+        linear-gradient(180deg, #0d1115 0%, #121a20 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      opacity: 0.35;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      padding: 24px;
+      min-height: 100vh;
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 280px 1fr 360px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(103, 232, 249, 0.12);
+      border-radius: 18px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
+    }
+
+    .left,
+    .right {
+      padding: 18px;
+    }
+
+    .center {
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero {
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0.04em;
+    }
+
+    .controls {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .controls button {
+      border: 1px solid rgba(103, 232, 249, 0.25);
+      background: rgba(15, 23, 30, 0.95);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+
+    .controls button:hover {
+      border-color: rgba(103, 232, 249, 0.6);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .stat,
+    .device {
+      padding: 16px;
+      background: var(--panel-2);
+      border: 1px solid rgba(142, 162, 177, 0.12);
+      border-radius: 16px;
+    }
+
+    .device-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-top: 8px;
+    }
+
+    .device h3,
+    .section-title {
+      margin: 0 0 12px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .normal {
+      background: rgba(52, 211, 153, 0.16);
+      color: var(--green);
+    }
+
+    .warning {
+      background: rgba(251, 191, 36, 0.16);
+      color: var(--amber);
+    }
+
+    .critical {
+      background: rgba(251, 113, 133, 0.16);
+      color: var(--red);
+    }
+
+    .event-list {
+      display: grid;
+      gap: 10px;
+      max-height: calc(100vh - 180px);
+      overflow: auto;
+    }
+
+    .event {
+      padding: 12px;
+      border-radius: 14px;
+      background: var(--panel-2);
+      border: 1px solid rgba(142, 162, 177, 0.10);
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 12px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 1100px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+  index.js: |
+    const config = window.__IOT_CONFIG__ || {};
+    const apiBase = config.apiBase || (window.location.origin + "/api");
+    const simulatorBase = config.simulatorBase || (window.location.origin + "/simulator");
+
+    const fleetEl = document.getElementById("fleet");
+    const statsEl = document.getElementById("stats");
+    const devicesEl = document.getElementById("devices");
+    const eventsEl = document.getElementById("events");
+    const brokerEl = document.getElementById("broker");
+    const scenarioLabelEl = document.getElementById("scenario-label");
+
+    function severityClass(severity) {
+      if (severity === "critical") return "critical";
+      if (severity === "warning") return "warning";
+      return "normal";
+    }
+
+    function renderStats(devices, events) {
+      const critical = devices.filter((item) => item.severity === "critical").length;
+      const warning = devices.filter((item) => item.severity === "warning").length;
+      const online = devices.filter((item) => item.online !== false).length;
+
+      const cards = [
+        ["Devices Online", online],
+        ["Warnings", warning],
+        ["Critical", critical],
+        ["Recent Events", events.length],
+      ];
+
+      statsEl.innerHTML = cards.map(([label, value]) =>
+        '<div class="panel stat">' +
+          '<div class="muted">' + label + '</div>' +
+          '<div class="value">' + value + '</div>' +
+        '</div>'
+      ).join("");
+    }
+
+    function renderFleet(devices) {
+      fleetEl.innerHTML = devices.map((device) =>
+        '<div class="event">' +
+          '<div><strong>' + device.deviceId + '</strong></div>' +
+          '<div class="muted">Last seen: ' + new Date(device.lastSeen || Date.now()).toLocaleTimeString() + '</div>' +
+          '<div style="margin-top:8px" class="pill ' + severityClass(device.severity) + '">' + (device.severity || "normal") + '</div>' +
+        '</div>'
+      ).join("");
+    }
+
+    function renderDevices(devices) {
+      devicesEl.innerHTML = devices.map((device) =>
+        '<article class="device">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px">' +
+            '<h3>' + device.deviceId + '</h3>' +
+            '<span class="pill ' + severityClass(device.severity) + '">' + (device.severity || "normal") + '</span>' +
+          '</div>' +
+          '<div class="kv">' +
+            '<div>Temperature</div><div>' + (device.temperature ?? "--") + ' C</div>' +
+            '<div>Humidity</div><div>' + (device.humidity ?? "--") + ' %</div>' +
+            '<div>Pressure</div><div>' + (device.pressure ?? "--") + ' hPa</div>' +
+            '<div>Battery</div><div>' + (device.battery ?? "--") + ' %</div>' +
+          '</div>' +
+        '</article>'
+      ).join("");
+    }
+
+    function renderEvents(events) {
+      eventsEl.innerHTML = events.slice(0, 24).map((event) =>
+        '<div class="event">' +
+          '<div style="display:flex;justify-content:space-between;gap:10px">' +
+            '<strong>' + (event.payload.deviceId || "system") + '</strong>' +
+            '<span class="pill ' + severityClass(event.payload.severity) + '">' + event.type + '</span>' +
+          '</div>' +
+          '<div class="muted" style="margin-top:6px">' + new Date(event.receivedAt).toLocaleTimeString() + '</div>' +
+          '<div style="margin-top:8px;font-size:14px">' + (event.payload.message || event.topic) + '</div>' +
+        '</div>'
+      ).join("");
+    }
+
+    async function loadScenario() {
+      const res = await fetch(simulatorBase + "/scenario");
+      const data = await res.json();
+      scenarioLabelEl.textContent = "Scenario: " + data.scenario;
+    }
+
+    async function setScenario(name) {
+      const res = await fetch(simulatorBase + "/scenario/" + name, {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        throw new Error("failed to change scenario");
+      }
+
+      await loadScenario();
+      await load();
+    }
+
+    async function load() {
+      const [health, devices, events] = await Promise.all([
+        fetch(apiBase + "/health").then((r) => r.json()),
+        fetch(apiBase + "/devices").then((r) => r.json()),
+        fetch(apiBase + "/events").then((r) => r.json()),
+      ]);
+
+      brokerEl.textContent = health.mqttConnected ? "Broker connected" : "Broker disconnected";
+      brokerEl.className = "pill " + (health.mqttConnected ? "normal" : "critical");
+
+      renderStats(devices, events);
+      renderFleet(devices);
+      renderDevices(devices);
+      renderEvents(events);
+    }
+
+    document.querySelectorAll("[data-scenario]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        try {
+          await setScenario(button.dataset.scenario);
+        } catch (error) {
+          console.error(error);
+        }
+      });
+    });
+
+    await loadScenario();
+    await load();
+    setInterval(load, 3000);
+  
+  server.js: |
+    const port = Number(process.env.UI_PORT || 8080);
+
+    Bun.serve({
+      port,
+      async fetch(request) {
+        const url = new URL(request.url);
+        const path = url.pathname === "/" ? "/index.html" : url.pathname;
+
+        const file = Bun.file("/src" + path);
+
+        if (!(await file.exists())) {
+          return new Response("Not found", { status: 404 });
+        }
+
+        const headers = new Headers();
+
+        if (path.endsWith(".html")) headers.set("content-type", "text/html; charset=utf-8");
+        if (path.endsWith(".css")) headers.set("content-type", "text/css; charset=utf-8");
+        if (path.endsWith(".js")) headers.set("content-type", "text/javascript; charset=utf-8");
+
+        return new Response(file, { headers });
+      },
+    });
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-ui
+  namespace: iot-playground
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-ui
+  template:
+    metadata:
+      labels:
+        app: iot-ui
+    spec:
+      containers:
+        - name: ui
+          image: oven/bun:1
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -lc
+            - bun /src/server.js
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: UI_PORT
+              value: "8080"
+            - name: API_BASE
+              value: http://iot-api:8080
+          
+          volumeMounts:
+            - name: ui-code
+              mountPath: /src
+              readOnly: true
+          
+      volumes:
+        - name: ui-code
+          configMap:
+            name: iot-ui-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-ui
+  namespace: iot-playground
+spec:
+  selector:
+    app: iot-ui
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

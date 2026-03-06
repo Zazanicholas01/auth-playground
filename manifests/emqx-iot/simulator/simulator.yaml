@@ -1,0 +1,275 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iot-simulator-code
+  namespace: iot-playground
+data:
+  package.json: |
+    {
+      "name": "iot-simulator",
+      "private": true,
+      "type": "module",
+      "dependencies": {
+        "mqtt": "^5.13.3"
+      }
+    }
+
+  index.js: |
+    import mqtt from "mqtt";
+
+    const mqttUrl = process.env.MQTT_URL || "mqtt://emqx-listeners:1883";
+    const topicRoot = process.env.MQTT_TOPIC_ROOT || "site/alpha/devices";
+    const intervalMs = Number(process.env.PUBLISH_INTERVAL_MS || 2000);
+    const httpPort = Number(process.env.SIMULATOR_PORT || 8080);
+
+    const deviceIds = (process.env.DEVICE_IDS || "boiler-01,freezer-02,pump-03,door-04,hvac-05")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    let scenario = process.env.SCENARIO || "normal";
+    let tick = 0;
+    let publishTimer = null;
+
+    const state = new Map(
+      deviceIds.map((deviceId, index) => [
+        deviceId,
+        {
+          deviceId,
+          temperature: 20 + index * 2,
+          humidity: 40 + index,
+          pressure: 1000 + index * 3,
+          battery: 95 - index * 6,
+        },
+      ]),
+    );
+
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+    const nextTelemetry = (current) => {
+      const drift = Math.sin(tick / 5) * 0.6;
+      const anomaly = scenario === "incident" && current.deviceId === "freezer-02" ? 14 : 0;
+      const warning = scenario === "warning-spike" && current.deviceId === "pump-03" ? 8 : 0;
+
+      return {
+        ...current,
+        temperature: +(current.temperature + drift + anomaly + warning + (Math.random() - 0.5) * 1.2).toFixed(1),
+        humidity: +clamp(current.humidity + (Math.random() - 0.5) * 2, 20, 90).toFixed(1),
+        pressure: +clamp(current.pressure + (Math.random() - 0.5) * 4, 970, 1040).toFixed(1),
+        battery: +clamp(current.battery - Math.random() * 0.05, 10, 100).toFixed(1),
+      };
+    };
+
+    const severityFor = (telemetry) => {
+      if (telemetry.temperature > 30 || telemetry.battery < 20) return "critical";
+      if (telemetry.temperature > 25 || telemetry.battery < 35) return "warning";
+      return "normal";
+    };
+
+    const client = mqtt.connect(mqttUrl, {
+      reconnectPeriod: 3000,
+      connectTimeout: 10000,
+    });
+
+    function publishAll() {
+      if (!client.connected) {
+        console.log("simulator skipped publish because mqtt is not connected");
+        return;
+      }
+
+      tick += 1;
+
+      for (const [deviceId, current] of state.entries()) {
+        const telemetry = {
+          ...nextTelemetry(current),
+          online: true,
+          ts: new Date().toISOString(),
+        };
+
+        state.set(deviceId, telemetry);
+
+        const severity = severityFor(telemetry);
+        const status = {
+          deviceId,
+          online: true,
+          severity,
+          ts: telemetry.ts,
+        };
+
+        client.publish(`${topicRoot}/${deviceId}/telemetry`, JSON.stringify(telemetry));
+        client.publish(`${topicRoot}/${deviceId}/status`, JSON.stringify(status));
+
+        if (severity !== "normal") {
+          client.publish(
+            `${topicRoot}/${deviceId}/alerts`,
+            JSON.stringify({
+              deviceId,
+              severity,
+              message:
+                severity === "critical"
+                  ? "Threshold exceeded, operator action required"
+                  : "Device is trending outside normal range",
+              ts: telemetry.ts,
+            }),
+          );
+        }
+      }
+
+      console.log("simulator published batch for scenario:", scenario);
+    }
+
+    client.on("connect", () => {
+      console.log("simulator connected to mqtt broker:", mqttUrl);
+
+      if (!publishTimer) {
+        publishAll();
+        publishTimer = setInterval(publishAll, intervalMs);
+      }
+    });
+
+    client.on("reconnect", () => {
+      console.log("simulator reconnecting to mqtt broker:", mqttUrl);
+    });
+
+    client.on("close", () => {
+      console.log("simulator mqtt connection closed");
+    });
+
+    client.on("offline", () => {
+      console.log("simulator mqtt client offline");
+    });
+
+    client.on("error", (error) => {
+      console.error("simulator mqtt error:", error.message);
+    });
+
+    const corsHeaders = {
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "GET, POST, OPTIONS",
+      "access-control-allow-headers": "content-type",
+    };
+
+    const json = (payload, status = 200) =>
+      new Response(JSON.stringify(payload, null, 2), {
+        status,
+        headers: {
+          "content-type": "application/json",
+          "cache-control": "no-store",
+          ...corsHeaders,
+        },
+      });
+
+    Bun.serve({
+      port: httpPort,
+      async fetch(request) {
+        const url = new URL(request.url);
+
+        if (request.method === "OPTIONS") {
+          return new Response(null, {
+            status: 204,
+            headers: corsHeaders,
+          });
+        }
+
+        if (request.method === "GET" && url.pathname === "/health") {
+          return json({
+            ok: true,
+            mqttUrl,
+            mqttConnected: client.connected,
+            scenario,
+            devices: [...state.keys()],
+          });
+        }
+
+        if (request.method === "GET" && url.pathname === "/scenario") {
+          return json({
+            scenario,
+            available: ["normal", "warning-spike", "incident"],
+          });
+        }
+
+        if (request.method === "POST" && url.pathname.startsWith("/scenario/")) {
+          const next = url.pathname.split("/").pop();
+          const allowed = new Set(["normal", "warning-spike", "incident"]);
+
+          if (!allowed.has(next)) {
+            return json({ error: "invalid scenario" }, 400);
+          }
+
+          scenario = next;
+          tick = 0;
+
+          return json({ ok: true, scenario });
+        }
+
+        return json({ error: "not found" }, 404);
+      },
+    });
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iot-simulator
+  namespace: iot-playground
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-simulator
+  template:
+    metadata:
+      labels:
+        app: iot-simulator
+    spec:
+      containers:
+        - name: simulator
+          image: oven/bun:1
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -lc
+            - cp -R /src/. /work && cd /work && bun install --no-save && bun run index.js
+          env:
+            - name: MQTT_URL
+              value: mqtt://emqx-listeners:1883
+            - name: MQTT_TOPIC_ROOT
+              value: site/alpha/devices
+            - name: DEVICE_IDS
+              value: boiler-01,freezer-02,pump-03,door-04,hvac-05
+            - name: PUBLISH_INTERVAL_MS
+              value: "2000"
+            - name: SCENARIO
+              value: normal
+            - name: SIMULATOR_PORT
+              value: "8080"
+
+          ports:
+            - containerPort: 8080
+              name: http
+          
+          volumeMounts:
+            - name: simulator-code
+              mountPath: /src
+              readOnly: true
+            - name: simulator-workdir
+              mountPath: /work
+      
+      volumes:
+        - name: simulator-code
+          configMap:
+            name: iot-simulator-code
+        - name: simulator-workdir
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-simulator
+  namespace: iot-playground
+spec:
+  selector:
+    app: iot-simulator
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

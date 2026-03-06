@@ -1,0 +1,45 @@
+CORE BROKER
+
+    - Emqx.yaml
+        - Declares EMQX custom resource managed by the EMQX Operator
+        - Configures the broker image, dashboard password, MQTT listener on 1883 and operator-managed services
+    
+    - Emqx-route.yaml
+        - Exposes the EMQX Dashboard through Gateway API as an HTTPRoute
+    
+    - Mqtt-Tcp-Route.yaml
+        - Intended to expose raw MQTT through Gateway API via TCP Route
+
+SIMULATOR
+
+    - simulator.yaml
+        - Simulator runtime code in a ConfigMap + Deployment / Service
+        - Runs on Bun, publishes fake device telemetry / status / alerts to EMQX
+        - Exposes HTTP control endpoints /health and /scenario
+
+API
+
+    - api.yaml
+        - Contains API runtime code 
+        - Subscribes to MQTT topics from EMQX, stores current device state and recent events in memory
+        - Exposes /health /devices and /events
+
+UI
+
+    - ui-client.yaml
+        - Contains the UI assets
+        - Defines the Bun-based Deployment and Service that serve static frontend
+
+GATEWAY ROUTING
+
+    - simulator-route.yaml
+        - Main HTTPRoute for the custom playground
+        - / --> UI
+        - /api --> API
+        - /simulator --> Simulator control service with prefix rewrite
+
+FLOW
+
+    - iot-simulator publishes MQTT messages to emqx-listeners:1883
+    - iot-api subscribes to these topics and exposes state over HTTP
+    - iot-ui calls API and simulator control endpoints to render the dashboard and trigger scenarios

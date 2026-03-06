@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iot-playground-config
+  namespace: iot-playground
+data:
+  MQTT_HOST: emqx-listeners
+  MQTT_PORT: "1883"
+  MQTT_URL: mqtt://emqx-listeners:1883
+  MQTT_TOPIC_ROOT: site/alpha/devices
+  DEVICE_IDS: boiler-01,freezer-02,pump-03,door-04,hvac-05
+  API_PORT: "8080"
+  UI_PORT: "80"

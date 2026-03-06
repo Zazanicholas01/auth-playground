@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: iot-playground
+
+resources:
+  - emqx/emqx.yaml
+  - emqx/emqx-route.yaml
+#  - emqx/mqtt-tcp-route.yaml
+  - simulator/api.yaml
+  - simulator/simulator.yaml
+  - simulator/ui-client.yaml
+  - simulator/simulator-route.yaml
+  - config.yaml
