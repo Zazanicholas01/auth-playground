@@ -18,7 +18,7 @@ data:
           <aside class="panel left">
             <div class="section-head">
               <div>
-                <div class="eyebrow">Zones</div>
+                <div class="eyebrow">&#127807; Zones</div>
                 <h3 class="section-title">Greenhouse Fleet</h3>
               </div>
               <div id="broker" class="pill normal">Broker unknown</div>
@@ -29,7 +29,7 @@ data:
           <section class="center">
             <section class="panel hero">
               <div>
-                <div class="eyebrow">Near-digital-twin greenhouse</div>
+                <div class="eyebrow">&#127793; Near-digital-twin greenhouse</div>
                 <h1>Greenhouse Operations Console</h1>
                 <p class="muted hero-copy">
                   Synthetic climate, irrigation, root-zone, and actuator telemetry flowing through EMQX.
@@ -62,7 +62,7 @@ data:
               <article class="panel block">
                 <div class="section-head">
                   <div>
-                    <div class="eyebrow">Air Climate</div>
+                    <div class="eyebrow">&#127777;&#65039; Air Climate</div>
                     <h3 class="section-title">Indoor Conditions</h3>
                   </div>
                 </div>
@@ -72,7 +72,7 @@ data:
               <article class="panel block">
                 <div class="section-head">
                   <div>
-                    <div class="eyebrow">Weather Driver</div>
+                    <div class="eyebrow">&#9728;&#65039; Weather Driver</div>
                     <h3 class="section-title">Outdoor Conditions</h3>
                   </div>
                 </div>
@@ -84,7 +84,7 @@ data:
               <article class="panel block">
                 <div class="section-head">
                   <div>
-                    <div class="eyebrow">Root Zone</div>
+                    <div class="eyebrow">&#129716; Root Zone</div>
                     <h3 class="section-title">Soil and Irrigation</h3>
                   </div>
                 </div>
@@ -94,7 +94,7 @@ data:
               <article class="panel block">
                 <div class="section-head">
                   <div>
-                    <div class="eyebrow">Automation</div>
+                    <div class="eyebrow">&#9881;&#65039; Automation</div>
                     <h3 class="section-title">Actuator State</h3>
                   </div>
                 </div>
@@ -106,7 +106,7 @@ data:
               <article class="panel block">
                 <div class="section-head">
                   <div>
-                    <div class="eyebrow">Derived Metrics</div>
+                    <div class="eyebrow">&#127811; Derived Metrics</div>
                     <h3 class="section-title">Agronomic Signals</h3>
                   </div>
                 </div>
@@ -116,7 +116,7 @@ data:
               <article class="panel block">
                 <div class="section-head">
                   <div>
-                    <div class="eyebrow">Trend Snapshot</div>
+                    <div class="eyebrow">&#128200; Trend Snapshot</div>
                     <h3 class="section-title">Recent History</h3>
                   </div>
                 </div>
@@ -128,7 +128,7 @@ data:
           <aside class="panel right">
             <div class="section-head">
               <div>
-                <div class="eyebrow">Alerts</div>
+                <div class="eyebrow">&#128680; Alerts</div>
                 <h3 class="section-title">Event Stream</h3>
               </div>
             </div>
@@ -149,19 +149,19 @@ data:
 
   styles.css: |
     :root {
-      --bg: #f3f1e8;
-      --bg-2: #e4efe1;
-      --panel: rgba(252, 250, 244, 0.94);
-      --panel-2: rgba(244, 248, 239, 0.96);
-      --line: rgba(87, 112, 88, 0.12);
-      --text: #1d2b21;
-      --muted: #5f7263;
-      --green: #2f7d4a;
-      --moss: #7a8f45;
-      --amber: #a96f16;
+      --bg: #eef6e8;
+      --bg-2: #d7eccf;
+      --panel: rgba(246, 252, 242, 0.95);
+      --panel-2: rgba(234, 247, 228, 0.96);
+      --line: rgba(56, 122, 64, 0.14);
+      --text: #16301a;
+      --muted: #54705a;
+      --green: #1f8f3a;
+      --moss: #4f9a3d;
+      --amber: #b37a14;
       --red: #b23b3b;
       --blue: #2d6f7c;
-      --shadow: 0 22px 40px rgba(31, 43, 33, 0.10);
+      --shadow: 0 22px 40px rgba(24, 66, 28, 0.12);
     }
 
     * {
@@ -173,8 +173,8 @@ data:
       color: var(--text);
       font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(122, 143, 69, 0.18), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(45, 111, 124, 0.12), transparent 26%),
+        radial-gradient(circle at top left, rgba(31, 143, 58, 0.24), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(79, 154, 61, 0.18), transparent 28%),
         linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
     }
 
@@ -224,7 +224,7 @@ data:
       gap: 16px;
       padding: 20px 22px;
       background:
-        linear-gradient(135deg, rgba(122, 143, 69, 0.10), rgba(45, 111, 124, 0.08)),
+        linear-gradient(135deg, rgba(31, 143, 58, 0.16), rgba(79, 154, 61, 0.14)),
         var(--panel);
     }
 
@@ -263,7 +263,7 @@ data:
     }
 
     .controls button {
-      border: 1px solid rgba(47, 125, 74, 0.20);
+      border: 1px solid rgba(31, 143, 58, 0.28);
       background: rgba(244, 248, 239, 0.95);
       color: var(--text);
       border-radius: 999px;
@@ -273,7 +273,7 @@ data:
     }
 
     .controls button:hover {
-      border-color: rgba(47, 125, 74, 0.45);
+      border-color: rgba(31, 143, 58, 0.58);
       transform: translateY(-1px);
     }
 
@@ -339,7 +339,7 @@ data:
     }
 
     .normal {
-      background: rgba(47, 125, 74, 0.14);
+      background: rgba(31, 143, 58, 0.18);
       color: var(--green);
     }
 
@@ -413,7 +413,7 @@ data:
     .spark-bars span {
       flex: 1;
       border-radius: 6px 6px 0 0;
-      background: linear-gradient(180deg, rgba(45, 111, 124, 0.75), rgba(47, 125, 74, 0.55));
+      background: linear-gradient(180deg, rgba(79, 154, 61, 0.85), rgba(31, 143, 58, 0.65));
       min-height: 4px;
     }
 
@@ -751,5 +751,7 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
+
+
 
 
