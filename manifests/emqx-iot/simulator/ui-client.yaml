@@ -48,8 +48,8 @@ data:
 
         <script>
           window.__IOT_CONFIG__ = {
-            apiBase: "http://localhost:8090",
-            simulatorBase: "http://localhost:8091"
+            apiBase: window.location.origin + "/api",
+            simulatorBase: window.location.origin + "/simulator"
           };
         </script>
         <script src="/index.js" type="module"></script>
