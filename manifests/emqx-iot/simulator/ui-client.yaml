@@ -1,4 +1,4 @@
-apiVersion: v1
+﻿apiVersion: v1
 kind: ConfigMap
 metadata:
   name: iot-ui-code
@@ -616,7 +616,7 @@ data:
           '<div class="muted" style="margin-top:4px">Last seen: ' + new Date(device.lastSeen || Date.now()).toLocaleTimeString() + '</div>' +
           '<div style="margin-top:10px;font-size:14px">' +
             '&#127777;&#65039; ' + fmt(device.indoor?.temperature ?? device.temperature, 1, ' C') +
-            ' � &#128167; ' + fmt(device.indoor?.humidity ?? device.humidity, 1, ' %') +
+            ' Â· &#128167; ' + fmt(device.indoor?.humidity ?? device.humidity, 1, ' %') +
           '</div>' +
         '</div>'
       ).join("");
@@ -877,6 +877,7 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
+
 
 
 
