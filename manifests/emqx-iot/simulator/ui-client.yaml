@@ -631,30 +631,33 @@ data:
     }
 
     async function load() {
-      const [health, devices, summary, alerts] = await Promise.all([
-        fetch(apiBase + "/health").then((r) => r.json()),
-        fetch(apiBase + "/devices").then((r) => r.json()),
-        fetch(apiBase + "/summary").then((r) => r.json()),
-        fetch(apiBase + "/alerts").then((r) => r.json()),
-      ]);
+      try {
+        const [health, devices, summary, alerts] = await Promise.all([
+          fetch(apiBase + "/health").then((r) => r.json()),
+          fetch(apiBase + "/devices").then((r) => r.json()),
+          fetch(apiBase + "/summary").then((r) => r.json()),
+          fetch(apiBase + "/alerts").then((r) => r.json()),
+        ]);
 
-      brokerEl.textContent = health.mqttConnected ? "Broker connected" : "Broker disconnected";
-      brokerEl.className = "pill " + (health.mqttConnected ? "normal" : "critical");
+        brokerEl.textContent = health.mqttConnected ? "Broker connected" : "Broker disconnected";
+        brokerEl.className = "pill " + (health.mqttConnected ? "normal" : "critical");
 
-      renderSummary(summary);
-      renderFleet(devices);
-      renderEvents(events);
+        renderSummary(summary);
+        renderFleet(devices);
+        renderEvents(alerts);
 
-      const zone = pickPrimaryZone(devices);
-      if (!zone) return;
+        const zone = pickPrimaryZone(devices);
+        if (!zone) return;
 
-      currentZoneId = zone.deviceId;
-      renderZone(zone);
+        currentZoneId = zone.deviceId;
+        renderZone(zone);
 
-      const history = await fetch(apiBase + "/history/" + currentZoneId).then((r) => r.json());
-      renderHistory(history);
+        const history = await fetch(apiBase + "/history/" + currentZoneId).then((r) => r.json());
+        renderHistory(history);
+      } catch (error) {
+        console.error("failed to load dashboard", error);
+      }
     }
-
     document.querySelectorAll("[data-scenario]").forEach((button) => {
       button.addEventListener("click", async () => {
         try {
@@ -748,3 +751,5 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
+
+
