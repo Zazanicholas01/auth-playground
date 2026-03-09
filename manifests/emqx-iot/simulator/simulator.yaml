@@ -21,50 +21,526 @@ data:
     const topicRoot = process.env.MQTT_TOPIC_ROOT || "site/alpha/devices";
     const intervalMs = Number(process.env.PUBLISH_INTERVAL_MS || 2000);
     const httpPort = Number(process.env.SIMULATOR_PORT || 8080);
+    const zoneId = process.env.ZONE_ID || "greenhouse-a";
+    const tickSeconds = intervalMs / 1000;
 
-    const deviceIds = (process.env.DEVICE_IDS || "boiler-01,freezer-02,pump-03,door-04,hvac-05")
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean);
-
-    let scenario = process.env.SCENARIO || "normal";
+    let scenario = process.env.SCENARIO || "baseline-day";
     let tick = 0;
     let publishTimer = null;
 
-    const state = new Map(
-      deviceIds.map((deviceId, index) => [
-        deviceId,
-        {
-          deviceId,
-          temperature: 20 + index * 2,
-          humidity: 40 + index,
-          pressure: 1000 + index * 3,
-          battery: 95 - index * 6,
-        },
-      ]),
-    );
+    const allowedScenarios = new Set([
+      "baseline-day",
+      "hot-humid-afternoon",
+      "cold-night",
+      "irrigation-failure",
+      "ventilation-failure",
+      "high-radiation-stress",
+    ]);
 
     const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+    const noise = (amplitude = 1) => (Math.random() - 0.5) * 2 * amplitude;
+    const round = (value, digits = 2) => Number(value.toFixed(digits));
 
-    const nextTelemetry = (current) => {
-      const drift = Math.sin(tick / 5) * 0.6;
-      const anomaly = scenario === "incident" && current.deviceId === "freezer-02" ? 14 : 0;
-      const warning = scenario === "warning-spike" && current.deviceId === "pump-03" ? 8 : 0;
+    function solarProfile(hour) {
+      return Math.max(0, Math.sin(((hour - 6) / 12) * Math.PI));
+    }
+
+    function outdoorTemperatureProfile(hour) {
+      return 15 + 8 * Math.sin(((hour - 8) / 24) * Math.PI * 2);
+    }
+
+    function saturationVaporPressure(tempC) {
+      return 0.6108 * Math.exp((17.27 * tempC) / (tempC + 237.3));
+    }
+
+    function dewPointC(tempC, rh) {
+      const safeRh = clamp(rh, 1, 100);
+      const a = 17.27;
+      const b = 237.7;
+      const alpha = (a * tempC) / (b + tempC) + Math.log(safeRh / 100);
+      return (b * alpha) / (a - alpha);
+    }
+
+    function vpdKPa(tempC, rh) {
+      return saturationVaporPressure(tempC) * (1 - clamp(rh, 0, 100) / 100);
+    }
+
+    function absoluteHumidity(tempC, rh) {
+      const svp = saturationVaporPressure(tempC);
+      const avp = svp * clamp(rh, 0, 100) / 100;
+      return (216.7 * avp) / (tempC + 273.15);
+    }
+
+    function relativeHumidityFromAbsolute(tempC, absHumidity) {
+      const svp = saturationVaporPressure(tempC);
+      const avp = (absHumidity * (tempC + 273.15)) / 216.7;
+      return clamp((avp / svp) * 100, 0, 100);
+    }
+
+    function severityFor(currentState) {
+      if (
+        currentState.indoor.temperature > 32 ||
+        currentState.indoor.co2 > 1400 ||
+        currentState.derived.vpd > 2.0 ||
+        currentState.soil.moisture < 0.22 ||
+        currentState.soil.tankLevel < 10
+      ) {
+        return "critical";
+      }
+
+      if (
+        currentState.indoor.temperature > 28 ||
+        currentState.indoor.co2 > 1100 ||
+        currentState.derived.vpd > 1.4 ||
+        currentState.soil.moisture < 0.28 ||
+        currentState.soil.tankLevel < 20
+      ) {
+        return "warning";
+      }
+
+      return "normal";
+    }
+
+    function createInitialState() {
+      const temperature = 22.0;
+      const humidity = 68.0;
 
       return {
-        ...current,
-        temperature: +(current.temperature + drift + anomaly + warning + (Math.random() - 0.5) * 1.2).toFixed(1),
-        humidity: +clamp(current.humidity + (Math.random() - 0.5) * 2, 20, 90).toFixed(1),
-        pressure: +clamp(current.pressure + (Math.random() - 0.5) * 4, 970, 1040).toFixed(1),
-        battery: +clamp(current.battery - Math.random() * 0.05, 10, 100).toFixed(1),
+        zoneId,
+        outdoor: {
+          temperature: 16.0,
+          humidity: 72.0,
+          solar: 0.0,
+          wind: 1.2,
+        },
+        indoor: {
+          temperature,
+          humidity,
+          absoluteHumidity: absoluteHumidity(temperature, humidity),
+          co2: 520,
+          pressure: 1012,
+          par: 0,
+        },
+        soil: {
+          moisture: 0.34,
+          temperature: 20.0,
+          ec: 1.8,
+          ph: 6.2,
+          tankLevel: 82.0,
+          irrigationFlow: 0,
+        },
+        actuators: {
+          vent: 0.15,
+          heater: 0.0,
+          fan: 0.0,
+          mister: 0.0,
+          irrigation: 0.0,
+          growLight: 0.0,
+        },
+        derived: {
+          dewPoint: 0,
+          vpd: 0,
+          evapotranspiration: 0,
+          irrigationDemand: 0,
+        },
       };
-    };
+    }
 
-    const severityFor = (telemetry) => {
-      if (telemetry.temperature > 30 || telemetry.battery < 20) return "critical";
-      if (telemetry.temperature > 25 || telemetry.battery < 35) return "warning";
-      return "normal";
-    };
+    let state = createInitialState();
+
+    function resetStateForScenario(nextScenario) {
+      scenario = nextScenario;
+      tick = 0;
+      state = createInitialState();
+    }
+
+    function updateOutdoor(now, activeScenario) {
+      const hour = now.getHours() + now.getMinutes() / 60;
+      const solarBase = solarProfile(hour);
+      let solar = clamp(solarBase + noise(0.08), 0, 1);
+      let temperature = outdoorTemperatureProfile(hour) + 7 * solar + noise(0.4);
+      let humidity = 82 - 22 * solar + noise(2.0);
+      let wind = clamp(1.5 + noise(0.6), 0, 6);
+
+      if (activeScenario === "hot-humid-afternoon") {
+        temperature += 5;
+        humidity += 8;
+      }
+
+      if (activeScenario === "cold-night") {
+        temperature -= 7;
+        solar *= 0.25;
+      }
+
+      if (activeScenario === "high-radiation-stress") {
+        temperature += 3;
+        solar = clamp(solar + 0.18, 0, 1);
+      }
+
+      return {
+        temperature: clamp(temperature, -5, 45),
+        humidity: clamp(humidity, 20, 100),
+        solar: clamp(solar, 0, 1),
+        wind: clamp(wind, 0, 8),
+      };
+    }
+
+    function moveActuator(current, target, rate = 0.2) {
+      return clamp(current + (target - current) * rate, 0, 1);
+    }
+
+    function computeControlTargets(currentState, activeScenario, currentTick) {
+      const targets = {
+        vent: 0.1,
+        heater: 0.0,
+        fan: 0.0,
+        mister: 0.0,
+        irrigation: 0.0,
+        growLight: currentState.outdoor.solar < 0.12 ? 0.35 : 0.0,
+      };
+
+      if (currentState.indoor.temperature > 25.5) {
+        targets.vent = clamp((currentState.indoor.temperature - 24) / 8, 0.15, 1);
+        targets.fan = clamp((currentState.indoor.temperature - 25) / 6, 0, 1);
+      }
+
+      if (currentState.indoor.temperature < 19) {
+        targets.heater = clamp((20.5 - currentState.indoor.temperature) / 4, 0, 1);
+        targets.vent = 0.05;
+      }
+
+      if (currentState.indoor.humidity > 85) {
+        targets.vent = Math.max(targets.vent, 0.45);
+        targets.fan = Math.max(targets.fan, 0.35);
+      }
+
+      if (currentState.indoor.humidity < 58 && currentState.outdoor.solar > 0.2) {
+        targets.mister = clamp((60 - currentState.indoor.humidity) / 20, 0, 0.5);
+      }
+
+      if (currentState.soil.moisture < 0.29 || (currentTick % 90 === 0 && currentState.outdoor.solar > 0.3)) {
+        targets.irrigation = currentState.soil.tankLevel > 5 ? 0.75 : 0.0;
+      }
+
+      if (activeScenario === "hot-humid-afternoon") {
+        targets.vent = Math.max(targets.vent, 0.8);
+        targets.fan = Math.max(targets.fan, 0.65);
+        targets.mister = Math.max(targets.mister, 0.15);
+      }
+
+      if (activeScenario === "cold-night") {
+        targets.vent = 0.03;
+        targets.fan = 0.0;
+        targets.heater = Math.max(targets.heater, 0.7);
+        targets.growLight = 0.25;
+      }
+
+      if (activeScenario === "irrigation-failure") {
+        targets.irrigation = 0.0;
+      }
+
+      if (activeScenario === "ventilation-failure") {
+        targets.vent = 0.0;
+        targets.fan = 0.0;
+      }
+
+      if (activeScenario === "high-radiation-stress") {
+        targets.vent = Math.max(targets.vent, 0.5);
+        targets.fan = Math.max(targets.fan, 0.45);
+        targets.growLight = 0.0;
+      }
+
+      return targets;
+    }
+
+    function updateActuators(currentActuators, currentState, activeScenario, currentTick) {
+      const targets = computeControlTargets(currentState, activeScenario, currentTick);
+
+      return {
+        vent: moveActuator(currentActuators.vent, targets.vent, 0.3),
+        heater: moveActuator(currentActuators.heater, targets.heater, 0.15),
+        fan: moveActuator(currentActuators.fan, targets.fan, 0.25),
+        mister: moveActuator(currentActuators.mister, targets.mister, 0.25),
+        irrigation: moveActuator(currentActuators.irrigation, targets.irrigation, 0.45),
+        growLight: moveActuator(currentActuators.growLight, targets.growLight, 0.2),
+      };
+    }
+
+    function updateIndoor(currentIndoor, outdoor, soil, actuators, dtSeconds) {
+      const exchange = 0.010 * (outdoor.temperature - currentIndoor.temperature) * dtSeconds;
+      const solarGain = 0.22 * outdoor.solar * dtSeconds;
+      const heaterGain = 0.28 * actuators.heater * dtSeconds;
+      const ventCooling =
+        0.015 * actuators.vent * (currentIndoor.temperature - outdoor.temperature) * dtSeconds;
+      const fanCooling =
+        0.01 * actuators.fan * (currentIndoor.temperature - outdoor.temperature) * dtSeconds;
+      const mistCooling = 0.07 * actuators.mister * dtSeconds;
+      const canopyBuffer = -0.008 * (currentIndoor.temperature - soil.temperature) * dtSeconds;
+
+      const temperature = clamp(
+        currentIndoor.temperature +
+          exchange +
+          solarGain +
+          heaterGain -
+          ventCooling -
+          fanCooling -
+          mistCooling +
+          canopyBuffer +
+          noise(0.08),
+        5,
+        45,
+      );
+
+      const outdoorAbsHumidity = absoluteHumidity(outdoor.temperature, outdoor.humidity);
+      const evapotranspirationMass =
+        (0.08 + 0.35 * outdoor.solar + 0.08 * vpdKPa(currentIndoor.temperature, currentIndoor.humidity)) *
+        clamp(soil.moisture / 0.35, 0.45, 1.3) *
+        (dtSeconds / 60);
+      const mistInput = 1.3 * actuators.mister * (dtSeconds / 60);
+      const ventExchange =
+        0.35 * (actuators.vent + 0.5 * actuators.fan) *
+        (currentIndoor.absoluteHumidity - outdoorAbsHumidity) *
+        (dtSeconds / 60);
+
+      let absoluteHumidityValue =
+        currentIndoor.absoluteHumidity + evapotranspirationMass + mistInput - ventExchange + noise(0.03);
+
+      const relativeHumidity = relativeHumidityFromAbsolute(temperature, absoluteHumidityValue);
+      const condensation = relativeHumidity > 96 ? (relativeHumidity - 96) * 0.04 : 0;
+      absoluteHumidityValue = clamp(absoluteHumidityValue - condensation, 4, 35);
+
+      const humidity = clamp(relativeHumidityFromAbsolute(temperature, absoluteHumidityValue), 35, 100);
+
+      const co2Drawdown =
+        (0.8 + 2.0 * outdoor.solar + 0.4 * actuators.growLight) *
+        clamp(1.4 - vpdKPa(temperature, humidity), 0.4, 1.4);
+      const co2Exchange =
+        18 * (actuators.vent + 0.4 * actuators.fan) * ((420 - currentIndoor.co2) / 100) * dtSeconds;
+      const co2 = clamp(currentIndoor.co2 + co2Exchange - co2Drawdown + noise(2), 300, 1600);
+
+      const par = clamp(950 * outdoor.solar + 280 * actuators.growLight + noise(8), 0, 1500);
+
+      return {
+        temperature,
+        humidity,
+        absoluteHumidity: absoluteHumidityValue,
+        co2,
+        pressure: 1012 + noise(1.2),
+        par,
+      };
+    }
+
+    function updateSoil(currentSoil, indoor, actuators, dtSeconds) {
+      const fieldCapacity = 0.42;
+      const wiltingPoint = 0.16;
+      const et =
+        clamp(
+          0.00007 * indoor.par + 0.014 * vpdKPa(indoor.temperature, indoor.humidity),
+          0,
+          0.03,
+        ) * (dtSeconds / 2);
+      const irrigationFlow = 1.6 * actuators.irrigation;
+      const irrigationIn = 0.016 * actuators.irrigation * dtSeconds;
+      const drainage = Math.max(0, currentSoil.moisture - fieldCapacity) * 0.06 * dtSeconds;
+      const stressMultiplier = currentSoil.moisture < wiltingPoint ? 0.3 : 1;
+
+      const moisture =
+        currentSoil.moisture + irrigationIn - drainage - et * stressMultiplier + noise(0.001);
+
+      const temperature =
+        currentSoil.temperature +
+        0.025 * (indoor.temperature - currentSoil.temperature) * dtSeconds -
+        0.06 * actuators.irrigation * dtSeconds +
+        noise(0.04);
+
+      const tankLevel =
+        currentSoil.tankLevel - 0.18 * irrigationFlow * dtSeconds + noise(0.015);
+
+      return {
+        moisture: clamp(moisture, 0.12, 0.6),
+        temperature: clamp(temperature, 4, 35),
+        ec: clamp(currentSoil.ec + 0.02 * et - 0.03 * actuators.irrigation + noise(0.01), 0.8, 3.5),
+        ph: clamp(currentSoil.ph + noise(0.01), 5.2, 7.5),
+        tankLevel: clamp(tankLevel, 0, 100),
+        irrigationFlow: clamp(irrigationFlow, 0, 2.0),
+      };
+    }
+
+    function updateDerived(indoor, soil) {
+      const dewPoint = dewPointC(indoor.temperature, indoor.humidity);
+      const vpd = vpdKPa(indoor.temperature, indoor.humidity);
+      const evapotranspiration = clamp(
+        0.02 + indoor.par / 1800 + 0.35 * vpd + 0.02 * Math.max(indoor.temperature - 20, 0),
+        0,
+        2.5,
+      );
+      const irrigationDemand = clamp(
+        (0.45 - soil.moisture) * 120 + vpd * 22 + indoor.par / 220,
+        0,
+        100,
+      );
+
+      return {
+        dewPoint: round(dewPoint, 2),
+        vpd: round(vpd, 2),
+        evapotranspiration: round(evapotranspiration, 2),
+        irrigationDemand: round(irrigationDemand, 1),
+      };
+    }
+
+    function buildAlerts(currentState) {
+      const alerts = [];
+
+      if (currentState.indoor.temperature > 32) {
+        alerts.push({
+          severity: "critical",
+          code: "HIGH_TEMP",
+          message: "Air temperature too high",
+        });
+      } else if (currentState.indoor.temperature > 28) {
+        alerts.push({
+          severity: "warning",
+          code: "TEMP_RISING",
+          message: "Air temperature trending high",
+        });
+      }
+
+      if (currentState.indoor.temperature < 15) {
+        alerts.push({
+          severity: "warning",
+          code: "LOW_TEMP",
+          message: "Air temperature below target band",
+        });
+      }
+
+      if (currentState.derived.vpd > 1.6) {
+        alerts.push({
+          severity: "warning",
+          code: "HIGH_VPD",
+          message: "Air too dry for stable transpiration",
+        });
+      }
+
+      if (currentState.indoor.co2 > 1200) {
+        alerts.push({
+          severity: "warning",
+          code: "HIGH_CO2",
+          message: "CO2 concentration elevated",
+        });
+      }
+
+      if (currentState.soil.moisture < 0.22) {
+        alerts.push({
+          severity: "critical",
+          code: "LOW_SOIL_MOISTURE",
+          message: "Root zone too dry",
+        });
+      } else if (currentState.soil.moisture < 0.28) {
+        alerts.push({
+          severity: "warning",
+          code: "SOIL_DRYING",
+          message: "Root zone moisture is trending low",
+        });
+      }
+
+      if (currentState.soil.tankLevel < 15) {
+        alerts.push({
+          severity: "warning",
+          code: "LOW_TANK",
+          message: "Irrigation tank running low",
+        });
+      }
+
+      if (scenario === "ventilation-failure") {
+        alerts.push({
+          severity: "warning",
+          code: "VENT_FAULT",
+          message: "Ventilation actuator unavailable",
+        });
+      }
+
+      if (scenario === "irrigation-failure") {
+        alerts.push({
+          severity: "warning",
+          code: "IRRIGATION_FAULT",
+          message: "Irrigation actuator unavailable",
+        });
+      }
+
+      return alerts;
+    }
+
+    function buildTelemetryPayload(currentState) {
+      const now = new Date().toISOString();
+      const alerts = buildAlerts(currentState);
+      const severity = severityFor(currentState);
+
+      return {
+        zoneId: currentState.zoneId,
+        deviceId: currentState.zoneId,
+        ts: now,
+        scenario,
+        severity,
+        online: true,
+        outdoor: {
+          temperature: round(currentState.outdoor.temperature, 1),
+          humidity: round(currentState.outdoor.humidity, 1),
+          solar: round(currentState.outdoor.solar, 3),
+          wind: round(currentState.outdoor.wind, 2),
+        },
+        indoor: {
+          temperature: round(currentState.indoor.temperature, 1),
+          humidity: round(currentState.indoor.humidity, 1),
+          absoluteHumidity: round(currentState.indoor.absoluteHumidity, 2),
+          co2: Math.round(currentState.indoor.co2),
+          pressure: round(currentState.indoor.pressure, 1),
+          par: Math.round(currentState.indoor.par),
+          dewPoint: currentState.derived.dewPoint,
+          vpd: currentState.derived.vpd,
+        },
+        soil: {
+          moisture: round(currentState.soil.moisture, 3),
+          temperature: round(currentState.soil.temperature, 1),
+          ec: round(currentState.soil.ec, 2),
+          ph: round(currentState.soil.ph, 2),
+          tankLevel: round(currentState.soil.tankLevel, 1),
+          irrigationFlow: round(currentState.soil.irrigationFlow, 2),
+        },
+        actuators: {
+          vent: round(currentState.actuators.vent, 2),
+          heater: round(currentState.actuators.heater, 2),
+          fan: round(currentState.actuators.fan, 2),
+          mister: round(currentState.actuators.mister, 2),
+          irrigation: round(currentState.actuators.irrigation, 2),
+          growLight: round(currentState.actuators.growLight, 2),
+        },
+        derived: {
+          dewPoint: currentState.derived.dewPoint,
+          vpd: currentState.derived.vpd,
+          evapotranspiration: currentState.derived.evapotranspiration,
+          irrigationDemand: currentState.derived.irrigationDemand,
+        },
+        alerts,
+        temperature: round(currentState.indoor.temperature, 1),
+        humidity: round(currentState.indoor.humidity, 1),
+        pressure: round(currentState.indoor.pressure, 1),
+        battery: round(currentState.soil.tankLevel, 1),
+      };
+    }
+
+    function tickGreenhouse() {
+      const now = new Date();
+
+      tick += 1;
+
+      state.outdoor = updateOutdoor(now, scenario);
+      state.actuators = updateActuators(state.actuators, state, scenario, tick);
+      state.indoor = updateIndoor(state.indoor, state.outdoor, state.soil, state.actuators, tickSeconds);
+      state.soil = updateSoil(state.soil, state.indoor, state.actuators, tickSeconds);
+      state.derived = updateDerived(state.indoor, state.soil);
+
+      return buildTelemetryPayload(state);
+    }
 
     const client = mqtt.connect(mqttUrl, {
       reconnectPeriod: 3000,
@@ -77,45 +553,35 @@ data:
         return;
       }
 
-      tick += 1;
+      const telemetry = tickGreenhouse();
+      const status = {
+        zoneId,
+        deviceId: zoneId,
+        online: true,
+        severity: telemetry.severity,
+        scenario,
+        ts: telemetry.ts,
+      };
 
-      for (const [deviceId, current] of state.entries()) {
-        const telemetry = {
-          ...nextTelemetry(current),
-          online: true,
-          ts: new Date().toISOString(),
-        };
+      client.publish(`${topicRoot}/${zoneId}/telemetry`, JSON.stringify(telemetry));
+      client.publish(`${topicRoot}/${zoneId}/status`, JSON.stringify(status));
 
-        state.set(deviceId, telemetry);
-
-        const severity = severityFor(telemetry);
-        const status = {
-          deviceId,
-          online: true,
-          severity,
-          ts: telemetry.ts,
-        };
-
-        client.publish(`${topicRoot}/${deviceId}/telemetry`, JSON.stringify(telemetry));
-        client.publish(`${topicRoot}/${deviceId}/status`, JSON.stringify(status));
-
-        if (severity !== "normal") {
-          client.publish(
-            `${topicRoot}/${deviceId}/alerts`,
-            JSON.stringify({
-              deviceId,
-              severity,
-              message:
-                severity === "critical"
-                  ? "Threshold exceeded, operator action required"
-                  : "Device is trending outside normal range",
-              ts: telemetry.ts,
-            }),
-          );
-        }
+      for (const alert of telemetry.alerts) {
+        client.publish(
+          `${topicRoot}/${zoneId}/alerts`,
+          JSON.stringify({
+            zoneId,
+            deviceId: zoneId,
+            severity: alert.severity,
+            code: alert.code,
+            message: alert.message,
+            scenario,
+            ts: telemetry.ts,
+          }),
+        );
       }
 
-      console.log("simulator published batch for scenario:", scenario);
+      console.log("simulator published greenhouse batch for scenario:", scenario);
     }
 
     client.on("connect", () => {
@@ -177,28 +643,35 @@ data:
             mqttUrl,
             mqttConnected: client.connected,
             scenario,
-            devices: [...state.keys()],
+            zoneId,
           });
         }
 
         if (request.method === "GET" && url.pathname === "/scenario") {
           return json({
             scenario,
-            available: ["normal", "warning-spike", "incident"],
+            available: [...allowedScenarios],
+          });
+        }
+
+        if (request.method === "GET" && url.pathname === "/state") {
+          return json({
+            zoneId,
+            scenario,
+            tick,
+            state,
+            preview: buildTelemetryPayload(state),
           });
         }
 
         if (request.method === "POST" && url.pathname.startsWith("/scenario/")) {
           const next = url.pathname.split("/").pop();
-          const allowed = new Set(["normal", "warning-spike", "incident"]);
 
-          if (!allowed.has(next)) {
+          if (!allowedScenarios.has(next)) {
             return json({ error: "invalid scenario" }, 400);
           }
 
-          scenario = next;
-          tick = 0;
-
+          resetStateForScenario(next);
           return json({ ok: true, scenario });
         }
 
@@ -234,26 +707,26 @@ spec:
               value: mqtt://emqx-listeners:1883
             - name: MQTT_TOPIC_ROOT
               value: site/alpha/devices
-            - name: DEVICE_IDS
-              value: boiler-01,freezer-02,pump-03,door-04,hvac-05
+            - name: ZONE_ID
+              value: greenhouse-a
             - name: PUBLISH_INTERVAL_MS
               value: "2000"
             - name: SCENARIO
-              value: normal
+              value: baseline-day
             - name: SIMULATOR_PORT
               value: "8080"
 
           ports:
             - containerPort: 8080
               name: http
-          
+
           volumeMounts:
             - name: simulator-code
               mountPath: /src
               readOnly: true
             - name: simulator-workdir
               mountPath: /work
-      
+
       volumes:
         - name: simulator-code
           configMap:

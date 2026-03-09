@@ -20,9 +20,75 @@ data:
     const mqttUrl = process.env.MQTT_URL || "mqtt://emqx-listeners:1883";
     const topicRoot = process.env.MQTT_TOPIC_ROOT || "site/alpha/devices";
     const historySize = Number(process.env.EVENT_HISTORY_SIZE || 250);
+    const historyPoints = Number(process.env.HISTORY_POINTS || 300);
 
     const devices = new Map();
     const events = [];
+    const history = new Map();
+
+
+    function pushHistory(deviceId, point) {
+      if (!history.has(deviceId)) {
+        history.set(deviceId, []);
+      }
+
+      const points = history.get(deviceId);
+      points.push(point);
+      
+      if (points.length > historyPoints) {
+        points.splice(0, points.length - historyPoints);
+      }
+    }
+
+    function normalizeTelemetry(message, topic) {
+
+      const deviceId = message.deviceId || message.zoneId || topic.split("/").at(-2);
+
+      return {
+        deviceId,
+        zoneId: message.zoneId || deviceId,
+        scenario: message.scenario || "unknown",
+        severity: message.severity || "normal",
+        online: message.online !== false,
+        ts: message.ts || new Date().toISOString(),
+
+        outdoor: message.outdoor || {},
+        indoor: message.indoor || {},
+        soil: message.soil || {},
+        actuators: message.actuators || {},
+        derived: message.derived || {},
+        alerts: Array.isArray(message.alerts) ? message.alerts : [],
+
+        temperature: message.temperature ?? message.indoor?.temperature ?? null,
+        humidity: message.humidity ?? message.indoor?.humidity ?? null,
+        pressure: message.pressure ?? message.indoor?.pressure ?? null,
+        battery: message.battery ?? message.soil?.tankLevel ?? null,
+      };
+    }
+
+    function avg(values) {
+      const valid = values.filter((value) => typeof value === "number" && Number.isFinite(value));
+      if (!valid.length) return null;
+      return valid.reduce((sum, value) => sum + value, 0) / valid.length;
+    }
+
+    
+    function greenhouseSummary() {
+      const all = [...devices.values()];
+
+      return {
+        zones: all.length,
+        online: all.filter((d) => d.online !== false).length,
+        warning: all.filter((d) => d.severity === "warning").length,
+        critical: all.filter((d) => d.severity === "critical").length,
+        avgTemperature: avg(all.map((d) => d.indoor?.temperature)),
+        avgHumidity: avg(all.map((d) => d.indoor?.humidity)),
+        avgCo2: avg(all.map((d) => d.indoor?.co2)),
+        avgSoilMoisture: avg(all.map((d) => d.soil?.moisture)),
+        avgVpd: avg(all.map((d) => d.derived?.vpd)),
+      };
+    }
+
 
     const mqttClient = mqtt.connect(mqttUrl, {
       reconnectPeriod: 3000,
@@ -75,14 +141,46 @@ data:
           payload: message,
         };
 
-        console.log("api received message:", topic);
+        console.log("API received message:", topic);
 
-        if (event.type === "telemetry" || event.type === "status") {
-          const deviceId = message.deviceId || topic.split("/").at(-2);
+        if (event.type === "telemetry") {
+          const normalized = normalizeTelemetry(message, topic);
+          const deviceId = normalized.deviceId;
+
           devices.set(deviceId, {
-            deviceId,
+            ...devices.get(deviceId),
+            ...normalized,
+            lastTopic: topic,
+            lastSeen: event.receivedAt,
+          });
+
+          pushHistory(deviceId, {
+            ts: normalized.ts,
+            scenario: normalized.scenario,
+            severity: normalized.severity,
+            temperature: normalized.indoor.temperature ?? null,
+            humidity: normalized.indoor.humidity ?? null,
+            co2: normalized.indoor.co2 ?? null,
+            par: normalized.indoor.par ?? null,
+            pressure: normalized.indoor.pressure ?? null,
+            dewPoint: normalized.indoor.dewPoint ?? normalized.derived.dewPoint ?? null,
+            vpd: normalized.derived.vpd ?? normalized.indoor.vpd ?? null,
+            soilMoisture: normalized.soil.moisture ?? null,
+            soilTemperature: normalized.soil.temperature ?? null,
+            tankLevel: normalized.soil.tankLevel ?? null,
+            irrigationFlow: normalized.soil.irrigationFlow ?? null,
+          });
+        }
+
+        if (event.type === "status") {
+
+          const deviceId = message.deviceId || message.zoneId || topic.split("/").at(-2);
+
+          devices.set(deviceId, {
             ...devices.get(deviceId),
             ...message,
+            deviceId,
+            zoneId: message.zoneId || deviceId,
             lastTopic: topic,
             lastSeen: event.receivedAt,
           });
@@ -133,6 +231,7 @@ data:
             mqttConnected: mqttClient.connected,
             devices: devices.size,
             events: events.length,
+            historyPoints,
           });
         }
 
@@ -142,6 +241,43 @@ data:
 
         if (url.pathname === "/events") {
           return json(events);
+        }
+
+        if (url.pathname === "/summary") {
+          return json(greenhouseSummary());
+        }
+
+        if (url.pathname.startsWith("/history/")) {
+          const deviceId = url.pathname.split("/").pop();
+          return json(history.get(deviceId) || []);
+        }
+
+        if (url.pathname.startsWith("/zone/")) {
+          const deviceId = url.pathname.split("/").pop();
+          const device = devices.get(deviceId);
+
+          if (!device) {
+            return json({ error: "not-found" }, 404);
+          }
+
+          return json(device);
+        }
+
+        if (url.pathname === "/alerts") {
+          return json(
+            events
+              .filter((event) => event.type === "alerts")
+              .slice(0, 100)
+          );
+        }
+
+        if (url.pathname === "/metrics") {
+          return json({
+            indoor: ["temperature", "humidity", "co2", "pressure", "par", "dewPoint", "vpd"],
+            soil: ["moisture", "temperature", "ec", "ph", "tankLevel", "irrigationFlow"],
+            actuators: ["vent", "heater", "fan", "mister", "irrigation", "growLight"],
+            derived: ["dewPoint", "vpd", "evapotranspiration", "irrigationDemand"],
+          });
         }
 
         return json({ error: "not found" }, 404);
