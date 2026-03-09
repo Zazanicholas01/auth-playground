@@ -20,7 +20,6 @@ spec:
       }
 
       mqtt.max_packet_size = 1MB
-      mqtt.allow_anonymous = true
 
       authorization {
         no_match = allow
