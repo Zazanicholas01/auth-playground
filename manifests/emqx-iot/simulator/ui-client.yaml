@@ -63,20 +63,22 @@ data:
                 <div class="section-head">
                   <div>
                     <div class="eyebrow">&#127777;&#65039; Air Climate</div>
-                    <h3 class="section-title">Indoor Conditions</h3>
+                    <h3 class="section-title">Climate Trends</h3>
                   </div>
+                  <div id="climate-meta" class="chart-meta"></div>
                 </div>
-                <div id="indoor-card" class="kv-grid"></div>
+                <div id="climate-chart" class="chart-shell"></div>
               </article>
 
               <article class="panel block">
                 <div class="section-head">
                   <div>
-                    <div class="eyebrow">&#9728;&#65039; Weather Driver</div>
-                    <h3 class="section-title">Outdoor Conditions</h3>
+                    <div class="eyebrow">&#129716; Root Zone</div>
+                    <h3 class="section-title">Watering and Root Zone</h3>
                   </div>
+                  <div id="watering-meta" class="chart-meta"></div>
                 </div>
-                <div id="outdoor-card" class="kv-grid"></div>
+                <div id="watering-chart" class="chart-shell"></div>
               </article>
             </section>
 
@@ -84,21 +86,21 @@ data:
               <article class="panel block">
                 <div class="section-head">
                   <div>
-                    <div class="eyebrow">&#129716; Root Zone</div>
-                    <h3 class="section-title">Soil and Irrigation</h3>
+                    <div class="eyebrow">&#9728;&#65039; Weather Driver</div>
+                    <h3 class="section-title">Current Outdoor Drivers</h3>
                   </div>
                 </div>
-                <div id="soil-card" class="kv-grid"></div>
+                <div id="outdoor-card" class="mini-grid"></div>
               </article>
 
               <article class="panel block">
                 <div class="section-head">
                   <div>
                     <div class="eyebrow">&#9881;&#65039; Automation</div>
-                    <h3 class="section-title">Actuator State</h3>
+                    <h3 class="section-title">Actuator Snapshot</h3>
                   </div>
                 </div>
-                <div id="actuator-card" class="kv-grid"></div>
+                <div id="actuator-card" class="mini-grid"></div>
               </article>
             </section>
 
@@ -107,10 +109,10 @@ data:
                 <div class="section-head">
                   <div>
                     <div class="eyebrow">&#127811; Derived Metrics</div>
-                    <h3 class="section-title">Agronomic Signals</h3>
+                    <h3 class="section-title">Derived Signals</h3>
                   </div>
                 </div>
-                <div id="derived-card" class="kv-grid"></div>
+                <div id="derived-card" class="gauge-grid"></div>
               </article>
 
               <article class="panel block">
@@ -120,7 +122,7 @@ data:
                     <h3 class="section-title">Recent History</h3>
                   </div>
                 </div>
-                <div id="history-spark" class="spark-grid"></div>
+                <div id="history-spark" class="micro-grid"></div>
               </article>
             </section>
           </section>
@@ -165,6 +167,14 @@ data:
       --blue: #2d6f7c;
       --sky: #8dcfdf;
       --shadow: 0 22px 40px rgba(24, 66, 28, 0.12);
+      --chart-grid: rgba(56, 122, 64, 0.14);
+      --chart-track: rgba(31, 143, 58, 0.10);
+      --climate-a: #1f8f3a;
+      --climate-b: #2d6f7c;
+      --climate-c: #b37a14;
+      --water-a: #4f9a3d;
+      --water-b: #2a9d8f;
+      --water-c: #b23b3b;
     }
 
     * {
@@ -415,30 +425,197 @@ data:
       color: var(--red);
     }
 
-    .kv-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px 14px;
+    .chart-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
     }
 
-    .kv-item {
+    .chart-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(244, 248, 239, 0.96);
+      border: 1px solid rgba(95, 114, 99, 0.12);
+      font-size: 12px;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+
+    .chart-shell {
+      min-height: 260px;
+    }
+
+    .chart-card {
+      display: grid;
+      gap: 14px;
+    }
+
+    .chart-card svg,
+    .micro-card svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .chart-frame {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.14));
+      border: 1px solid rgba(95, 114, 99, 0.10);
+      border-radius: 18px;
+      padding: 12px;
+    }
+
+    .chart-empty {
+      min-height: 220px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      border: 1px dashed rgba(95, 114, 99, 0.20);
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .chart-note {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .mini-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mini-card {
       padding: 12px;
       border-radius: 14px;
       background: var(--panel-2);
       border: 1px solid rgba(95, 114, 99, 0.08);
+      display: grid;
+      gap: 8px;
     }
 
-    .kv-item .k {
+    .mini-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
       font-size: 12px;
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
 
-    .kv-item .v {
-      margin-top: 6px;
-      font-size: 20px;
+    .meter {
+      height: 10px;
+      border-radius: 999px;
+      background: var(--chart-track);
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(79, 154, 61, 0.78), rgba(31, 143, 58, 0.98));
+    }
+
+    .meter-fill.outdoor {
+      background: linear-gradient(90deg, rgba(141, 207, 223, 0.82), rgba(45, 111, 124, 0.94));
+    }
+
+    .meter-fill.alert {
+      background: linear-gradient(90deg, rgba(179, 122, 20, 0.88), rgba(178, 59, 59, 0.95));
+    }
+
+    .gauge-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .gauge-card {
+      padding: 14px;
+      border-radius: 16px;
+      background: var(--panel-2);
+      border: 1px solid rgba(95, 114, 99, 0.08);
+      display: grid;
+      gap: 10px;
+    }
+
+    .gauge-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 10px;
+    }
+
+    .gauge-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .gauge-value {
+      font-size: 26px;
       font-weight: 700;
+      line-height: 1;
+    }
+
+    .gauge-track {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(56, 122, 64, 0.10);
+      overflow: hidden;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(141, 207, 223, 0.75), rgba(31, 143, 58, 0.95));
+    }
+
+    .micro-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .micro-card {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 14px;
+      background: var(--panel-2);
+      border: 1px solid rgba(95, 114, 99, 0.08);
+    }
+
+    .micro-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
     }
 
     .event-list {
@@ -470,30 +647,6 @@ data:
       border-color: rgba(31, 143, 58, 0.22);
     }
 
-    .spark-grid {
-      display: grid;
-      gap: 12px;
-    }
-
-    .spark-row {
-      display: grid;
-      gap: 6px;
-    }
-
-    .spark-bars {
-      display: flex;
-      align-items: end;
-      gap: 4px;
-      height: 64px;
-    }
-
-    .spark-bars span {
-      flex: 1;
-      border-radius: 6px 6px 0 0;
-      background: linear-gradient(180deg, rgba(79, 154, 61, 0.85), rgba(31, 143, 58, 0.65));
-      min-height: 4px;
-    }
-
     @media (max-width: 1200px) {
       main {
         grid-template-columns: 1fr;
@@ -506,14 +659,14 @@ data:
       }
 
       .stats,
-      .grid-two {
+      .grid-two,
+      .gauge-grid {
         grid-template-columns: 1fr;
       }
     }
 
+
   index.js: |
-
-
     const config = window.__IOT_CONFIG__ || {};
     const apiBase = config.apiBase || (window.location.origin + "/api");
     const simulatorBase = config.simulatorBase || (window.location.origin + "/simulator");
@@ -524,14 +677,17 @@ data:
     const brokerEl = document.getElementById("broker");
     const scenarioLabelEl = document.getElementById("scenario-label");
     const zoneLabelEl = document.getElementById("zone-label");
-    const indoorCardEl = document.getElementById("indoor-card");
+    const climateChartEl = document.getElementById("climate-chart");
+    const climateMetaEl = document.getElementById("climate-meta");
     const outdoorCardEl = document.getElementById("outdoor-card");
-    const soilCardEl = document.getElementById("soil-card");
+    const wateringChartEl = document.getElementById("watering-chart");
+    const wateringMetaEl = document.getElementById("watering-meta");
     const actuatorCardEl = document.getElementById("actuator-card");
     const derivedCardEl = document.getElementById("derived-card");
     const historySparkEl = document.getElementById("history-spark");
 
     let currentZoneId = null;
+    let previousHistoryKey = "";
 
     function severityClass(severity) {
       if (severity === "critical") return "critical";
@@ -545,47 +701,41 @@ data:
       return "&#127807;";
     }
 
-    function metricIcon(label) {
-      const icons = {
-        "Air Temp": "&#127777;&#65039;",
-        "Humidity": "&#128167;",
-        "CO2": "&#127788;&#65039;",
-        "Pressure": "&#127756;",
-        "PAR": "&#9728;&#65039;",
-        "Abs Humidity": "&#128166;",
-        "Outdoor Temp": "&#9728;&#65039;",
-        "Outdoor RH": "&#9729;&#65039;",
-        "Solar": "&#127774;",
-        "Wind": "&#127788;&#65039;",
-        "Soil Moisture": "&#129716;",
-        "Soil Temp": "&#127793;",
-        "EC": "&#129514;",
-        "pH": "&#129514;",
-        "Tank Level": "&#128703;",
-        "Irrig. Flow": "&#128167;",
-        "Vent": "&#127811;",
-        "Heater": "&#128293;",
-        "Fan": "&#127744;",
-        "Mister": "&#128166;",
-        "Irrigation": "&#128167;",
-        "Grow Light": "&#128161;",
-        "Dew Point": "&#127783;&#65039;",
-        "VPD": "&#127787;&#65039;",
-        "ET Proxy": "&#127811;",
-        "Irrigation Demand": "&#128166;",
-      };
-      return icons[label] || "&#127807;";
-    }
-
     function fmt(value, digits = 1, suffix = "") {
       if (value === null || value === undefined || Number.isNaN(value)) return "--";
       return Number(value).toFixed(digits) + suffix;
     }
 
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function latestNumber(values) {
+      for (let index = values.length - 1; index >= 0; index -= 1) {
+        const value = values[index];
+        if (typeof value === "number" && Number.isFinite(value)) return value;
+      }
+      return null;
+    }
+
     function pickPrimaryZone(devices) {
       if (!devices.length) return null;
-      const greenhouse = devices.find((d) => d.zoneId === "greenhouse-a" || d.deviceId === "greenhouse-a");
+      const greenhouse = devices.find((device) => device.zoneId === "greenhouse-a" || device.deviceId === "greenhouse-a");
       return greenhouse || devices[0];
+    }
+
+    function normalizeHistory(points) {
+      return points.map((point, index) => ({
+        index,
+        ts: point.ts || new Date().toISOString(),
+        label: new Date(point.ts || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        temperature: point.temperature ?? null,
+        humidity: point.humidity ?? null,
+        co2: point.co2 ?? null,
+        soilMoisture: point.soilMoisture ?? null,
+        tankLevel: point.tankLevel ?? null,
+        irrigationFlow: point.irrigationFlow ?? null,
+      }));
     }
 
     function renderSummary(summary) {
@@ -616,101 +766,258 @@ data:
           '<div class="muted" style="margin-top:4px">Last seen: ' + new Date(device.lastSeen || Date.now()).toLocaleTimeString() + '</div>' +
           '<div style="margin-top:10px;font-size:14px">' +
             '&#127777;&#65039; ' + fmt(device.indoor?.temperature ?? device.temperature, 1, ' C') +
-            ' Â· &#128167; ' + fmt(device.indoor?.humidity ?? device.humidity, 1, ' %') +
+            ' · &#128167; ' + fmt(device.indoor?.humidity ?? device.humidity, 1, ' %') +
           '</div>' +
         '</div>'
       ).join("");
     }
 
-    function renderKv(target, items) {
-      target.innerHTML = items.map(([label, value]) =>
-        '<div class="kv-item">' +
-          '<div class="k">' + metricIcon(label) + ' ' + label + '</div>' +
-          '<div class="v">' + value + '</div>' +
+    function renderChartMeta(target, items) {
+      target.innerHTML = items.map((item) =>
+        '<div class="chart-pill">' +
+          '<span class="swatch" style="background:' + item.color + '"></span>' +
+          '<span>' + item.label + '</span>' +
+          '<strong>' + item.value + '</strong>' +
         '</div>'
       ).join("");
     }
 
-    function renderZone(zone) {
-      zoneLabelEl.textContent = zone.zoneId || zone.deviceId || "--";
-      scenarioLabelEl.textContent = zone.scenario || "unknown";
+    function pathForSeries(values, width, height, padding, min, max) {
+      const valid = values
+        .map((value, index) => ({ value, index }))
+        .filter((entry) => typeof entry.value === "number" && Number.isFinite(entry.value));
+      if (!valid.length) return "";
 
-      renderKv(indoorCardEl, [
-        ["Air Temp", fmt(zone.indoor?.temperature, 1, " C")],
-        ["Humidity", fmt(zone.indoor?.humidity, 1, " %")],
-        ["CO2", fmt(zone.indoor?.co2, 0, " ppm")],
-        ["Pressure", fmt(zone.indoor?.pressure, 1, " hPa")],
-        ["PAR", fmt(zone.indoor?.par, 0, " umol")],
-        ["Abs Humidity", fmt(zone.indoor?.absoluteHumidity, 2, " g/m3")],
-      ]);
-
-      renderKv(outdoorCardEl, [
-        ["Outdoor Temp", fmt(zone.outdoor?.temperature, 1, " C")],
-        ["Outdoor RH", fmt(zone.outdoor?.humidity, 1, " %")],
-        ["Solar", fmt(zone.outdoor?.solar, 3, "")],
-        ["Wind", fmt(zone.outdoor?.wind, 2, " m/s")],
-      ]);
-
-      renderKv(soilCardEl, [
-        ["Soil Moisture", fmt(zone.soil?.moisture, 3, "")],
-        ["Soil Temp", fmt(zone.soil?.temperature, 1, " C")],
-        ["EC", fmt(zone.soil?.ec, 2, " mS/cm")],
-        ["pH", fmt(zone.soil?.ph, 2, "")],
-        ["Tank Level", fmt(zone.soil?.tankLevel, 1, " %")],
-        ["Irrig. Flow", fmt(zone.soil?.irrigationFlow, 2, " L/min")],
-      ]);
-
-      renderKv(actuatorCardEl, [
-        ["Vent", fmt(zone.actuators?.vent, 2, "")],
-        ["Heater", fmt(zone.actuators?.heater, 2, "")],
-        ["Fan", fmt(zone.actuators?.fan, 2, "")],
-        ["Mister", fmt(zone.actuators?.mister, 2, "")],
-        ["Irrigation", fmt(zone.actuators?.irrigation, 2, "")],
-        ["Grow Light", fmt(zone.actuators?.growLight, 2, "")],
-      ]);
-
-      renderKv(derivedCardEl, [
-        ["Dew Point", fmt(zone.derived?.dewPoint ?? zone.indoor?.dewPoint, 2, " C")],
-        ["VPD", fmt(zone.derived?.vpd ?? zone.indoor?.vpd, 2, " kPa")],
-        ["ET Proxy", fmt(zone.derived?.evapotranspiration, 2, "")],
-        ["Irrigation Demand", fmt(zone.derived?.irrigationDemand, 1, " %")],
-      ]);
+      const range = Math.max(max - min, 0.0001);
+      return valid.map((entry, position) => {
+        const x = padding.left + (entry.index / Math.max(values.length - 1, 1)) * (width - padding.left - padding.right);
+        const y = height - padding.bottom - ((entry.value - min) / range) * (height - padding.top - padding.bottom);
+        return (position === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2);
+      }).join(" ");
     }
 
-    function spark(values) {
-      const valid = values.filter((v) => typeof v === "number" && Number.isFinite(v));
-      if (!valid.length) return '<div class="muted">No history</div>';
+    function buildLineChart(series, options = {}) {
+      const width = options.width || 640;
+      const height = options.height || 220;
+      const padding = { top: 14, right: 10, bottom: 24, left: 10 };
+      const samples = Math.max(...series.map((item) => item.values.length), 0);
+      const allValues = series.flatMap((item) => item.values).filter((value) => typeof value === "number" && Number.isFinite(value));
 
+      if (!samples || !allValues.length) {
+        return '<div class="chart-empty">Waiting for enough telemetry to render a chart.</div>';
+      }
+
+      const min = Math.min(...allValues);
+      const max = Math.max(...allValues);
+
+      const gridLines = [0.2, 0.4, 0.6, 0.8].map((step) => {
+        const y = height - padding.bottom - step * (height - padding.top - padding.bottom);
+        return '<line x1="' + padding.left + '" y1="' + y.toFixed(2) + '" x2="' + (width - padding.right) + '" y2="' + y.toFixed(2) + '" stroke="var(--chart-grid)" stroke-width="1" />';
+      }).join("");
+
+      const tickIndexes = [0, Math.floor((samples - 1) / 2), samples - 1]
+        .filter((value, index, values) => values.indexOf(value) === index && value >= 0);
+
+      const ticks = tickIndexes.map((sourceIndex) => {
+        const label = (options.labels || [])[sourceIndex] || "";
+        const x = padding.left + (sourceIndex / Math.max(samples - 1, 1)) * (width - padding.left - padding.right);
+        return '<text x="' + x.toFixed(2) + '" y="' + (height - 6) + '" text-anchor="middle" fill="var(--muted)" font-size="11">' + label + '</text>';
+      }).join("");
+
+      const lines = series.map((item) => {
+        const d = pathForSeries(item.values, width, height, padding, min, max);
+        if (!d) return "";
+        return '<path d="' + d + '" fill="none" stroke="' + item.color + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />';
+      }).join("");
+
+      return (
+        '<div class="chart-card">' +
+          '<div class="chart-legend">' +
+            series.map((item) =>
+              '<div class="legend-item"><span class="swatch" style="background:' + item.color + '"></span>' + item.label + '</div>'
+            ).join("") +
+          '</div>' +
+          '<div class="chart-frame">' +
+            '<svg viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-label="' + (options.title || "telemetry chart") + '">' +
+              gridLines +
+              lines +
+              ticks +
+            '</svg>' +
+          '</div>' +
+          '<div class="chart-note">' + (options.note || "Rolling telemetry history") + '</div>' +
+        '</div>'
+      );
+    }
+
+    function buildMicroChart(values, color) {
+      const valid = values.filter((value) => typeof value === "number" && Number.isFinite(value));
+      if (!valid.length) {
+        return '<div class="chart-note">No history</div>';
+      }
+
+      const width = 300;
+      const height = 60;
+      const padding = { top: 6, right: 4, bottom: 6, left: 4 };
       const min = Math.min(...valid);
       const max = Math.max(...valid);
-      const range = Math.max(max - min, 0.0001);
+      const d = pathForSeries(values, width, height, padding, min, max);
 
-      return values.map((value) => {
-        if (typeof value !== "number" || !Number.isFinite(value)) {
-          return '<span style="height:4px;opacity:0.25"></span>';
-        }
-        const h = 6 + ((value - min) / range) * 58;
-        return '<span style="height:' + h.toFixed(0) + 'px"></span>';
+      return (
+        '<svg viewBox="0 0 ' + width + ' ' + height + '" role="img">' +
+          '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />' +
+        '</svg>'
+      );
+    }
+
+    function renderOutdoor(zone) {
+      const items = [
+        {
+          label: "Outdoor Temp",
+          value: fmt(zone.outdoor?.temperature, 1, " C"),
+          pct: clamp(((Number(zone.outdoor?.temperature) || 0) + 10) / 45, 0, 1),
+          tone: "outdoor",
+        },
+        {
+          label: "Outdoor RH",
+          value: fmt(zone.outdoor?.humidity, 1, " %"),
+          pct: clamp((Number(zone.outdoor?.humidity) || 0) / 100, 0, 1),
+          tone: "outdoor",
+        },
+        {
+          label: "Solar",
+          value: fmt(zone.outdoor?.solar, 3, ""),
+          pct: clamp((Number(zone.outdoor?.solar) || 0) / 1.2, 0, 1),
+          tone: "outdoor",
+        },
+        {
+          label: "Wind",
+          value: fmt(zone.outdoor?.wind, 2, " m/s"),
+          pct: clamp((Number(zone.outdoor?.wind) || 0) / 10, 0, 1),
+          tone: "outdoor",
+        },
+      ];
+
+      outdoorCardEl.innerHTML = items.map((item) =>
+        '<div class="mini-card">' +
+          '<div class="mini-head"><span>' + item.label + '</span><span>' + item.value + '</span></div>' +
+          '<div class="meter"><div class="meter-fill ' + item.tone + '" style="width:' + (item.pct * 100).toFixed(0) + '%"></div></div>' +
+        '</div>'
+      ).join("");
+    }
+
+    function renderActuators(zone) {
+      const items = [
+        ["Vent", zone.actuators?.vent],
+        ["Heater", zone.actuators?.heater],
+        ["Fan", zone.actuators?.fan],
+        ["Mister", zone.actuators?.mister],
+        ["Irrigation", zone.actuators?.irrigation],
+        ["Grow Light", zone.actuators?.growLight],
+      ];
+
+      actuatorCardEl.innerHTML = items.map(([label, value]) => {
+        const pct = clamp(Number(value) || 0, 0, 1);
+        return (
+          '<div class="mini-card">' +
+            '<div class="mini-head"><span>' + label + '</span><span>' + fmt(value, 2, "") + '</span></div>' +
+            '<div class="meter"><div class="meter-fill alert" style="width:' + (pct * 100).toFixed(0) + '%"></div></div>' +
+          '</div>'
+        );
       }).join("");
+    }
+
+    function renderDerived(zone) {
+      const items = [
+        {
+          label: "Dew Point",
+          display: fmt(zone.derived?.dewPoint ?? zone.indoor?.dewPoint, 2, " C"),
+          pct: clamp(((Number(zone.derived?.dewPoint ?? zone.indoor?.dewPoint) || 0) + 10) / 35, 0, 1),
+        },
+        {
+          label: "VPD",
+          display: fmt(zone.derived?.vpd ?? zone.indoor?.vpd, 2, " kPa"),
+          pct: clamp((Number(zone.derived?.vpd ?? zone.indoor?.vpd) || 0) / 3.5, 0, 1),
+        },
+        {
+          label: "ET Proxy",
+          display: fmt(zone.derived?.evapotranspiration, 2, ""),
+          pct: clamp((Number(zone.derived?.evapotranspiration) || 0) / 5, 0, 1),
+        },
+        {
+          label: "Irrigation Demand",
+          display: fmt(zone.derived?.irrigationDemand, 1, " %"),
+          pct: clamp((Number(zone.derived?.irrigationDemand) || 0) / 100, 0, 1),
+        },
+      ];
+
+      derivedCardEl.innerHTML = items.map((item) =>
+        '<div class="gauge-card">' +
+          '<div class="gauge-top">' +
+            '<div class="gauge-label">' + item.label + '</div>' +
+            '<div class="gauge-value">' + item.display + '</div>' +
+          '</div>' +
+          '<div class="gauge-track"><div class="gauge-fill" style="width:' + (item.pct * 100).toFixed(0) + '%"></div></div>' +
+        '</div>'
+      ).join("");
     }
 
     function renderHistory(points) {
       const latest = points.slice(-16);
-
       const rows = [
-        ["&#127777;&#65039; Temperature", latest.map((p) => p.temperature)],
-        ["&#128167; Humidity", latest.map((p) => p.humidity)],
-        ["&#127788;&#65039; CO2", latest.map((p) => p.co2)],
-        ["&#129716; Soil Moisture", latest.map((p) => p.soilMoisture)],
-        ["&#128703; Tank Level", latest.map((p) => p.tankLevel)],
+        ["Temperature", latest.map((point) => point.temperature), "var(--climate-a)", fmt(latestNumber(latest.map((point) => point.temperature)), 1, " C")],
+        ["Humidity", latest.map((point) => point.humidity), "var(--climate-b)", fmt(latestNumber(latest.map((point) => point.humidity)), 1, " %")],
+        ["CO2", latest.map((point) => point.co2), "var(--climate-c)", fmt(latestNumber(latest.map((point) => point.co2)), 0, " ppm")],
+        ["Soil Moisture", latest.map((point) => point.soilMoisture), "var(--water-a)", fmt(latestNumber(latest.map((point) => point.soilMoisture)), 3, "")],
+        ["Tank Level", latest.map((point) => point.tankLevel), "var(--water-c)", fmt(latestNumber(latest.map((point) => point.tankLevel)), 1, " %")],
       ];
 
-      historySparkEl.innerHTML = rows.map(([label, values]) =>
-        '<div class="spark-row">' +
-          '<div class="muted">' + label + '</div>' +
-          '<div class="spark-bars">' + spark(values) + '</div>' +
+      historySparkEl.innerHTML = rows.map(([label, values, color, latestValue]) =>
+        '<div class="micro-card">' +
+          '<div class="micro-head"><strong>' + label + '</strong><span class="muted">' + latestValue + '</span></div>' +
+          buildMicroChart(values, color) +
         '</div>'
       ).join("");
+    }
+
+    function renderHistoryCharts(points) {
+      const history = normalizeHistory(points);
+      const labels = history.map((point) => point.label);
+
+      const climateSeries = [
+        { label: "Air Temp", color: "var(--climate-a)", values: history.map((point) => point.temperature) },
+        { label: "Humidity", color: "var(--climate-b)", values: history.map((point) => point.humidity) },
+        { label: "CO2", color: "var(--climate-c)", values: history.map((point) => point.co2) },
+      ];
+
+      const wateringSeries = [
+        { label: "Soil Moisture", color: "var(--water-a)", values: history.map((point) => point.soilMoisture) },
+        { label: "Tank Level", color: "var(--water-b)", values: history.map((point) => point.tankLevel) },
+        { label: "Irrigation Flow", color: "var(--water-c)", values: history.map((point) => point.irrigationFlow) },
+      ];
+
+      climateChartEl.innerHTML = buildLineChart(climateSeries, {
+        labels,
+        title: "Climate trends",
+        note: "Temperature, humidity, and CO2 over the recent telemetry window.",
+      });
+
+      wateringChartEl.innerHTML = buildLineChart(wateringSeries, {
+        labels,
+        title: "Watering and root-zone trends",
+        note: "Soil moisture, tank level, and irrigation flow over time.",
+      });
+
+      renderChartMeta(climateMetaEl, [
+        { label: "Air Temp", color: "var(--climate-a)", value: fmt(latestNumber(climateSeries[0].values), 1, " C") },
+        { label: "Humidity", color: "var(--climate-b)", value: fmt(latestNumber(climateSeries[1].values), 1, " %") },
+        { label: "CO2", color: "var(--climate-c)", value: fmt(latestNumber(climateSeries[2].values), 0, " ppm") },
+      ]);
+
+      renderChartMeta(wateringMetaEl, [
+        { label: "Soil Moisture", color: "var(--water-a)", value: fmt(latestNumber(wateringSeries[0].values), 3, "") },
+        { label: "Tank Level", color: "var(--water-b)", value: fmt(latestNumber(wateringSeries[1].values), 1, " %") },
+        { label: "Irrig. Flow", color: "var(--water-c)", value: fmt(latestNumber(wateringSeries[2].values), 2, " L/min") },
+      ]);
     }
 
     function eventCardClass(payload) {
@@ -735,6 +1042,15 @@ data:
         );
       }).join("");
     }
+
+    function renderZone(zone) {
+      zoneLabelEl.textContent = zone.zoneId || zone.deviceId || "--";
+      scenarioLabelEl.textContent = zone.scenario || "unknown";
+      renderOutdoor(zone);
+      renderActuators(zone);
+      renderDerived(zone);
+    }
+
     async function loadScenario() {
       const res = await fetch(simulatorBase + "/scenario");
       const data = await res.json();
@@ -757,28 +1073,46 @@ data:
     async function load() {
       try {
         const [health, devices, summary, alerts] = await Promise.all([
-          fetch(apiBase + "/health").then((r) => r.json()),
-          fetch(apiBase + "/devices").then((r) => r.json()),
-          fetch(apiBase + "/summary").then((r) => r.json()),
-          fetch(apiBase + "/alerts").then((r) => r.json()),
+          fetch(apiBase + "/health").then((response) => response.json()),
+          fetch(apiBase + "/devices").then((response) => response.json()),
+          fetch(apiBase + "/summary").then((response) => response.json()),
+          fetch(apiBase + "/alerts").then((response) => response.json()),
         ]);
 
         brokerEl.textContent = health.mqttConnected ? "Broker connected" : "Broker disconnected";
         brokerEl.className = "pill " + (health.mqttConnected ? "normal" : "critical");
-        brokerEl.innerHTML = severityIcon(health.mqttConnected ? "normal" : "critical") + ' ' + brokerEl.textContent;
+        brokerEl.innerHTML = severityIcon(health.mqttConnected ? "normal" : "critical") + " " + brokerEl.textContent;
 
         renderSummary(summary);
         renderFleet(devices);
         renderEvents(alerts);
 
         const zone = pickPrimaryZone(devices);
-        if (!zone) return;
+        if (!zone) {
+          climateChartEl.innerHTML = '<div class="chart-empty">No zones are publishing telemetry yet.</div>';
+          wateringChartEl.innerHTML = '<div class="chart-empty">No zones are publishing telemetry yet.</div>';
+          climateMetaEl.innerHTML = "";
+          wateringMetaEl.innerHTML = "";
+          outdoorCardEl.innerHTML = "";
+          actuatorCardEl.innerHTML = "";
+          derivedCardEl.innerHTML = "";
+          historySparkEl.innerHTML = "";
+          return;
+        }
 
         currentZoneId = zone.deviceId;
         renderZone(zone);
 
-        const history = await fetch(apiBase + "/history/" + currentZoneId).then((r) => r.json());
-        renderHistory(history);
+        const history = await fetch(apiBase + "/history/" + currentZoneId).then((response) => response.json());
+        const historyKey = JSON.stringify(
+          history.map((point) => [point.ts, point.temperature, point.humidity, point.co2, point.soilMoisture, point.tankLevel, point.irrigationFlow])
+        );
+
+        if (historyKey !== previousHistoryKey) {
+          renderHistoryCharts(history);
+          renderHistory(normalizeHistory(history));
+          previousHistoryKey = historyKey;
+        }
       } catch (error) {
         console.error("failed to load dashboard", error);
       }
@@ -797,6 +1131,7 @@ data:
     await loadScenario();
     await load();
     setInterval(load, 3000);
+
 
   server.js: |
     const port = Number(process.env.UI_PORT || 8080);
