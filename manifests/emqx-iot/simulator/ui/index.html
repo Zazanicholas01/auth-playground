@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Greenhouse Digital Twin</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="global-bar panel">
+        <div class="global-copy">
+          <div class="eyebrow">Greenhouse Digital Twin</div>
+          <h1>Greenhouse A</h1>
+        </div>
+
+        <nav class="page-nav" aria-label="Page navigation">
+          <a href="/" data-nav="twin">Twin</a>
+          <a href="/operations" data-nav="operations">Operations</a>
+        </nav>
+
+        <div class="global-status">
+          <div id="broker-pill" class="pill normal">Broker linked</div>
+          <div class="global-chip">
+            <span class="muted">Scenario</span>
+            <strong id="scenario-label">Baseline day</strong>
+          </div>
+          <div class="global-chip">
+            <span class="muted">Zone</span>
+            <strong id="selected-zone-label">North Bay</strong>
+          </div>
+          <div class="global-chip">
+            <span class="muted">Asset</span>
+            <strong id="selected-asset-label">Supply fan bank</strong>
+          </div>
+        </div>
+      </header>
+
+      <section id="page-twin" class="page-layout twin-layout">
+        <aside class="rail panel">
+          <div class="rail-head">
+            <div>
+              <div class="eyebrow">Zones</div>
+              <h2>Operational Map</h2>
+            </div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Facility</div>
+            <div data-slot="fleet-summary" class="fleet-summary"></div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Zone Status</div>
+            <div data-slot="zone-list" class="zone-list"></div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Overlay Modes</div>
+            <div data-slot="overlay-toggles" class="toggle-stack"></div>
+          </div>
+        </aside>
+
+        <main class="center-stage">
+          <header class="ops-ribbon panel">
+            <div class="ops-copy">
+              <div class="eyebrow">Twin View</div>
+              <h1>Spatial climate choreography across canopy, root zone, and infrastructure</h1>
+              <p class="muted">
+                A clean operational twin for airflow drift, hydration response, heat transport, humidity pooling,
+                and fault isolation across the production house.
+              </p>
+            </div>
+
+            <div class="ops-grid">
+              <div id="scene-status" class="hero-chip hero-chip-wide"></div>
+            </div>
+          </header>
+
+          <section class="schematic-wrap panel">
+            <div class="schematic-topbar">
+              <div class="schematic-title">
+                <div class="eyebrow">Facility Twin</div>
+                <h3>Greenhouse A</h3>
+              </div>
+              <div id="scene-badges" class="scene-badges"></div>
+            </div>
+
+            <div class="schematic-stage">
+              <div id="schematic" class="schematic" aria-label="Greenhouse schematic"></div>
+            </div>
+            <div class="scene-readouts">
+              <div id="zone-readout" class="scene-card"></div>
+              <div id="asset-callout" class="scene-card"></div>
+            </div>
+          </section>
+        </main>
+
+        <aside class="rail panel">
+          <div class="rail-head">
+            <div>
+              <div class="eyebrow">Selected Loop</div>
+              <h2>Zone Focus</h2>
+            </div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Environmental Drivers</div>
+            <div id="twin-scene-badges" class="scene-badges scene-badges-stack"></div>
+          </div>
+        </aside>
+      </section>
+
+      <section id="page-operations" class="page-layout operations-layout">
+        <aside class="rail panel">
+          <div class="rail-head">
+            <div>
+              <div class="eyebrow">Facility</div>
+              <h2>Zones and Status</h2>
+            </div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Fleet Summary</div>
+            <div data-slot="fleet-summary" class="fleet-summary"></div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Active Zones</div>
+            <div data-slot="zone-list" class="zone-list"></div>
+          </div>
+        </aside>
+
+        <main class="operations-main">
+          <header class="ops-ribbon panel">
+          <div class="ops-copy">
+            <div class="eyebrow">Operations View</div>
+            <h1>Alerts, climate response, and derived control signals</h1>
+            <p class="muted">
+              Separate operator workspace for event load, telemetry validation, and selected asset response.
+            </p>
+          </div>
+
+          <div class="ops-grid">
+            <div id="ops-status" class="hero-chip hero-chip-wide"></div>
+          </div>
+          </header>
+
+          <section class="operations-summary panel">
+            <div class="section-label">Operational Summary</div>
+            <div id="ops-summary" class="ops-summary-grid"></div>
+          </section>
+
+          <section class="telemetry-strip panel">
+            <div class="strip-group">
+              <div class="section-label">Climate</div>
+              <div id="climate-strip" class="strip-grid"></div>
+            </div>
+
+            <div class="strip-group">
+              <div class="section-label">Root Zone</div>
+              <div id="root-strip" class="strip-grid"></div>
+            </div>
+
+            <div class="strip-group">
+              <div class="section-label">Derived Signals</div>
+              <div id="derived-strip" class="strip-grid"></div>
+            </div>
+          </section>
+        </main>
+
+        <aside class="rail panel">
+          <div class="rail-head">
+            <div>
+              <div class="eyebrow">Alerts</div>
+              <h2>Response Queue</h2>
+            </div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Active Events</div>
+            <div data-slot="alert-list" class="alert-list"></div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Asset Detail</div>
+            <div data-slot="asset-detail" class="asset-detail"></div>
+          </div>
+        </aside>
+      </section>
+    </div>
+
+    <script>
+      window.__IOT_CONFIG__ = {
+        apiBase: window.location.origin + "/api",
+        simulatorBase: window.location.origin + "/simulator"
+      };
+
+      if (window.location.hash.includes("figmacapture=")) {
+        const script = document.createElement("script");
+        script.src = "https://mcp.figma.com/mcp/html-to-design/capture.js";
+        script.async = true;
+        document.head.appendChild(script);
+      }
+    </script>
+    <script src="/index.js" type="module"></script>
+  </body>
+</html>

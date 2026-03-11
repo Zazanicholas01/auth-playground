@@ -12,3 +12,14 @@ resources:
   - simulator/ui-client.yaml
   - simulator/simulator-route.yaml
   - config.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: iot-ui-code
+    files:
+      - simulator/ui/index.html
+      - simulator/ui/styles.css
+      - simulator/ui/index.js
+      - simulator/ui/server.js
