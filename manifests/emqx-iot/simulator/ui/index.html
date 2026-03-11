@@ -31,7 +31,7 @@
             <strong id="selected-zone-label">North Bay</strong>
           </div>
           <div class="global-chip">
-            <span class="muted">Asset</span>
+            <span id="selected-asset-heading" class="muted">Asset</span>
             <strong id="selected-asset-label">Supply fan bank</strong>
           </div>
         </div>
@@ -58,12 +58,6 @@
         </aside>
 
         <main class="center-stage">
-          <header class="ops-ribbon twin-summary panel">
-            <div class="ops-grid">
-              <div id="scene-status" class="hero-chip hero-chip-wide"></div>
-            </div>
-          </header>
-
           <section class="schematic-wrap panel">
             <div class="schematic-topbar">
               <div class="schematic-title">
@@ -98,15 +92,24 @@
             <div class="section-label">Active Zones</div>
             <div data-slot="zone-list" class="zone-list"></div>
           </div>
+
+          <div class="rail-section">
+            <div class="section-label">Time Range</div>
+            <div id="graph-range-toggle" class="graph-range-toggle graph-control-stack" aria-label="Graph time range"></div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Metric Grouping</div>
+            <div id="graph-metric-toggle" class="graph-range-toggle graph-control-stack" aria-label="Graph metric grouping"></div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Comparison Mode</div>
+            <div id="graph-compare-toggle" class="graph-range-toggle graph-control-stack" aria-label="Graph comparison mode"></div>
+          </div>
         </aside>
 
         <main class="operations-main">
-          <header class="ops-ribbon twin-summary panel">
-            <div class="ops-grid">
-              <div id="ops-status" class="hero-chip hero-chip-wide"></div>
-            </div>
-          </header>
-
           <section class="operations-summary panel">
             <div class="section-label">Operational Summary</div>
             <div id="ops-summary" class="ops-summary-grid"></div>
@@ -130,8 +133,8 @@
         <aside class="rail panel">
           <div class="rail-head">
             <div>
-              <div class="eyebrow">Facility</div>
-              <h2>Zone and Context</h2>
+              <div class="eyebrow">Analysis</div>
+              <h2>Graph Controls</h2>
             </div>
           </div>
 
@@ -144,24 +147,12 @@
             <div class="section-label">Active Zones</div>
             <div data-slot="zone-list" class="zone-list"></div>
           </div>
-
-          <div class="rail-section">
-            <div class="section-label">Asset Detail</div>
-            <div data-slot="asset-detail" class="asset-detail"></div>
-          </div>
         </aside>
 
         <main class="graphs-main">
-          <header class="ops-ribbon twin-summary panel">
-            <div class="ops-grid">
-              <div id="graphs-status" class="hero-chip hero-chip-wide"></div>
-            </div>
-          </header>
-
           <section class="graph-board panel">
             <div class="graph-board-head">
               <div class="section-label">Telemetry Trends</div>
-              <div id="graph-range-toggle" class="graph-range-toggle" aria-label="Graph time range"></div>
             </div>
             <div id="graph-grid" class="graph-grid"></div>
           </section>

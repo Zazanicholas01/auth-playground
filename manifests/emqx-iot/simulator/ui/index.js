@@ -135,6 +135,8 @@ const state = {
   history: [],
   scenario: "baseline-day",
   graphRange: "medium",
+  graphMetricGroup: "all",
+  graphComparisonMode: "managed",
   selectedZoneId: "greenhouse-a-north",
   managedZoneIds: ["greenhouse-a-north"],
   selectedAssetId: "north-fans"
@@ -170,6 +172,7 @@ async function selectZone(zoneId, { updateHistory = true } = {}) {
 const brokerPillEl = document.getElementById("broker-pill");
 const scenarioLabelEl = document.getElementById("scenario-label");
 const selectedZoneLabelEl = document.getElementById("selected-zone-label");
+const selectedAssetHeadingEl = document.getElementById("selected-asset-heading");
 const selectedAssetLabelEl = document.getElementById("selected-asset-label");
 const sceneStatusEl = document.getElementById("scene-status");
 const opsStatusEl = document.getElementById("ops-status");
@@ -178,6 +181,8 @@ const schematicEl = document.getElementById("schematic");
 const sceneBadgesEl = document.getElementById("scene-badges");
 const graphGridEl = document.getElementById("graph-grid");
 const graphRangeToggleEl = document.getElementById("graph-range-toggle");
+const graphMetricToggleEl = document.getElementById("graph-metric-toggle");
+const graphCompareToggleEl = document.getElementById("graph-compare-toggle");
 const greenhousePhotoUrl = "/dev-assets/greenhouse-twin.png";
 
 function severityClass(severity) {
@@ -324,18 +329,18 @@ function assetTypeIcon(type) {
 function assetSelectionGraphic(asset, zone) {
   const ring = `${Math.round((asset.load ?? 0) * 100)}`;
   return `<svg class="asset-selection-graphic" viewBox="0 0 280 132" aria-hidden="true">
-    <rect x="1" y="1" width="278" height="130" rx="18" fill="rgba(16,33,19,0.04)" stroke="rgba(18,56,26,0.10)" />
-    <rect x="24" y="28" width="232" height="76" rx="18" fill="rgba(34,124,68,0.08)" stroke="rgba(34,124,68,0.18)" stroke-dasharray="5 5"/>
-    <circle cx="66" cy="66" r="26" fill="rgba(23,202,119,0.16)" stroke="rgba(24,111,64,0.35)" stroke-width="2"/>
+    <rect x="1" y="1" width="278" height="130" rx="18" fill="rgba(11,28,18,0.92)" stroke="rgba(121,255,187,0.14)" />
+    <rect x="24" y="28" width="232" height="76" rx="18" fill="rgba(34,124,68,0.12)" stroke="rgba(121,255,187,0.24)" stroke-dasharray="5 5"/>
+    <circle cx="66" cy="66" r="26" fill="rgba(23,202,119,0.18)" stroke="rgba(121,255,187,0.3)" stroke-width="2"/>
     <foreignObject x="42" y="42" width="48" height="48">${assetTypeIcon(asset.type)}</foreignObject>
     <g transform="translate(144 66)">
-      <circle cx="0" cy="0" r="18" fill="none" stroke="rgba(18,56,26,0.12)" stroke-width="6"/>
+      <circle cx="0" cy="0" r="18" fill="none" stroke="rgba(121,255,187,0.12)" stroke-width="6"/>
       <circle cx="0" cy="0" r="18" fill="none" stroke="#1f8f3a" stroke-width="6" stroke-linecap="round" stroke-dasharray="${ring} 100" pathLength="100" transform="rotate(-90)"/>
-      <text x="0" y="3.5" text-anchor="middle" fill="#17311a" font-size="11" font-weight="800">${ring}%</text>
+      <text x="0" y="3.5" text-anchor="middle" fill="#effff5" font-size="11" font-weight="800">${ring}%</text>
     </g>
-    <text x="240" y="45" text-anchor="end" fill="#5d715f" font-size="10" font-weight="700" letter-spacing="1.4">SELECTED</text>
-    <text x="240" y="66" text-anchor="end" fill="#17311a" font-size="15" font-weight="800">${zone.name}</text>
-    <text x="240" y="86" text-anchor="end" fill="#5d715f" font-size="11">${asset.metricLabel || "Control load"}</text>
+    <text x="240" y="45" text-anchor="end" fill="#b7e7ca" font-size="10" font-weight="700" letter-spacing="1.4">SELECTED</text>
+    <text x="240" y="66" text-anchor="end" fill="#effff5" font-size="15" font-weight="800">${zone.name}</text>
+    <text x="240" y="86" text-anchor="end" fill="#b7e7ca" font-size="11">${asset.metricLabel || "Control load"}</text>
   </svg>`;
 }
 
@@ -506,10 +511,10 @@ function sparkline(values, color) {
 }
 
 function trendChart(values, color) {
-  const width = 360;
+  const width = 400;
   const height = 128;
-  const padding = 8;
-  const leftAxisWidth = 42;
+  const padding = 4;
+  const leftAxisWidth = 28;
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = Math.max(max - min, 0.001);
@@ -586,6 +591,59 @@ function renderGraphRangeToggle() {
   graphRangeToggleEl.querySelectorAll("[data-graph-range]").forEach((element) => {
     element.addEventListener("click", () => {
       state.graphRange = element.dataset.graphRange;
+      renderGraphs();
+    });
+  });
+}
+
+function renderGraphMetricToggle() {
+  if (!graphMetricToggleEl) return;
+  const groups = [
+    ["all", "All metrics"],
+    ["climate", "Climate"],
+    ["root", "Root zone"]
+  ];
+
+  graphMetricToggleEl.innerHTML = groups.map(([value, label]) => `
+    <button
+      type="button"
+      class="range-chip ${state.graphMetricGroup === value ? "active" : ""}"
+      data-graph-metric="${value}"
+      aria-pressed="${state.graphMetricGroup === value ? "true" : "false"}"
+    >
+      ${label}
+    </button>
+  `).join("");
+
+  graphMetricToggleEl.querySelectorAll("[data-graph-metric]").forEach((element) => {
+    element.addEventListener("click", () => {
+      state.graphMetricGroup = element.dataset.graphMetric;
+      renderGraphs();
+    });
+  });
+}
+
+function renderGraphComparisonToggle() {
+  if (!graphCompareToggleEl) return;
+  const modes = [
+    ["managed", "Managed zones"],
+    ["focused", "Focused zone"]
+  ];
+
+  graphCompareToggleEl.innerHTML = modes.map(([value, label]) => `
+    <button
+      type="button"
+      class="range-chip ${state.graphComparisonMode === value ? "active" : ""}"
+      data-graph-compare="${value}"
+      aria-pressed="${state.graphComparisonMode === value ? "true" : "false"}"
+    >
+      ${label}
+    </button>
+  `).join("");
+
+  graphCompareToggleEl.querySelectorAll("[data-graph-compare]").forEach((element) => {
+    element.addEventListener("click", () => {
+      state.graphComparisonMode = element.dataset.graphCompare;
       renderGraphs();
     });
   });
@@ -728,7 +786,15 @@ function renderSchematic() {
 
 function renderAlerts() {
   const severityRank = { critical: 0, warning: 1, normal: 2 };
-  const rows = [...state.alerts]
+  const focusedZoneId = selectedZone()?.id;
+  const scopedAlerts = currentPage === "operations"
+    ? state.alerts.filter((event) => {
+      const payload = event.payload || {};
+      const zoneId = payload.zoneId || payload.deviceId || "";
+      return zoneId === focusedZoneId;
+    })
+    : state.alerts;
+  const rows = [...scopedAlerts]
     .sort((left, right) => {
       const leftSeverity = severityClass(left.payload?.severity);
       const rightSeverity = severityClass(right.payload?.severity);
@@ -760,7 +826,7 @@ function renderAlerts() {
         <span>Incident</span>
         <span>View</span>
       </div>
-      ${rows}
+      ${rows || `<div class="muted" style="padding:10px">No current events for ${selectedZone()?.name || "focused zone"}.</div>`}
     </div>
   `);
 
@@ -780,8 +846,22 @@ function selectedZone() {
   return state.zones.find((zone) => zone.id === state.selectedZoneId) || state.zones[0];
 }
 
+function scopedAssetsForCurrentPage() {
+  const zone = selectedZone();
+  if (currentPage === "operations") {
+    return (zone?.assets || []).map((asset) => ({
+      ...asset,
+      zoneId: zone.id,
+      zoneName: zone.name,
+      zoneSeverity: zone.severity,
+      faultContext: zone.alerts[0] || "Nominal"
+    }));
+  }
+  return managedAssets();
+}
+
 function selectedAsset() {
-  const assets = managedAssets();
+  const assets = scopedAssetsForCurrentPage();
   return assets.find((asset) => asset.id === state.selectedAssetId) || assets[0];
 }
 
@@ -793,7 +873,7 @@ function selectAsset(assetId) {
 function renderAssetDetail() {
   const zone = selectedZone();
   const asset = selectedAsset();
-  const assets = managedAssets();
+  const assets = scopedAssetsForCurrentPage();
   const load = asset.load ?? 0;
   const datasetHtml = assets.map((candidate) => `
     <button class="asset-selector ${candidate.id === asset.id ? "active" : ""}" data-asset-id="${candidate.id}" type="button">
@@ -816,9 +896,9 @@ function renderAssetDetail() {
       <div class="asset-selection-visual">${assetSelectionGraphic(asset, { name: asset.zoneName || zone.name })}</div>
       <div class="asset-row"><span>${asset.metricLabel || "Control load"}</span><strong>${fmt(load * 100, 0, asset.metricUnit || " %")}</strong></div>
       <div class="asset-row"><span>Fault context</span><strong>${asset.faultContext || "Nominal"}</strong></div>
-      <div class="asset-row"><span>Dataset size</span><strong>${assets.length} assets across ${managedZones().length} zones</strong></div>
+      <div class="asset-row"><span>Dataset size</span><strong>${currentPage === "operations" ? `${assets.length} assets in ${zone.name}` : `${assets.length} assets across ${managedZones().length} zones`}</strong></div>
       <div class="asset-dataset">
-        <div class="section-label">Asset Dataset</div>
+        <div class="section-label">${currentPage === "operations" ? `${zone.name} Assets` : "Asset Dataset"}</div>
         <div class="asset-selector-list">${datasetHtml}</div>
       </div>
     </div>
@@ -878,32 +958,98 @@ function renderOperationsSummary() {
 function renderGraphs() {
   if (!graphGridEl) return;
   const zone = selectedZone();
+  const managed = managedZones();
   const baseHistory = state.history.length ? state.history : createFallbackData(4).history;
   const history = historySlice(baseHistory);
   const [startLabel, middleLabel, endLabel] = graphTimeLabels(history);
   renderGraphRangeToggle();
+  renderGraphMetricToggle();
+  renderGraphComparisonToggle();
 
-  const cards = [
-    ["Air temperature", fmt(zone.indoor.temperature, 1, " C"), "#1f8f3a", history.map((point) => point.temperature), 1, " C"],
-    ["Humidity", fmt(zone.indoor.humidity, 0, " %"), "#2d6f7c", history.map((point) => point.humidity), 0, " %"],
-    ["Soil moisture", fmt(zone.soil.moisture, 2, ""), "#4f9a3d", history.map((point) => point.soilMoisture), 2, ""],
-    ["VPD", fmt(zone.derived.vpd, 2, " kPa"), "#b37a14", history.map((point) => point.vpd), 2, " kPa"]
+  const metricDefinitions = [
+    {
+      group: "climate",
+      label: "Air temperature",
+      color: "#1f8f3a",
+      digits: 1,
+      suffix: " C",
+      currentValue: (entry) => entry.indoor.temperature,
+      historyValue: (point) => point.temperature
+    },
+    {
+      group: "climate",
+      label: "Humidity",
+      color: "#2d6f7c",
+      digits: 0,
+      suffix: " %",
+      currentValue: (entry) => entry.indoor.humidity,
+      historyValue: (point) => point.humidity
+    },
+    {
+      group: "root",
+      label: "Soil moisture",
+      color: "#4f9a3d",
+      digits: 2,
+      suffix: "",
+      currentValue: (entry) => entry.soil.moisture,
+      historyValue: (point) => point.soilMoisture
+    },
+    {
+      group: "root",
+      label: "Irrigation flow",
+      color: "#2b8890",
+      digits: 1,
+      suffix: " L/min",
+      currentValue: (entry) => entry.soil.irrigationFlow,
+      historyValue: (point) => point.irrigationFlow
+    },
+    {
+      group: "climate",
+      label: "VPD",
+      color: "#b37a14",
+      digits: 2,
+      suffix: " kPa",
+      currentValue: (entry) => entry.derived.vpd,
+      historyValue: (point) => point.vpd
+    }
   ];
 
-  graphGridEl.innerHTML = cards.map(([label, value, color, values, digits, suffix]) => {
+  const visibleMetrics = state.graphMetricGroup === "all"
+    ? metricDefinitions
+    : metricDefinitions.filter((metric) => metric.group === state.graphMetricGroup);
+
+  graphGridEl.innerHTML = visibleMetrics.map((metric) => {
+    const values = history.map((point) => metric.historyValue(point)).filter((value) => typeof value === "number");
     const min = Math.min(...values);
     const max = Math.max(...values);
+    const focusedValue = metric.currentValue(zone);
+    const comparisonRows = state.graphComparisonMode === "managed"
+      ? managed.map((item) => `
+        <div class="graph-compare-row">
+          <span>${item.name}</span>
+          <strong>${fmt(metric.currentValue(item), metric.digits, metric.suffix)}</strong>
+        </div>
+      `).join("")
+      : "";
+
     return `
     <article class="graph-card">
       <div class="graph-card-head">
-        <div class="telemetry-label">${label}</div>
-        <strong>${value}</strong>
+        <div class="telemetry-label">${state.graphComparisonMode === "managed" ? `${managed.length} zone compare` : `Focused trend: ${zone.name}`}</div>
+        <strong>${metric.label}</strong>
       </div>
       <div class="graph-axis-meta">
-        <span>Max ${fmt(max, digits, suffix)}</span>
-        <span>Min ${fmt(min, digits, suffix)}</span>
+        <span>Max ${fmt(max, metric.digits, metric.suffix)}</span>
+        <span>Min ${fmt(min, metric.digits, metric.suffix)}</span>
       </div>
-      ${trendChart(values, color)}
+      ${trendChart(values, metric.color)}
+      ${state.graphComparisonMode === "managed" ? `
+        <div class="graph-compare-list">
+          ${comparisonRows}
+        </div>
+      ` : `
+        <div class="graph-focus-note">Focused trend: ${zone.name}</div>
+      `}
       <div class="graph-time-meta">
         <span>${startLabel}</span>
         <span>${middleLabel}</span>
@@ -921,9 +1067,22 @@ function render() {
   const managed = managedZones();
   scenarioLabelEl.textContent = selectedScenarioLabel();
   if (selectedZoneLabelEl) selectedZoneLabelEl.textContent = selectedZoneLabel();
-  if (selectedAssetLabelEl && asset) selectedAssetLabelEl.textContent = managed.length > 1 ? `${asset.name} (${asset.zoneName})` : asset.name;
+  if (currentPage === "graphs") {
+    if (selectedAssetHeadingEl) selectedAssetHeadingEl.textContent = "Mode";
+    if (selectedAssetLabelEl) {
+      selectedAssetLabelEl.textContent = state.graphComparisonMode === "managed"
+        ? "Zone compare"
+        : "Focused trend";
+    }
+  } else {
+    if (selectedAssetHeadingEl) selectedAssetHeadingEl.textContent = "Asset";
+    if (selectedAssetLabelEl && asset) {
+      selectedAssetLabelEl.textContent = currentPage === "operations"
+        ? asset.name
+        : managed.length > 1 ? `${asset.name} (${asset.zoneName})` : asset.name;
+    }
+  }
   const statusHtml = `
-    <span class="muted">${managed.length > 1 ? "Managed zones" : "Facility mode"}</span>
     <strong>${state.summary?.critical ? "Intervention priority" : state.summary?.warning ? "Adaptive correction" : "Nominal coordination"}</strong>
   `;
   if (sceneStatusEl) sceneStatusEl.innerHTML = statusHtml;
