@@ -17,6 +17,7 @@
         <nav class="page-nav" aria-label="Page navigation">
           <a href="/" data-nav="twin">Twin</a>
           <a href="/operations" data-nav="operations">Operations</a>
+          <a href="/graphs" data-nav="graphs">Graphs</a>
         </nav>
 
         <div class="global-status">
@@ -54,11 +55,6 @@
             <div class="section-label">Zone Status</div>
             <div data-slot="zone-list" class="zone-list"></div>
           </div>
-
-          <div class="rail-section">
-            <div class="section-label">Overlay Modes</div>
-            <div data-slot="overlay-toggles" class="toggle-stack"></div>
-          </div>
         </aside>
 
         <main class="center-stage">
@@ -80,26 +76,8 @@
             <div class="schematic-stage">
               <div id="schematic" class="schematic" aria-label="Greenhouse schematic"></div>
             </div>
-            <div class="scene-readouts">
-              <div id="zone-readout" class="scene-card"></div>
-              <div id="asset-callout" class="scene-card"></div>
-            </div>
           </section>
         </main>
-
-        <aside class="rail panel">
-          <div class="rail-head">
-            <div>
-              <div class="eyebrow">Selected Loop</div>
-              <h2>Zone Focus</h2>
-            </div>
-          </div>
-
-          <div class="rail-section">
-            <div class="section-label">Environmental Drivers</div>
-            <div id="twin-scene-badges" class="scene-badges scene-badges-stack"></div>
-          </div>
-        </aside>
       </section>
 
       <section id="page-operations" class="page-layout operations-layout">
@@ -123,18 +101,10 @@
         </aside>
 
         <main class="operations-main">
-          <header class="ops-ribbon panel">
-          <div class="ops-copy">
-            <div class="eyebrow">Operations View</div>
-            <h1>Alerts, climate response, and derived control signals</h1>
-            <p class="muted">
-              Separate operator workspace for event load, telemetry validation, and selected asset response.
-            </p>
-          </div>
-
-          <div class="ops-grid">
-            <div id="ops-status" class="hero-chip hero-chip-wide"></div>
-          </div>
+          <header class="ops-ribbon twin-summary panel">
+            <div class="ops-grid">
+              <div id="ops-status" class="hero-chip hero-chip-wide"></div>
+            </div>
           </header>
 
           <section class="operations-summary panel">
@@ -142,35 +112,37 @@
             <div id="ops-summary" class="ops-summary-grid"></div>
           </section>
 
-          <section class="telemetry-strip panel">
-            <div class="strip-group">
-              <div class="section-label">Climate</div>
-              <div id="climate-strip" class="strip-grid"></div>
+          <section class="operations-support">
+            <div class="support-panel events-panel panel">
+              <div class="section-label">Active Events</div>
+              <div data-slot="alert-list" class="alert-list"></div>
             </div>
 
-            <div class="strip-group">
-              <div class="section-label">Root Zone</div>
-              <div id="root-strip" class="strip-grid"></div>
-            </div>
-
-            <div class="strip-group">
-              <div class="section-label">Derived Signals</div>
-              <div id="derived-strip" class="strip-grid"></div>
+            <div class="support-panel panel">
+              <div class="section-label">Asset Detail</div>
+              <div data-slot="asset-detail" class="asset-detail"></div>
             </div>
           </section>
         </main>
+      </section>
 
+      <section id="page-graphs" class="page-layout graphs-layout">
         <aside class="rail panel">
           <div class="rail-head">
             <div>
-              <div class="eyebrow">Alerts</div>
-              <h2>Response Queue</h2>
+              <div class="eyebrow">Facility</div>
+              <h2>Zone and Context</h2>
             </div>
           </div>
 
           <div class="rail-section">
-            <div class="section-label">Active Events</div>
-            <div data-slot="alert-list" class="alert-list"></div>
+            <div class="section-label">Fleet Summary</div>
+            <div data-slot="fleet-summary" class="fleet-summary"></div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Active Zones</div>
+            <div data-slot="zone-list" class="zone-list"></div>
           </div>
 
           <div class="rail-section">
@@ -178,6 +150,22 @@
             <div data-slot="asset-detail" class="asset-detail"></div>
           </div>
         </aside>
+
+        <main class="graphs-main">
+          <header class="ops-ribbon twin-summary panel">
+            <div class="ops-grid">
+              <div id="graphs-status" class="hero-chip hero-chip-wide"></div>
+            </div>
+          </header>
+
+          <section class="graph-board panel">
+            <div class="graph-board-head">
+              <div class="section-label">Telemetry Trends</div>
+              <div id="graph-range-toggle" class="graph-range-toggle" aria-label="Graph time range"></div>
+            </div>
+            <div id="graph-grid" class="graph-grid"></div>
+          </section>
+        </main>
       </section>
     </div>
 

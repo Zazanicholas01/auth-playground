@@ -1,20 +1,17 @@
 const config = window.__IOT_CONFIG__ || {};
 const apiBase = config.apiBase || (window.location.origin + "/api");
 const simulatorBase = config.simulatorBase || (window.location.origin + "/simulator");
-const currentPage = window.location.pathname === "/operations" ? "operations" : "twin";
+const currentPage = window.location.pathname === "/operations"
+  ? "operations"
+  : window.location.pathname === "/graphs"
+    ? "graphs"
+    : "twin";
+let pendingZoneId = new URLSearchParams(window.location.search).get("zone");
 
 document.body.dataset.page = currentPage;
 document.querySelectorAll("[data-nav]").forEach((link) => {
   if (link.dataset.nav === currentPage) link.classList.add("active");
 });
-
-const overlayLabels = {
-  airflow: "Airflow",
-  irrigation: "Irrigation",
-  heat: "Heat",
-  humidity: "Humidity",
-  faults: "Faults"
-};
 
 const zoneNames = {
   "greenhouse-a-north": "North Bay",
@@ -32,10 +29,13 @@ const zoneBase = [
     width: 245,
     height: 320,
     assets: [
-      { id: "north-fans", name: "Supply fan bank", type: "air handling", x: 112, y: 135, width: 50, height: 24 },
-      { id: "north-vent", name: "Roof vent array", type: "ventilation", x: 250, y: 112, width: 65, height: 14 },
-      { id: "north-heater", name: "Pipe heater loop", type: "thermal", x: 102, y: 388, width: 210, height: 14 },
-      { id: "north-irrigation", name: "Irrigation manifold", type: "water", x: 140, y: 336, width: 140, height: 18 }
+      { id: "north-fans", name: "Supply fan bank", type: "air handling", x: 112, y: 135, width: 50, height: 24, metricLabel: "Airflow output", metricUnit: " %" },
+      { id: "north-vent", name: "Roof vent array", type: "ventilation", x: 250, y: 112, width: 65, height: 14, metricLabel: "Vent position", metricUnit: " %" },
+      { id: "north-heater", name: "Pipe heater loop", type: "thermal", x: 102, y: 388, width: 210, height: 14, metricLabel: "Heat demand", metricUnit: " %" },
+      { id: "north-irrigation", name: "Irrigation manifold", type: "water", x: 140, y: 336, width: 140, height: 18, metricLabel: "Flow demand", metricUnit: " %" },
+      { id: "north-mister", name: "Mist line", type: "humidification", metricLabel: "Mist duty", metricUnit: " %" },
+      { id: "north-light", name: "Grow light rail", type: "lighting", metricLabel: "Lighting output", metricUnit: " %" },
+      { id: "north-co2", name: "CO2 injector", type: "gas", metricLabel: "Injection duty", metricUnit: " %" }
     ]
   },
   {
@@ -46,10 +46,13 @@ const zoneBase = [
     width: 245,
     height: 320,
     assets: [
-      { id: "center-fans", name: "Circulation fans", type: "air handling", x: 390, y: 135, width: 54, height: 24 },
-      { id: "center-vent", name: "Thermal ridge vent", type: "ventilation", x: 520, y: 112, width: 66, height: 14 },
-      { id: "center-heater", name: "Hydronic pipe loop", type: "thermal", x: 376, y: 388, width: 210, height: 14 },
-      { id: "center-irrigation", name: "Root drip manifold", type: "water", x: 414, y: 336, width: 140, height: 18 }
+      { id: "center-fans", name: "Circulation fans", type: "air handling", x: 390, y: 135, width: 54, height: 24, metricLabel: "Airflow output", metricUnit: " %" },
+      { id: "center-vent", name: "Thermal ridge vent", type: "ventilation", x: 520, y: 112, width: 66, height: 14, metricLabel: "Vent position", metricUnit: " %" },
+      { id: "center-heater", name: "Hydronic pipe loop", type: "thermal", x: 376, y: 388, width: 210, height: 14, metricLabel: "Heat demand", metricUnit: " %" },
+      { id: "center-irrigation", name: "Root drip manifold", type: "water", x: 414, y: 336, width: 140, height: 18, metricLabel: "Flow demand", metricUnit: " %" },
+      { id: "center-mister", name: "Fogging bar", type: "humidification", metricLabel: "Mist duty", metricUnit: " %" },
+      { id: "center-light", name: "Supplemental light rack", type: "lighting", metricLabel: "Lighting output", metricUnit: " %" },
+      { id: "center-co2", name: "CO2 injector", type: "gas", metricLabel: "Injection duty", metricUnit: " %" }
     ]
   },
   {
@@ -60,10 +63,13 @@ const zoneBase = [
     width: 245,
     height: 320,
     assets: [
-      { id: "south-fans", name: "Exhaust fan bank", type: "air handling", x: 664, y: 135, width: 52, height: 24 },
-      { id: "south-vent", name: "South ridge vent", type: "ventilation", x: 794, y: 112, width: 64, height: 14 },
-      { id: "south-heater", name: "Perimeter heat loop", type: "thermal", x: 648, y: 388, width: 212, height: 14 },
-      { id: "south-irrigation", name: "Nutrient dosing bar", type: "water", x: 687, y: 336, width: 142, height: 18 }
+      { id: "south-fans", name: "Exhaust fan bank", type: "air handling", x: 664, y: 135, width: 52, height: 24, metricLabel: "Airflow output", metricUnit: " %" },
+      { id: "south-vent", name: "South ridge vent", type: "ventilation", x: 794, y: 112, width: 64, height: 14, metricLabel: "Vent position", metricUnit: " %" },
+      { id: "south-heater", name: "Perimeter heat loop", type: "thermal", x: 648, y: 388, width: 212, height: 14, metricLabel: "Heat demand", metricUnit: " %" },
+      { id: "south-irrigation", name: "Nutrient dosing bar", type: "water", x: 687, y: 336, width: 142, height: 18, metricLabel: "Flow demand", metricUnit: " %" },
+      { id: "south-mister", name: "Humidity curtain", type: "humidification", metricLabel: "Mist duty", metricUnit: " %" },
+      { id: "south-light", name: "Canopy light rail", type: "lighting", metricLabel: "Lighting output", metricUnit: " %" },
+      { id: "south-co2", name: "CO2 injector", type: "gas", metricLabel: "Injection duty", metricUnit: " %" }
     ]
   }
 ];
@@ -74,14 +80,9 @@ const state = {
   alerts: [],
   history: [],
   scenario: "baseline-day",
-  overlays: {
-    airflow: true,
-    irrigation: true,
-    heat: true,
-    humidity: true,
-    faults: true
-  },
+  graphRange: "medium",
   selectedZoneId: "greenhouse-a-north",
+  managedZoneIds: ["greenhouse-a-north"],
   selectedAssetId: "north-fans"
 };
 
@@ -95,13 +96,35 @@ function setSlotHTML(name, html) {
   });
 }
 
+async function loadHistoryForZone(zoneId) {
+  const history = await fetch(apiBase + "/history/" + zoneId).then((response) => response.json()).catch(() => []);
+  state.history = history.map((point) => ({
+    ts: point.ts ?? point.timestamp ?? point.time ?? null,
+    temperature: point.temperature ?? 0,
+    humidity: point.humidity ?? 0,
+    co2: point.co2 ?? 0,
+    soilMoisture: point.soilMoisture ?? 0,
+    irrigationFlow: point.irrigationFlow ?? 0,
+    vpd: point.vpd ?? 0
+  }));
+}
+
+async function selectZone(zoneId, { updateHistory = true } = {}) {
+  await focusZone(zoneId, { ensureManaged: true, updateHistory });
+}
+
 const brokerPillEl = document.getElementById("broker-pill");
 const scenarioLabelEl = document.getElementById("scenario-label");
+const selectedZoneLabelEl = document.getElementById("selected-zone-label");
+const selectedAssetLabelEl = document.getElementById("selected-asset-label");
 const sceneStatusEl = document.getElementById("scene-status");
 const opsStatusEl = document.getElementById("ops-status");
+const graphsStatusEl = document.getElementById("graphs-status");
 const schematicEl = document.getElementById("schematic");
 const sceneBadgesEl = document.getElementById("scene-badges");
-const climateStripEl = document.getElementById("climate-strip");
+const graphGridEl = document.getElementById("graph-grid");
+const graphRangeToggleEl = document.getElementById("graph-range-toggle");
+const greenhousePhotoUrl = "/dev-assets/greenhouse-twin.png";
 
 function severityClass(severity) {
   if (severity === "critical") return "critical";
@@ -116,6 +139,150 @@ function fmt(value, digits = 1, suffix = "") {
 
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+function assetLoadForType(type, actuators = {}) {
+  if (type === "air handling") return actuators.fan ?? 0;
+  if (type === "ventilation") return actuators.vent ?? 0;
+  if (type === "thermal") return actuators.heater ?? 0;
+  if (type === "water") return actuators.irrigation ?? 0;
+  if (type === "humidification") return actuators.mister ?? 0;
+  if (type === "lighting") return actuators.growLight ?? 0;
+  if (type === "gas") return clamp((actuators.vent ?? 0) * 0.28 + (actuators.fan ?? 0) * 0.12, 0, 1);
+  return 0;
+}
+
+function isManagedZone(zoneId) {
+  return state.managedZoneIds.includes(zoneId);
+}
+
+function managedZones() {
+  const zones = state.zones.filter((zone) => isManagedZone(zone.id));
+  return zones.length ? zones : (selectedZone() ? [selectedZone()] : []);
+}
+
+function managedAssets() {
+  return managedZones().flatMap((zone) => zone.assets.map((asset) => ({
+    ...asset,
+    zoneId: zone.id,
+    zoneName: zone.name,
+    zoneSeverity: zone.severity,
+    faultContext: zone.alerts[0] || "Nominal"
+  })));
+}
+
+function selectedScenarioLabel() {
+  const scenarios = [...new Set(managedZones().map((zone) => zone.scenario).filter(Boolean))];
+  if (!scenarios.length) return state.scenario.replace(/-/g, " ");
+  if (scenarios.length === 1) return scenarios[0].replace(/-/g, " ");
+  return "Mixed profiles";
+}
+
+function selectedZoneLabel() {
+  const zones = managedZones();
+  if (zones.length <= 1) return zones[0]?.name || "--";
+  return `${zones.length} zones`;
+}
+
+function syncManagedState() {
+  const zoneIds = new Set(state.zones.map((zone) => zone.id));
+  state.managedZoneIds = state.managedZoneIds.filter((zoneId) => zoneIds.has(zoneId));
+  if (!state.managedZoneIds.length && state.zones[0]) {
+    state.managedZoneIds = [state.zones[0].id];
+  }
+  if (!zoneIds.has(state.selectedZoneId)) {
+    state.selectedZoneId = state.managedZoneIds[0] || state.zones[0]?.id || state.selectedZoneId;
+  }
+  if (state.selectedZoneId && !isManagedZone(state.selectedZoneId)) {
+    state.managedZoneIds = [...state.managedZoneIds, state.selectedZoneId];
+  }
+}
+
+async function focusZone(zoneId, { ensureManaged = true, updateHistory = true } = {}) {
+  state.selectedZoneId = zoneId;
+  if (ensureManaged && !isManagedZone(zoneId)) {
+    state.managedZoneIds = [...state.managedZoneIds, zoneId];
+  }
+  syncManagedState();
+  const zone = selectedZone();
+  if (zone && !managedAssets().find((asset) => asset.id === state.selectedAssetId)) {
+    state.selectedAssetId = zone.assets[0]?.id || state.selectedAssetId;
+  }
+  if (updateHistory && zone?.id) {
+    await loadHistoryForZone(zone.id);
+  }
+  render();
+}
+
+async function toggleManagedZone(zoneId, { updateHistory = true } = {}) {
+  const currentlyManaged = isManagedZone(zoneId);
+  if (currentlyManaged && state.selectedZoneId !== zoneId) {
+    state.selectedZoneId = zoneId;
+  } else if (currentlyManaged && state.managedZoneIds.length > 1) {
+    state.managedZoneIds = state.managedZoneIds.filter((id) => id !== zoneId);
+    if (state.selectedZoneId === zoneId) {
+      state.selectedZoneId = state.managedZoneIds[0];
+    }
+  } else if (!currentlyManaged) {
+    state.managedZoneIds = [...state.managedZoneIds, zoneId];
+    state.selectedZoneId = zoneId;
+  } else {
+    state.selectedZoneId = zoneId;
+  }
+
+  syncManagedState();
+  const zone = selectedZone();
+  if (zone && !managedAssets().find((asset) => asset.id === state.selectedAssetId)) {
+    state.selectedAssetId = zone.assets[0]?.id || state.selectedAssetId;
+  }
+  if (updateHistory && zone?.id) {
+    await loadHistoryForZone(zone.id);
+  }
+  render();
+}
+
+function assetTypeIcon(type) {
+  const common = 'viewBox="0 0 48 48" aria-hidden="true"';
+  if (type === "air handling") {
+    return `<svg class="asset-icon-svg" ${common}><circle cx="24" cy="24" r="16" fill="rgba(38,149,83,0.14)" stroke="currentColor" stroke-width="2"/><circle cx="24" cy="24" r="4" fill="currentColor"/><path d="M24 10c5 0 9 4 9 9-5 1-9-2-9-7v-2Z" fill="currentColor"/><path d="M36 24c0 5-4 9-9 9-1-5 2-9 7-9h2Z" fill="currentColor"/><path d="M24 38c-5 0-9-4-9-9 5-1 9 2 9 7v2Z" fill="currentColor"/><path d="M12 24c0-5 4-9 9-9 1 5-2 9-7 9h-2Z" fill="currentColor"/></svg>`;
+  }
+  if (type === "ventilation") {
+    return `<svg class="asset-icon-svg" ${common}><rect x="8" y="12" width="32" height="24" rx="8" fill="rgba(38,149,83,0.14)" stroke="currentColor" stroke-width="2"/><path d="M14 24h11" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M21 18l7 6-7 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M30 18h4M32 24h6M30 30h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+  }
+  if (type === "thermal") {
+    return `<svg class="asset-icon-svg" ${common}><rect x="18" y="10" width="12" height="20" rx="6" fill="rgba(38,149,83,0.14)" stroke="currentColor" stroke-width="2"/><circle cx="24" cy="35" r="7" fill="rgba(38,149,83,0.14)" stroke="currentColor" stroke-width="2"/><path d="M24 16v14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M32 14c3 2 4 5 3 8M16 14c-3 2-4 5-3 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+  }
+  if (type === "water") {
+    return `<svg class="asset-icon-svg" ${common}><path d="M24 10c6 8 10 13 10 18a10 10 0 1 1-20 0c0-5 4-10 10-18Z" fill="rgba(38,149,83,0.14)" stroke="currentColor" stroke-width="2"/><path d="M29 30c-1 3-3 4-6 4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+  }
+  if (type === "humidification") {
+    return `<svg class="asset-icon-svg" ${common}><circle cx="18" cy="18" r="4" fill="currentColor"/><circle cx="28" cy="14" r="3" fill="currentColor" opacity="0.85"/><circle cx="32" cy="24" r="5" fill="currentColor" opacity="0.7"/><path d="M10 34c3-4 7-6 14-6s11 2 14 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M14 39h20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+  }
+  if (type === "lighting") {
+    return `<svg class="asset-icon-svg" ${common}><path d="M24 10c6 0 10 4 10 10 0 4-2 7-5 9-2 2-3 3-3 5h-4c0-2-1-3-3-5-3-2-5-5-5-9 0-6 4-10 10-10Z" fill="rgba(38,149,83,0.14)" stroke="currentColor" stroke-width="2"/><path d="M20 38h8M21 34h6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M24 15v6M18 21l3 2M30 21l-3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+  }
+  if (type === "gas") {
+    return `<svg class="asset-icon-svg" ${common}><rect x="12" y="16" width="24" height="18" rx="9" fill="rgba(38,149,83,0.14)" stroke="currentColor" stroke-width="2"/><circle cx="20" cy="25" r="2.5" fill="currentColor"/><circle cx="28" cy="25" r="2.5" fill="currentColor"/><path d="M16 13c2-2 4-3 8-3s6 1 8 3" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+  }
+  return `<svg class="asset-icon-svg" ${common}><circle cx="24" cy="24" r="14" fill="rgba(38,149,83,0.14)" stroke="currentColor" stroke-width="2"/></svg>`;
+}
+
+function assetSelectionGraphic(asset, zone) {
+  const ring = `${Math.round((asset.load ?? 0) * 100)}`;
+  return `<svg class="asset-selection-graphic" viewBox="0 0 280 132" aria-hidden="true">
+    <rect x="1" y="1" width="278" height="130" rx="18" fill="rgba(16,33,19,0.04)" stroke="rgba(18,56,26,0.10)" />
+    <rect x="24" y="28" width="232" height="76" rx="18" fill="rgba(34,124,68,0.08)" stroke="rgba(34,124,68,0.18)" stroke-dasharray="5 5"/>
+    <circle cx="66" cy="66" r="26" fill="rgba(23,202,119,0.16)" stroke="rgba(24,111,64,0.35)" stroke-width="2"/>
+    <foreignObject x="42" y="42" width="48" height="48">${assetTypeIcon(asset.type)}</foreignObject>
+    <g transform="translate(144 66)">
+      <circle cx="0" cy="0" r="18" fill="none" stroke="rgba(18,56,26,0.12)" stroke-width="6"/>
+      <circle cx="0" cy="0" r="18" fill="none" stroke="#1f8f3a" stroke-width="6" stroke-linecap="round" stroke-dasharray="${ring} 100" pathLength="100" transform="rotate(-90)"/>
+      <text x="0" y="3.5" text-anchor="middle" fill="#17311a" font-size="11" font-weight="800">${ring}%</text>
+    </g>
+    <text x="240" y="45" text-anchor="end" fill="#5d715f" font-size="10" font-weight="700" letter-spacing="1.4">SELECTED</text>
+    <text x="240" y="66" text-anchor="end" fill="#17311a" font-size="15" font-weight="800">${zone.name}</text>
+    <text x="240" y="86" text-anchor="end" fill="#5d715f" font-size="11">${asset.metricLabel || "Control load"}</text>
+  </svg>`;
 }
 
 function normalizeZone(zone, index = 0) {
@@ -142,13 +309,7 @@ function normalizeZone(zone, index = 0) {
     height: base.height,
     assets: base.assets.map((asset) => ({
       ...asset,
-      load: asset.type === "air handling"
-        ? actuators.fan ?? 0
-        : asset.type === "ventilation"
-          ? actuators.vent ?? 0
-          : asset.type === "thermal"
-            ? actuators.heater ?? 0
-            : actuators.irrigation ?? 0
+      load: assetLoadForType(asset.type, actuators)
     }))
   };
 }
@@ -240,6 +401,7 @@ function createFallbackData(tick) {
   ];
 
   const history = Array.from({ length: 18 }, (_, idx) => ({
+    ts: new Date(Date.now() - (17 - idx) * 5 * 60_000).toISOString(),
     temperature: 22 + Math.sin((tick + idx) / 4) * 1.8,
     humidity: 68 + Math.cos((tick + idx) / 5) * 6,
     co2: 590 + Math.sin((tick + idx) / 3) * 80,
@@ -286,23 +448,148 @@ function sparkline(values, color) {
   </svg>`;
 }
 
+function trendChart(values, color) {
+  const width = 360;
+  const height = 128;
+  const padding = 8;
+  const leftAxisWidth = 42;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = Math.max(max - min, 0.001);
+  const chartLeft = leftAxisWidth;
+  const chartRight = width - padding;
+  const chartTop = padding;
+  const chartBottom = height - padding;
+  const chartWidth = chartRight - chartLeft;
+  const chartHeight = chartBottom - chartTop;
+  const coords = values.map((value, index) => {
+    const x = chartLeft + (index / Math.max(values.length - 1, 1)) * chartWidth;
+    const y = chartBottom - ((value - min) / range) * chartHeight;
+    return [x, y];
+  });
+  const line = coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const area = `${chartLeft},${chartBottom} ${line} ${chartRight},${chartBottom}`;
+  const tickValues = [max, min + range / 2, min];
+  const tickMarkup = tickValues.map((tickValue) => {
+    const y = chartBottom - ((tickValue - min) / range) * chartHeight;
+    return `
+      <line x1="${chartLeft}" y1="${y.toFixed(1)}" x2="${chartRight}" y2="${y.toFixed(1)}" stroke="rgba(79,97,79,0.16)" stroke-width="1" />
+      <text x="${chartLeft - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end" class="chart-y-label">${tickValue.toFixed(range >= 10 ? 0 : range >= 1 ? 1 : 2)}</text>
+    `;
+  }).join("");
+
+  return `<svg class="trend-chart" viewBox="0 0 ${width} ${height}" role="img" aria-hidden="true">
+    ${tickMarkup}
+    <polygon points="${area}" fill="${color}22"></polygon>
+    <line x1="${chartLeft}" y1="${chartBottom}" x2="${chartRight}" y2="${chartBottom}" stroke="rgba(79,97,79,0.28)" stroke-width="1" />
+    <polyline fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="${line}" />
+  </svg>`;
+}
+
+function historySlice(history) {
+  if (state.graphRange === "short") return history.slice(-6);
+  if (state.graphRange === "medium") return history.slice(-12);
+  return history;
+}
+
+function formatTimeLabel(ts) {
+  if (!ts) return "--";
+  const date = new Date(ts);
+  if (Number.isNaN(date.getTime())) return "--";
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function graphTimeLabels(history) {
+  if (!history.length) return ["--", "--", "--"];
+  const first = history[0];
+  const middle = history[Math.floor((history.length - 1) / 2)];
+  const last = history[history.length - 1];
+  return [formatTimeLabel(first.ts), formatTimeLabel(middle.ts), formatTimeLabel(last.ts)];
+}
+
+function renderGraphRangeToggle() {
+  if (!graphRangeToggleEl) return;
+  const ranges = [
+    ["short", "6 pts"],
+    ["medium", "12 pts"],
+    ["long", "All"]
+  ];
+
+  graphRangeToggleEl.innerHTML = ranges.map(([value, label]) => `
+    <button
+      type="button"
+      class="range-chip ${state.graphRange === value ? "active" : ""}"
+      data-graph-range="${value}"
+      aria-pressed="${state.graphRange === value ? "true" : "false"}"
+    >
+      ${label}
+    </button>
+  `).join("");
+
+  graphRangeToggleEl.querySelectorAll("[data-graph-range]").forEach((element) => {
+    element.addEventListener("click", () => {
+      state.graphRange = element.dataset.graphRange;
+      renderGraphs();
+    });
+  });
+}
+
 function renderFleetSummary() {
-  setSlotHTML("fleet-summary", "");
+  if (!state.summary) {
+    setSlotHTML("fleet-summary", "");
+    return;
+  }
+  const managed = managedZones();
+  const managedAlerts = managed.reduce((sum, zone) => sum + zone.alerts.length, 0);
+
+  setSlotHTML("fleet-summary", `
+    <div class="summary-card compact-summary">
+      <div class="summary-top">
+        <strong>Greenhouse A</strong>
+        <span class="pill ${state.summary.critical ? "critical" : state.summary.warning ? "warning" : "normal"}">
+          ${state.summary.critical ? "attention" : state.summary.warning ? "watch" : "stable"}
+        </span>
+      </div>
+      <div class="summary-grid compact-grid">
+        <div class="mini">
+          <div class="telemetry-label">Zones</div>
+          <strong>${state.summary.zones ?? "--"}</strong>
+        </div>
+        <div class="mini">
+          <div class="telemetry-label">Managed</div>
+          <strong>${managed.length}</strong>
+        </div>
+        <div class="mini">
+          <div class="telemetry-label">Avg Air</div>
+          <strong>${fmt(state.summary.avgTemperature, 1, " C")}</strong>
+        </div>
+        <div class="mini">
+          <div class="telemetry-label">Alerts</div>
+          <strong>${managedAlerts}</strong>
+        </div>
+      </div>
+    </div>
+  `);
 }
 
 function renderZoneList() {
   const html = state.zones.map((zone) => `
-    <div class="zone-card ${state.selectedZoneId === zone.id ? "active" : ""}" data-zone-id="${zone.id}">
+    <div class="zone-card ${isManagedZone(zone.id) ? "managed" : ""} ${state.selectedZoneId === zone.id ? "active" : ""}" data-zone-id="${zone.id}">
       <div class="zone-card-top">
-        <strong>${zone.name}</strong>
-        <span class="pill ${severityClass(zone.severity)}">${zone.severity}</span>
+        <div class="zone-title-row">
+          <span class="zone-select-indicator" aria-hidden="true"></span>
+          <strong>${zone.name}</strong>
+        </div>
+        <span class="pill ${severityClass(zone.severity)}">${state.selectedZoneId === zone.id ? "focused" : isManagedZone(zone.id) ? "managed" : zone.severity}</span>
       </div>
-      <div class="muted" style="margin-top:6px">Scenario: ${zone.scenario.replace(/-/g, " ")}</div>
+      <div class="zone-subline">
+        <span>${fmt(zone.indoor.temperature, 1, " C")}</span>
+        <span>${fmt(zone.indoor.humidity, 0, " %")} RH</span>
+        <span>${zone.alerts.length} alerts</span>
+      </div>
       <div class="zone-metrics">
-        <div class="mini"><div class="telemetry-label">Air</div><strong>${fmt(zone.indoor.temperature, 1, " C")}</strong></div>
-        <div class="mini"><div class="telemetry-label">RH</div><strong>${fmt(zone.indoor.humidity, 0, " %")}</strong></div>
         <div class="mini"><div class="telemetry-label">Moisture</div><strong>${fmt(zone.soil.moisture, 2, "")}</strong></div>
-        <div class="mini"><div class="telemetry-label">Alerts</div><strong>${zone.alerts.length}</strong></div>
+        <div class="mini"><div class="telemetry-label">Demand</div><strong>${fmt(zone.derived.irrigationDemand, 0, "")}</strong></div>
       </div>
     </div>
   `).join("");
@@ -310,181 +597,126 @@ function renderZoneList() {
   setSlotHTML("zone-list", html);
 
   slotEls("zone-list").forEach((container) => container.querySelectorAll("[data-zone-id]").forEach((element) => {
-    element.addEventListener("click", () => {
-      state.selectedZoneId = element.dataset.zoneId;
-      const zone = selectedZone();
-      state.selectedAssetId = zone.assets[0]?.id || state.selectedAssetId;
-      render();
-    });
-  }));
-}
-
-function renderOverlayToggles() {
-  const html = Object.entries(overlayLabels).map(([key, label]) => `
-    <div class="toggle-chip ${state.overlays[key] ? "active" : ""}" data-overlay="${key}">
-      <div>
-        <strong>${label}</strong>
-        <div class="muted">Scene layer</div>
-      </div>
-      <div class="toggle-state"></div>
-    </div>
-  `).join("");
-
-  setSlotHTML("overlay-toggles", html);
-
-  slotEls("overlay-toggles").forEach((container) => container.querySelectorAll("[data-overlay]").forEach((element) => {
-    element.addEventListener("click", () => {
-      const key = element.dataset.overlay;
-      state.overlays[key] = !state.overlays[key];
-      render();
+    element.addEventListener("click", async () => {
+      if (currentPage === "twin") {
+        await focusZone(element.dataset.zoneId, { ensureManaged: true });
+        return;
+      }
+      await toggleManagedZone(element.dataset.zoneId);
     });
   }));
 }
 
 function renderSceneBadges(zone) {
   if (!sceneBadgesEl) return;
+  const managed = managedZones();
   sceneBadgesEl.innerHTML = `
     <div class="scene-badge">
-      <div class="telemetry-label">Selected Zone</div>
+      <div class="telemetry-label">Focused Zone</div>
       <strong>${zone.name}</strong>
       <div class="muted-value">${fmt(zone.indoor.temperature, 1, " C")} air · ${fmt(zone.soil.moisture, 2, "")} root water</div>
+    </div>
+    <div class="scene-badge">
+      <div class="telemetry-label">Managed Set</div>
+      <strong>${managed.length} zones</strong>
+      <div class="muted-value">${managed.map((item) => item.name).join(" · ")}</div>
     </div>
   `;
 }
 
-function airflowOverlay(zone) {
-  if (!state.overlays.airflow) return "";
-  const fanLoad = zone.actuators.fan ?? 0;
-  const path = `M ${zone.x + 30} ${zone.y + 70} C ${zone.x + 110} ${zone.y + 20}, ${zone.x + 170} ${zone.y + 20}, ${zone.x + zone.width - 24} ${zone.y + 82}`;
-  return `
-    <path d="${path}" class="flow-pulse" fill="none" stroke="rgba(45, 111, 124, 0.74)" stroke-width="${4 + fanLoad * 8}" stroke-dasharray="8 10" stroke-linecap="round" />
-    <polygon points="${zone.x + zone.width - 22},${zone.y + 82} ${zone.x + zone.width - 38},${zone.y + 74} ${zone.x + zone.width - 38},${zone.y + 90}" fill="rgba(45, 111, 124, 0.8)" />
-  `;
-}
-
-function irrigationOverlay(zone) {
-  if (!state.overlays.irrigation) return "";
-  const irrigation = zone.actuators.irrigation ?? 0;
-  return `
-    <path d="M ${zone.x + 46} ${zone.y + zone.height - 78} H ${zone.x + zone.width - 42}" fill="none" stroke="rgba(45, 111, 124, 0.36)" stroke-width="10" stroke-linecap="round" />
-    <path d="M ${zone.x + 46} ${zone.y + zone.height - 78} H ${zone.x + zone.width - 42}" class="flow-pulse" fill="none" stroke="rgba(71, 168, 190, 0.88)" stroke-width="${2 + irrigation * 7}" stroke-dasharray="6 12" stroke-linecap="round" />
-    ${[0, 1, 2, 3].map((idx) => {
-      const dx = zone.x + 72 + idx * 44;
-      return `<line x1="${dx}" y1="${zone.y + zone.height - 78}" x2="${dx}" y2="${zone.y + zone.height - 28}" stroke="rgba(71, 168, 190, 0.64)" stroke-width="${1.5 + irrigation * 3}" stroke-linecap="round" />`;
-    }).join("")}
-  `;
-}
-
-function heatOverlay(zone) {
-  if (!state.overlays.heat) return "";
-  const opacity = clamp((zone.actuators.heater ?? 0) * 0.7, 0.08, 0.55);
-  return `
-    <rect x="${zone.x + 20}" y="${zone.y + zone.height - 46}" width="${zone.width - 40}" height="24" rx="12" class="heat-band" fill="rgba(210, 104, 52, ${opacity})" />
-    <rect x="${zone.x + 34}" y="${zone.y + 78}" width="${zone.width - 68}" height="160" rx="30" fill="rgba(210, 104, 52, ${opacity * 0.42})" />
-  `;
-}
-
-function humidityOverlay(zone) {
-  if (!state.overlays.humidity) return "";
-  const humidityAlpha = clamp((zone.indoor.humidity - 50) / 120, 0.1, 0.42);
-  return `
-    <ellipse class="humidity-haze" cx="${zone.x + zone.width * 0.54}" cy="${zone.y + 154}" rx="${zone.width * 0.34}" ry="84" fill="rgba(141, 207, 223, ${humidityAlpha})" />
-    <ellipse class="humidity-haze" cx="${zone.x + zone.width * 0.42}" cy="${zone.y + 236}" rx="${zone.width * 0.24}" ry="66" fill="rgba(141, 207, 223, ${humidityAlpha * 0.74})" />
-  `;
-}
-
-function faultOverlay(zone) {
-  if (!state.overlays.faults || zone.severity === "normal") return "";
-  const beaconColor = zone.severity === "critical" ? "rgba(178, 59, 59, 0.92)" : "rgba(179, 122, 20, 0.92)";
-  const target = zone.assets[zone.severity === "critical" ? 3 : 1] || zone.assets[0];
-  return `
-    <circle class="fault-beacon" cx="${target.x + target.width - 2}" cy="${target.y - 10}" r="10" fill="${beaconColor}" />
-    <line x1="${target.x + target.width - 2}" y1="${target.y - 3}" x2="${target.x + target.width - 2}" y2="${target.y + 6}" stroke="white" stroke-width="2.2" />
-    <circle cx="${target.x + target.width - 2}" cy="${target.y + 11}" r="1.8" fill="white" />
-  `;
-}
-
-function assetShape(asset) {
-  const selected = asset.id === state.selectedAssetId ? "selected" : "";
-  const fill = asset.type === "thermal"
-    ? "rgba(178, 122, 20, 0.32)"
-    : asset.type === "water"
-      ? "rgba(45, 111, 124, 0.28)"
-      : "rgba(31, 143, 58, 0.22)";
-
-  return `
-    <g class="asset-hit ${selected}" data-asset-id="${asset.id}">
-      <rect x="${asset.x}" y="${asset.y}" width="${asset.width}" height="${asset.height}" rx="7" fill="${fill}" stroke="rgba(34, 67, 38, 0.22)" />
-    </g>
-  `;
-}
-
-function zoneBlock(zone) {
-  const canopyHeight = 120 + clamp(zone.indoor.par / 12, 18, 60);
-  return `
-    <g>
-      <rect x="${zone.x}" y="${zone.y}" width="${zone.width}" height="${zone.height}" rx="24" fill="rgba(255, 255, 255, 0.34)" stroke="rgba(56, 122, 64, 0.22)" stroke-width="2" />
-      <path d="M ${zone.x + 20} ${zone.y + 46} Q ${zone.x + zone.width / 2} ${zone.y - 6} ${zone.x + zone.width - 20} ${zone.y + 46}" fill="none" stroke="rgba(56, 122, 64, 0.26)" stroke-width="4" />
-      <rect x="${zone.x + 24}" y="${zone.y + zone.height - 116}" width="${zone.width - 48}" height="84" rx="18" fill="rgba(112, 169, 71, 0.22)" />
-      ${[0, 1, 2, 3, 4].map((idx) => {
-        const stemX = zone.x + 46 + idx * 38;
-        const stemTop = zone.y + zone.height - canopyHeight - (idx % 2 ? 16 : 0);
-        return `
-          <path d="M ${stemX} ${zone.y + zone.height - 32} C ${stemX - 4} ${zone.y + zone.height - 74}, ${stemX + 6} ${stemTop + 26}, ${stemX} ${stemTop}" stroke="rgba(63, 125, 51, 0.74)" stroke-width="4" fill="none" />
-          <ellipse cx="${stemX - 10}" cy="${stemTop + 22}" rx="16" ry="7" fill="rgba(104, 172, 73, 0.82)" />
-          <ellipse cx="${stemX + 12}" cy="${stemTop + 12}" rx="16" ry="7" fill="rgba(122, 186, 84, 0.84)" />
-        `;
-      }).join("")}
-      <rect x="${zone.x + 14}" y="${zone.y + zone.height - 28}" width="${zone.width - 28}" height="14" rx="7" fill="rgba(141, 112, 72, 0.76)" />
-      <text x="${zone.x + 18}" y="${zone.y + 26}" font-size="15" font-weight="700" fill="#17311a">${zone.name}</text>
-      ${humidityOverlay(zone)}
-      ${heatOverlay(zone)}
-      ${irrigationOverlay(zone)}
-      ${airflowOverlay(zone)}
-      ${faultOverlay(zone)}
-      ${zone.assets.map(assetShape).join("")}
-    </g>
-  `;
-}
-
 function renderSchematic() {
+  const zone = selectedZone();
   schematicEl.innerHTML = `
-    <svg class="svg-scene" viewBox="0 0 980 640" role="img" aria-label="Greenhouse digital twin scene">
-      <defs>
-        <linearGradient id="glassGlow" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="rgba(255,255,255,0.72)" />
-          <stop offset="100%" stop-color="rgba(255,255,255,0.12)" />
-        </linearGradient>
-      </defs>
-      <rect x="50" y="72" width="862" height="410" rx="36" fill="url(#glassGlow)" stroke="rgba(56, 122, 64, 0.26)" stroke-width="3" />
-      <rect x="74" y="92" width="816" height="370" rx="28" fill="rgba(255, 255, 255, 0.16)" stroke="rgba(56, 122, 64, 0.08)" />
-      <path d="M 74 452 H 890" stroke="rgba(56, 122, 64, 0.28)" stroke-width="2" stroke-dasharray="8 12" />
-      ${state.zones.map(zoneBlock).join("")}
-    </svg>
+    <div class="schematic-photo-wrap">
+      <img
+        class="schematic-photo"
+        src="${greenhousePhotoUrl}"
+        alt="Greenhouse interior with rows of plants and visible growing infrastructure"
+      />
+      <div class="schematic-hotspots" aria-label="Greenhouse zones">
+        ${state.zones.map((item) => `
+          <button
+            type="button"
+            class="zone-hotspot ${isManagedZone(item.id) ? "managed" : ""} ${item.id === state.selectedZoneId ? "active" : ""}"
+            data-zone-hotspot="${item.id}"
+            style="
+              left:${((item.x + item.width / 2) / 980 * 100).toFixed(2)}%;
+              top:${((item.y + item.height / 2) / 640 * 100).toFixed(2)}%;
+            "
+            aria-pressed="${item.id === state.selectedZoneId ? "true" : "false"}"
+          >
+            <span class="zone-hotspot-dot" aria-hidden="true"></span>
+            <span class="zone-hotspot-label">${item.name}</span>
+          </button>
+        `).join("")}
+      </div>
+      <div class="schematic-selected-zone">
+        <div class="telemetry-label">Image focus</div>
+        <strong>${zone.name}</strong>
+        <span>${fmt(zone.indoor.temperature, 1, " C")} air · ${fmt(zone.soil.moisture, 2, "")} moisture</span>
+      </div>
+      <div class="schematic-photo-caption">
+        <strong>Facility reference</strong>
+        <span>Click a zone marker to sync the twin selection.</span>
+      </div>
+    </div>
   `;
 
-  schematicEl.querySelectorAll("[data-asset-id]").forEach((element) => {
-    element.addEventListener("click", () => {
-      state.selectedAssetId = element.dataset.assetId;
-      render();
+  schematicEl.querySelectorAll("[data-zone-hotspot]").forEach((element) => {
+    element.addEventListener("click", async () => {
+      await focusZone(element.dataset.zoneHotspot, { ensureManaged: true });
     });
   });
 }
 
 function renderAlerts() {
-  setSlotHTML("alert-list", state.alerts.slice(0, 6).map((event) => {
+  const severityRank = { critical: 0, warning: 1, normal: 2 };
+  const rows = [...state.alerts]
+    .sort((left, right) => {
+      const leftSeverity = severityClass(left.payload?.severity);
+      const rightSeverity = severityClass(right.payload?.severity);
+      const severityDelta = (severityRank[leftSeverity] ?? 99) - (severityRank[rightSeverity] ?? 99);
+      if (severityDelta !== 0) return severityDelta;
+      return new Date(right.receivedAt).getTime() - new Date(left.receivedAt).getTime();
+    })
+    .slice(0, 20)
+    .map((event) => {
     const payload = event.payload || {};
+    const zoneId = payload.zoneId || payload.deviceId || "";
     return `
-      <div class="alert-card ${severityClass(payload.severity)}">
-        <div class="alert-top">
-          <strong>${zoneNames[payload.zoneId] || payload.zoneId || "System"}</strong>
-          <span class="pill ${severityClass(payload.severity)}">${payload.severity || "normal"}</span>
-        </div>
-        <div class="muted" style="margin-top:6px">${new Date(event.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
-        <div style="margin-top:8px;font-weight:600">${payload.message || event.type}</div>
+      <div class="alert-card ${severityClass(payload.severity)}" data-alert-zone-id="${zoneId}">
+        <div class="alert-time">${new Date(event.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+        <div class="alert-zone">${zoneNames[zoneId] || zoneId || "System"}</div>
+        <div class="alert-severity"><span class="pill ${severityClass(payload.severity)}">${payload.severity || "normal"}</span></div>
+        <div class="alert-message">${payload.message || event.type}</div>
+        <div class="alert-actions">${zoneId ? `<a class="alert-link" href="/graphs?zone=${encodeURIComponent(zoneId)}">Graph</a>` : ""}</div>
       </div>
     `;
-  }).join(""));
+  }).join("");
+
+  setSlotHTML("alert-list", `
+    <div class="incident-table">
+      <div class="incident-head">
+        <span>Time</span>
+        <span>Zone</span>
+        <span>State</span>
+        <span>Incident</span>
+        <span>View</span>
+      </div>
+      ${rows}
+    </div>
+  `);
+
+  slotEls("alert-list").forEach((container) => {
+    container.querySelectorAll("[data-alert-zone-id]").forEach((element) => {
+      const zoneId = element.dataset.alertZoneId;
+      if (!zoneId) return;
+      element.addEventListener("click", async (event) => {
+        if (event.target.closest(".alert-link")) return;
+        await selectZone(zoneId);
+      });
+    });
+  });
 }
 
 function selectedZone() {
@@ -492,71 +724,165 @@ function selectedZone() {
 }
 
 function selectedAsset() {
-  const zone = selectedZone();
-  return zone.assets.find((asset) => asset.id === state.selectedAssetId) || zone.assets[0];
+  const assets = managedAssets();
+  return assets.find((asset) => asset.id === state.selectedAssetId) || assets[0];
+}
+
+function selectAsset(assetId) {
+  state.selectedAssetId = assetId;
+  render();
 }
 
 function renderAssetDetail() {
   const zone = selectedZone();
   const asset = selectedAsset();
+  const assets = managedAssets();
   const load = asset.load ?? 0;
-
-  setSlotHTML("asset-detail", `
-    <div class="detail-card">
-      <div class="alert-top">
-        <strong>${asset.name}</strong>
-        <span class="pill ${severityClass(zone.severity)}">${asset.type}</span>
-      </div>
-      <div class="muted" style="margin-top:6px">${zone.name} spatial anchor</div>
-      <div class="asset-row"><span>Control load</span><strong>${fmt(load * 100, 0, " %")}</strong></div>
-      <div class="asset-row"><span>Fault context</span><strong>${zone.alerts[0] || "Nominal"}</strong></div>
-    </div>
-  `);
-}
-
-function renderTelemetryStrip() {
-  const zone = selectedZone();
-  const history = state.history.length ? state.history : createFallbackData(4).history;
-
-  const climateCards = [
-    ["Air temp", fmt(zone.indoor.temperature, 1, " C"), "#1f8f3a", history.map((point) => point.temperature)],
-    ["Humidity", fmt(zone.indoor.humidity, 0, " %"), "#2d6f7c", history.map((point) => point.humidity)],
-    ["Moisture", fmt(zone.soil.moisture, 2, ""), "#4f9a3d", history.map((point) => point.soilMoisture)],
-    ["VPD", fmt(zone.derived.vpd, 2, " kPa"), "#b37a14", history.map((point) => point.vpd)]
-  ];
-
-  const renderCards = (items) => items.map(([label, value, color, values]) => `
-    <div class="telemetry-card">
-      <div class="telemetry-label">${label}</div>
-      <strong>${value}</strong>
-      ${sparkline(values, color)}
-    </div>
+  const datasetHtml = assets.map((candidate) => `
+    <button class="asset-selector ${candidate.id === asset.id ? "active" : ""}" data-asset-id="${candidate.id}" type="button">
+      <span class="asset-selector-icon" aria-hidden="true">${assetTypeIcon(candidate.type)}</span>
+      <span class="asset-selector-copy">
+        <strong>${candidate.name}</strong>
+        <span>${candidate.zoneName} · ${candidate.type}</span>
+      </span>
+      <span class="asset-selector-metric">${fmt((candidate.load ?? 0) * 100, 0, " %")}</span>
+    </button>
   `).join("");
 
-  climateStripEl.innerHTML = renderCards(climateCards);
+  setSlotHTML("asset-detail", `
+    <div class="detail-card asset-detail-panel">
+      <div class="alert-top">
+        <strong>${asset.name}</strong>
+        <span class="pill ${severityClass(asset.zoneSeverity || zone.severity)}">${asset.type}</span>
+      </div>
+      <div class="muted" style="margin-top:6px">${asset.zoneName || zone.name} spatial anchor</div>
+      <div class="asset-selection-visual">${assetSelectionGraphic(asset, { name: asset.zoneName || zone.name })}</div>
+      <div class="asset-row"><span>${asset.metricLabel || "Control load"}</span><strong>${fmt(load * 100, 0, asset.metricUnit || " %")}</strong></div>
+      <div class="asset-row"><span>Fault context</span><strong>${asset.faultContext || "Nominal"}</strong></div>
+      <div class="asset-row"><span>Dataset size</span><strong>${assets.length} assets across ${managedZones().length} zones</strong></div>
+      <div class="asset-dataset">
+        <div class="section-label">Asset Dataset</div>
+        <div class="asset-selector-list">${datasetHtml}</div>
+      </div>
+    </div>
+  `);
+
+  slotEls("asset-detail").forEach((container) => {
+    container.querySelectorAll("[data-asset-id]").forEach((element) => {
+      element.addEventListener("click", () => {
+        selectAsset(element.dataset.assetId);
+      });
+    });
+  });
+}
+
+function renderOperationsSummary() {
+  const root = document.getElementById("ops-summary");
+  if (!root || !state.zones.length) return;
+  const managed = managedZones();
+  const focused = selectedZone();
+  const avgTemp = managed.reduce((sum, zone) => sum + (zone.indoor.temperature ?? 0), 0) / managed.length;
+  const avgHumidity = managed.reduce((sum, zone) => sum + (zone.indoor.humidity ?? 0), 0) / managed.length;
+  const totalAssets = managed.reduce((sum, zone) => sum + zone.assets.length, 0);
+  const totalAlerts = managed.reduce((sum, zone) => sum + zone.alerts.length, 0);
+
+  root.innerHTML = `
+    <div class="summary-card">
+      <div class="summary-top">
+        <strong>Managed Zones</strong>
+        <span class="pill normal">${managed.length} active</span>
+      </div>
+      <div class="muted-value">${managed.map((zone) => zone.name).join(" · ")}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-top">
+        <strong>Focused Zone</strong>
+        <span class="pill ${severityClass(focused.severity)}">${focused.severity}</span>
+      </div>
+      <div class="muted-value">${focused.name}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-top">
+        <strong>Average Climate</strong>
+        <span class="pill normal">managed</span>
+      </div>
+      <div class="muted-value">${fmt(avgTemp, 1, " C")} air · ${fmt(avgHumidity, 0, " %")} RH</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-top">
+        <strong>Assets / Alerts</strong>
+        <span class="pill ${totalAlerts ? "warning" : "normal"}">${totalAlerts} alerts</span>
+      </div>
+      <div class="muted-value">${totalAssets} addressable assets</div>
+    </div>
+  `;
+}
+
+function renderGraphs() {
+  if (!graphGridEl) return;
+  const zone = selectedZone();
+  const baseHistory = state.history.length ? state.history : createFallbackData(4).history;
+  const history = historySlice(baseHistory);
+  const [startLabel, middleLabel, endLabel] = graphTimeLabels(history);
+  renderGraphRangeToggle();
+
+  const cards = [
+    ["Air temperature", fmt(zone.indoor.temperature, 1, " C"), "#1f8f3a", history.map((point) => point.temperature), 1, " C"],
+    ["Humidity", fmt(zone.indoor.humidity, 0, " %"), "#2d6f7c", history.map((point) => point.humidity), 0, " %"],
+    ["Soil moisture", fmt(zone.soil.moisture, 2, ""), "#4f9a3d", history.map((point) => point.soilMoisture), 2, ""],
+    ["VPD", fmt(zone.derived.vpd, 2, " kPa"), "#b37a14", history.map((point) => point.vpd), 2, " kPa"]
+  ];
+
+  graphGridEl.innerHTML = cards.map(([label, value, color, values, digits, suffix]) => {
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    return `
+    <article class="graph-card">
+      <div class="graph-card-head">
+        <div class="telemetry-label">${label}</div>
+        <strong>${value}</strong>
+      </div>
+      <div class="graph-axis-meta">
+        <span>Max ${fmt(max, digits, suffix)}</span>
+        <span>Min ${fmt(min, digits, suffix)}</span>
+      </div>
+      ${trendChart(values, color)}
+      <div class="graph-time-meta">
+        <span>${startLabel}</span>
+        <span>${middleLabel}</span>
+        <span>${endLabel}</span>
+      </div>
+    </article>
+  `;
+  }).join("");
 }
 
 function render() {
   if (!state.zones.length) return;
   const zone = selectedZone();
-  scenarioLabelEl.textContent = zone.scenario.replace(/-/g, " ");
+  const asset = selectedAsset();
+  const managed = managedZones();
+  scenarioLabelEl.textContent = selectedScenarioLabel();
+  if (selectedZoneLabelEl) selectedZoneLabelEl.textContent = selectedZoneLabel();
+  if (selectedAssetLabelEl && asset) selectedAssetLabelEl.textContent = managed.length > 1 ? `${asset.name} (${asset.zoneName})` : asset.name;
   const statusHtml = `
-    <span class="muted">Facility mode</span>
+    <span class="muted">${managed.length > 1 ? "Managed zones" : "Facility mode"}</span>
     <strong>${state.summary?.critical ? "Intervention priority" : state.summary?.warning ? "Adaptive correction" : "Nominal coordination"}</strong>
   `;
   if (sceneStatusEl) sceneStatusEl.innerHTML = statusHtml;
   if (opsStatusEl) opsStatusEl.innerHTML = statusHtml;
+  if (graphsStatusEl) graphsStatusEl.innerHTML = statusHtml;
   renderFleetSummary();
   renderZoneList();
-  renderOverlayToggles();
   renderSceneBadges(zone);
+  renderOperationsSummary();
   if (currentPage === "twin") {
     renderSchematic();
   }
   renderAlerts();
   renderAssetDetail();
-  if (currentPage === "operations") {
-    renderTelemetryStrip();
+  if (currentPage === "graphs") {
+    renderGraphs();
   }
 }
 
@@ -569,26 +895,21 @@ async function loadLiveData() {
     fetch(simulatorBase + "/scenario").then((response) => response.json()).catch(() => ({ scenario: "baseline-day" }))
   ]);
 
-  const primaryId = state.selectedZoneId;
+  const primaryId = pendingZoneId || state.selectedZoneId;
   state.summary = summary;
   state.zones = devices.slice(0, 3).map(normalizeZone);
   state.alerts = alerts;
   state.scenario = scenario.scenario || state.scenario;
-
-  const nextSelected = state.zones.find((zone) => zone.id === primaryId) || state.zones[0];
-  state.selectedZoneId = nextSelected?.id || state.selectedZoneId;
+  state.selectedZoneId = state.zones.find((zone) => zone.id === primaryId)?.id || state.selectedZoneId || state.zones[0]?.id;
+  if (pendingZoneId) {
+    state.managedZoneIds = [pendingZoneId];
+  }
+  pendingZoneId = null;
+  syncManagedState();
   const currentZone = selectedZone();
 
   if (currentZone) {
-    const history = await fetch(apiBase + "/history/" + currentZone.id).then((response) => response.json()).catch(() => []);
-    state.history = history.map((point) => ({
-      temperature: point.temperature ?? 0,
-      humidity: point.humidity ?? 0,
-      co2: point.co2 ?? 0,
-      soilMoisture: point.soilMoisture ?? 0,
-      irrigationFlow: point.irrigationFlow ?? 0,
-      vpd: point.vpd ?? 0
-    }));
+    await loadHistoryForZone(currentZone.id);
   }
 
   brokerPillEl.className = "pill " + (health.mqttConnected ? "normal" : "critical");
@@ -619,10 +940,11 @@ async function refresh() {
   if (!selectedZone()) {
     state.selectedZoneId = state.zones[0]?.id || state.selectedZoneId;
   }
+  syncManagedState();
 
   const zone = selectedZone();
-  if (zone && !zone.assets.find((asset) => asset.id === state.selectedAssetId)) {
-    state.selectedAssetId = zone.assets[0]?.id || state.selectedAssetId;
+  if (zone && !managedAssets().find((asset) => asset.id === state.selectedAssetId)) {
+    state.selectedAssetId = managedAssets()[0]?.id || zone.assets[0]?.id || state.selectedAssetId;
   }
 
   render();

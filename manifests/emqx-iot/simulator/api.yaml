@@ -25,6 +25,12 @@ data:
     const devices = new Map();
     const events = [];
     const history = new Map();
+    const syntheticZoneIds = ["greenhouse-a-north", "greenhouse-a-center", "greenhouse-a-south"];
+    const syntheticZoneMeta = {
+      "greenhouse-a-north": { name: "North Bay", offset: 0, severity: "normal" },
+      "greenhouse-a-center": { name: "Center Bay", offset: 1, severity: "warning" },
+      "greenhouse-a-south": { name: "South Bay", offset: 2, severity: "critical" },
+    };
 
 
     function pushHistory(deviceId, point) {
@@ -72,9 +78,130 @@ data:
       return valid.reduce((sum, value) => sum + value, 0) / valid.length;
     }
 
+    function seedZoneSnapshot(zoneId) {
+      const meta = syntheticZoneMeta[zoneId] || syntheticZoneMeta["greenhouse-a-north"];
+      const offset = meta.offset;
+      const now = Date.now();
+      const phase = Math.floor(now / 60000) % 144;
+      const temp = 22.8 + offset * 1.35 + Math.sin((phase + offset * 7) / 5) * 0.9;
+      const humidity = 69 - offset * 4 + Math.cos((phase + offset * 3) / 6) * 3.8;
+      const moisture = 0.33 - offset * 0.035 + Math.sin((phase + offset * 2) / 8) * 0.018;
+      const vent = Math.max(0, Math.min(1, 0.24 + offset * 0.12 + Math.sin((phase + offset) / 4) * 0.08));
+      const fan = Math.max(0, Math.min(1, 0.3 + offset * 0.14 + Math.cos((phase + offset) / 5) * 0.1));
+      const heater = Math.max(0, Math.min(1, 0.2 - offset * 0.05 + Math.cos((phase + offset) / 9) * 0.08));
+      const irrigation = Math.max(0, Math.min(1, 0.22 + offset * 0.1 + Math.sin((phase + offset) / 7) * 0.09));
+      const scenario = offset === 0 ? "baseline-day" : offset === 1 ? "humidity-recovery" : "high-radiation-stress";
+      const alerts = meta.severity === "critical"
+        ? ["Irrigation pressure unstable", "Heat drift beyond setpoint"]
+        : meta.severity === "warning"
+          ? ["Humidity plume near ridge vent"]
+          : [];
+
+      return {
+        deviceId: zoneId,
+        zoneId,
+        scenario,
+        severity: meta.severity,
+        online: true,
+        ts: new Date(now).toISOString(),
+        outdoor: {
+          temperature: 18.5,
+          humidity: 61,
+          solar: 0.62,
+          wind: 2.1,
+        },
+        indoor: {
+          temperature: temp,
+          humidity,
+          co2: 560 + offset * 120,
+          par: 610 + offset * 70,
+          pressure: 1012,
+        },
+        soil: {
+          moisture,
+          temperature: 20.2 + offset * 0.6,
+          ec: 1.7 + offset * 0.1,
+          ph: 6.1 + offset * 0.04,
+          tankLevel: 78 - offset * 10,
+          irrigationFlow: 1.2 + irrigation * 2.2,
+        },
+        actuators: {
+          vent,
+          heater,
+          fan,
+          mister: Math.max(0, Math.min(1, 0.12 + offset * 0.08)),
+          irrigation,
+          growLight: offset === 2 ? 0.08 : 0.05,
+        },
+        derived: {
+          dewPoint: temp - ((100 - humidity) / 5),
+          vpd: Math.max(0.4, Math.min(2.2, 0.9 + offset * 0.28 + (temp - 24) * 0.08)),
+          evapotranspiration: 2 + offset * 0.35,
+          irrigationDemand: 46 + offset * 12,
+        },
+        alerts,
+        lastSeen: new Date(now).toISOString(),
+        synthetic: true,
+      };
+    }
+
+    function syntheticHistoryFor(deviceId) {
+      const seed = seedZoneSnapshot(deviceId);
+      const offset = syntheticZoneMeta[deviceId]?.offset || 0;
+      return Array.from({ length: 18 }, (_, idx) => ({
+        ts: new Date(Date.now() - (17 - idx) * 5 * 60_000).toISOString(),
+        scenario: seed.scenario,
+        severity: seed.severity,
+        temperature: (seed.indoor.temperature || 0) + Math.sin((idx + offset) / 4) * 0.7,
+        humidity: (seed.indoor.humidity || 0) + Math.cos((idx + offset) / 5) * 2.4,
+        co2: (seed.indoor.co2 || 0) + Math.sin((idx + offset) / 3) * 38,
+        par: seed.indoor.par || null,
+        pressure: seed.indoor.pressure || null,
+        dewPoint: (seed.derived.dewPoint || 0) + Math.sin((idx + offset) / 6) * 0.3,
+        vpd: (seed.derived.vpd || 0) + Math.sin((idx + offset) / 5) * 0.08,
+        soilMoisture: (seed.soil.moisture || 0) + Math.cos((idx + offset) / 7) * 0.01,
+        soilTemperature: (seed.soil.temperature || 0) + Math.sin((idx + offset) / 6) * 0.2,
+        tankLevel: seed.soil.tankLevel || null,
+        irrigationFlow: (seed.soil.irrigationFlow || 0) + Math.cos((idx + offset) / 6) * 0.12,
+      }));
+    }
+
+    function materializedDevices() {
+      const merged = new Map(devices);
+      syntheticZoneIds.forEach((zoneId) => {
+        if (!merged.has(zoneId)) {
+          merged.set(zoneId, seedZoneSnapshot(zoneId));
+        }
+      });
+      return [...merged.values()].sort((a, b) => a.deviceId.localeCompare(b.deviceId));
+    }
+
+    function materializedAlerts() {
+      const baseAlerts = events.filter((event) => event.type === "alerts");
+      const syntheticAlerts = syntheticZoneIds
+        .filter((zoneId) => !devices.has(zoneId))
+        .map((zoneId, index) => {
+          const seed = seedZoneSnapshot(zoneId);
+          return {
+            topic: `${topicRoot}/${zoneId}/alerts`,
+            type: "alerts",
+            receivedAt: new Date(Date.now() - (index + 1) * 180_000).toISOString(),
+            payload: {
+              zoneId,
+              deviceId: zoneId,
+              severity: seed.severity,
+              message: seed.alerts[0] || `${syntheticZoneMeta[zoneId].name} operating within nominal envelope`,
+            },
+          };
+        });
+      return [...baseAlerts, ...syntheticAlerts]
+        .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime())
+        .slice(0, 100);
+    }
+
     
     function greenhouseSummary() {
-      const all = [...devices.values()];
+      const all = materializedDevices();
 
       return {
         zones: all.length,
@@ -229,14 +356,14 @@ data:
             ok: true,
             mqttUrl,
             mqttConnected: mqttClient.connected,
-            devices: devices.size,
+            devices: materializedDevices().length,
             events: events.length,
             historyPoints,
           });
         }
 
         if (url.pathname === "/devices") {
-          return json([...devices.values()].sort((a, b) => a.deviceId.localeCompare(b.deviceId)));
+          return json(materializedDevices());
         }
 
         if (url.pathname === "/events") {
@@ -249,12 +376,12 @@ data:
 
         if (url.pathname.startsWith("/history/")) {
           const deviceId = url.pathname.split("/").pop();
-          return json(history.get(deviceId) || []);
+          return json(history.get(deviceId) || syntheticHistoryFor(deviceId));
         }
 
         if (url.pathname.startsWith("/zone/")) {
           const deviceId = url.pathname.split("/").pop();
-          const device = devices.get(deviceId);
+          const device = devices.get(deviceId) || materializedDevices().find((item) => item.deviceId === deviceId);
 
           if (!device) {
             return json({ error: "not-found" }, 404);
@@ -264,11 +391,7 @@ data:
         }
 
         if (url.pathname === "/alerts") {
-          return json(
-            events
-              .filter((event) => event.type === "alerts")
-              .slice(0, 100)
-          );
+          return json(materializedAlerts());
         }
 
         if (url.pathname === "/metrics") {
