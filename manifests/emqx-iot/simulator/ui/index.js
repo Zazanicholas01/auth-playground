@@ -17,6 +17,9 @@ const zoneNames = {
   "greenhouse-a-north": "North Bay",
   "greenhouse-a-center": "Center Bay",
   "greenhouse-a-south": "South Bay",
+  "greenhouse-a-west": "West Bay",
+  "greenhouse-a-east": "East Bay",
+  "greenhouse-a-propagation": "Propagation Bay",
   "greenhouse-a": "North Bay"
 };
 
@@ -70,6 +73,57 @@ const zoneBase = [
       { id: "south-mister", name: "Humidity curtain", type: "humidification", metricLabel: "Mist duty", metricUnit: " %" },
       { id: "south-light", name: "Canopy light rail", type: "lighting", metricLabel: "Lighting output", metricUnit: " %" },
       { id: "south-co2", name: "CO2 injector", type: "gas", metricLabel: "Injection duty", metricUnit: " %" }
+    ]
+  },
+  {
+    id: "greenhouse-a-west",
+    name: "West Bay",
+    x: 120,
+    y: 454,
+    width: 220,
+    height: 116,
+    assets: [
+      { id: "west-fans", name: "Crossflow fan bank", type: "air handling", metricLabel: "Airflow output", metricUnit: " %" },
+      { id: "west-vent", name: "Side vent curtain", type: "ventilation", metricLabel: "Vent position", metricUnit: " %" },
+      { id: "west-heater", name: "Bench heat loop", type: "thermal", metricLabel: "Heat demand", metricUnit: " %" },
+      { id: "west-irrigation", name: "Irrigation rail", type: "water", metricLabel: "Flow demand", metricUnit: " %" },
+      { id: "west-mister", name: "Cooling mist line", type: "humidification", metricLabel: "Mist duty", metricUnit: " %" },
+      { id: "west-light", name: "Photoperiod rail", type: "lighting", metricLabel: "Lighting output", metricUnit: " %" },
+      { id: "west-co2", name: "CO2 injector", type: "gas", metricLabel: "Injection duty", metricUnit: " %" }
+    ]
+  },
+  {
+    id: "greenhouse-a-east",
+    name: "East Bay",
+    x: 392,
+    y: 454,
+    width: 220,
+    height: 116,
+    assets: [
+      { id: "east-fans", name: "Recirculation fan bank", type: "air handling", metricLabel: "Airflow output", metricUnit: " %" },
+      { id: "east-vent", name: "Ridge vent segment", type: "ventilation", metricLabel: "Vent position", metricUnit: " %" },
+      { id: "east-heater", name: "Hydronic bench loop", type: "thermal", metricLabel: "Heat demand", metricUnit: " %" },
+      { id: "east-irrigation", name: "Drip manifold", type: "water", metricLabel: "Flow demand", metricUnit: " %" },
+      { id: "east-mister", name: "Fogging rail", type: "humidification", metricLabel: "Mist duty", metricUnit: " %" },
+      { id: "east-light", name: "Canopy light rack", type: "lighting", metricLabel: "Lighting output", metricUnit: " %" },
+      { id: "east-co2", name: "CO2 injector", type: "gas", metricLabel: "Injection duty", metricUnit: " %" }
+    ]
+  },
+  {
+    id: "greenhouse-a-propagation",
+    name: "Propagation Bay",
+    x: 664,
+    y: 454,
+    width: 220,
+    height: 116,
+    assets: [
+      { id: "prop-fans", name: "Low-velocity fans", type: "air handling", metricLabel: "Airflow output", metricUnit: " %" },
+      { id: "prop-vent", name: "Nursery vent curtain", type: "ventilation", metricLabel: "Vent position", metricUnit: " %" },
+      { id: "prop-heater", name: "Root-zone heat mat loop", type: "thermal", metricLabel: "Heat demand", metricUnit: " %" },
+      { id: "prop-irrigation", name: "Misting manifold", type: "water", metricLabel: "Flow demand", metricUnit: " %" },
+      { id: "prop-mister", name: "Propagation fogger", type: "humidification", metricLabel: "Mist duty", metricUnit: " %" },
+      { id: "prop-light", name: "Nursery light bar", type: "lighting", metricLabel: "Lighting output", metricUnit: " %" },
+      { id: "prop-co2", name: "CO2 injector", type: "gas", metricLabel: "Injection duty", metricUnit: " %" }
     ]
   }
 ];
@@ -286,7 +340,7 @@ function assetSelectionGraphic(asset, zone) {
 }
 
 function normalizeZone(zone, index = 0) {
-  const base = zoneBase[index] || zoneBase[0];
+  const base = zoneBase.find((item) => item.id === (zone.deviceId || zone.zoneId)) || zoneBase[index] || zoneBase[0];
   const indoor = zone.indoor || {};
   const soil = zone.soil || {};
   const actuators = zone.actuators || {};
@@ -379,7 +433,10 @@ function createFallbackData(tick) {
   const zones = [
     createZone(zoneBase[0], 0, "normal"),
     createZone(zoneBase[1], 1, "warning"),
-    createZone(zoneBase[2], 2, "critical")
+    createZone(zoneBase[2], 2, "critical"),
+    createZone(zoneBase[3], 3, "normal"),
+    createZone(zoneBase[4], 4, "warning"),
+    createZone(zoneBase[5], 5, "normal")
   ];
 
   const alerts = [
@@ -897,7 +954,7 @@ async function loadLiveData() {
 
   const primaryId = pendingZoneId || state.selectedZoneId;
   state.summary = summary;
-  state.zones = devices.slice(0, 3).map(normalizeZone);
+  state.zones = devices.map(normalizeZone);
   state.alerts = alerts;
   state.scenario = scenario.scenario || state.scenario;
   state.selectedZoneId = state.zones.find((zone) => zone.id === primaryId)?.id || state.selectedZoneId || state.zones[0]?.id;

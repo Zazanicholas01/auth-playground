@@ -25,11 +25,21 @@ data:
     const devices = new Map();
     const events = [];
     const history = new Map();
-    const syntheticZoneIds = ["greenhouse-a-north", "greenhouse-a-center", "greenhouse-a-south"];
+    const syntheticZoneIds = [
+      "greenhouse-a-north",
+      "greenhouse-a-center",
+      "greenhouse-a-south",
+      "greenhouse-a-west",
+      "greenhouse-a-east",
+      "greenhouse-a-propagation",
+    ];
     const syntheticZoneMeta = {
       "greenhouse-a-north": { name: "North Bay", offset: 0, severity: "normal" },
       "greenhouse-a-center": { name: "Center Bay", offset: 1, severity: "warning" },
       "greenhouse-a-south": { name: "South Bay", offset: 2, severity: "critical" },
+      "greenhouse-a-west": { name: "West Bay", offset: 3, severity: "normal" },
+      "greenhouse-a-east": { name: "East Bay", offset: 4, severity: "warning" },
+      "greenhouse-a-propagation": { name: "Propagation Bay", offset: 5, severity: "normal" },
     };
 
 
