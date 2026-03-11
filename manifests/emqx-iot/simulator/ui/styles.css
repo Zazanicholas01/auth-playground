@@ -294,6 +294,16 @@ body[data-page="operations"] #page-operations {
   background: var(--hero);
 }
 
+.ops-ribbon.twin-summary {
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding: 10px;
+}
+
+.ops-ribbon.twin-summary .ops-grid {
+  grid-template-columns: 1fr;
+}
+
 .ops-copy h1 {
   max-width: 760px;
   color: #0c2311;
@@ -342,6 +352,11 @@ body[data-page="operations"] #page-operations {
 .hero-chip strong {
   font-size: 17px;
   line-height: 1.1;
+}
+
+.twin-summary .hero-chip {
+  padding: 16px 18px;
+  background: linear-gradient(180deg, #ecf4e7, #d8e4d2);
 }
 
 .schematic-wrap {

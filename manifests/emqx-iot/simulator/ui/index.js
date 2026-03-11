@@ -460,9 +460,6 @@ function renderSchematic() {
       <rect x="74" y="92" width="816" height="370" rx="28" fill="rgba(255, 255, 255, 0.16)" stroke="rgba(56, 122, 64, 0.08)" />
       <path d="M 74 452 H 890" stroke="rgba(56, 122, 64, 0.28)" stroke-width="2" stroke-dasharray="8 12" />
       ${state.zones.map(zoneBlock).join("")}
-      <rect x="110" y="510" width="720" height="64" rx="16" fill="rgba(243, 248, 239, 0.82)" stroke="rgba(95, 114, 99, 0.12)" />
-      <text x="136" y="536" font-size="11" fill="#5d7560">PLANT SERVICE SPINE</text>
-      <text x="136" y="560" font-size="16" font-weight="700" fill="#17311a">HVAC headers, nutrient dosing, ridge ventilation, and fault beacons remain spatially pinned to the greenhouse scene.</text>
     </svg>
   `;
 
