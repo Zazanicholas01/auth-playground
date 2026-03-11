@@ -71,21 +71,25 @@ body::after {
   z-index: 1;
   min-height: 100vh;
   display: grid;
-  gap: 18px;
-  padding: 12px;
+  gap: 14px;
+  padding: 0 12px 12px;
 }
 
 .global-bar {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) auto auto;
-  gap: 14px;
+  grid-template-columns: minmax(260px, 1.2fr) auto minmax(320px, 1fr);
+  gap: 18px;
   align-items: stretch;
-  padding: 10px 14px;
-  border-radius: 20px;
+  width: calc(100% + 24px);
+  margin: 0 -12px;
+  padding: 18px 22px;
+  border-radius: 0 0 24px 24px;
   background:
-    linear-gradient(180deg, rgba(7, 60, 27, 0.94), rgba(4, 33, 15, 0.98));
-  border: 1px solid rgba(108, 255, 173, 0.14);
-  box-shadow: var(--hero-shadow);
+    linear-gradient(90deg, rgba(5, 22, 12, 0.98) 0%, rgba(8, 41, 20, 0.98) 48%, rgba(12, 61, 31, 0.96) 100%);
+  border-width: 0 0 1px;
+  border-style: solid;
+  border-color: rgba(110, 255, 183, 0.16);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.36);
 }
 
 .global-copy,
@@ -98,45 +102,62 @@ body::after {
 .global-copy {
   display: grid;
   align-content: center;
+  gap: 4px;
 }
 
 .global-copy h1 {
-  margin: 4px 0 0;
-  color: #eff7ea;
-  font-size: 21px;
-  line-height: 1;
+  margin: 0;
+  color: #f4fbf0;
+  font-size: 26px;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.global-copy .eyebrow {
+  color: rgba(136, 244, 180, 0.72);
 }
 
 .page-nav {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px;
+  justify-self: center;
+  align-self: center;
+  padding: 7px;
   border-radius: 999px;
-  background: rgba(227, 237, 220, 0.12);
-  border: 1px solid rgba(137, 255, 187, 0.12);
+  background: rgba(212, 230, 215, 0.08);
+  border: 1px solid rgba(137, 255, 187, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .page-nav a {
-  padding: 9px 14px;
+  padding: 10px 16px;
   border-radius: 999px;
-  color: rgba(238, 245, 233, 0.74);
+  color: rgba(236, 247, 238, 0.8);
   text-decoration: none;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.page-nav a:hover {
+  color: #f4fbf0;
+  background: rgba(206, 231, 211, 0.12);
 }
 
 .page-nav a.active {
-  color: var(--text-strong);
-  background: linear-gradient(180deg, #d7e2d0, #c6d2c0);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
+  color: #0f2213;
+  background: linear-gradient(180deg, #e9f4e4, #cfe0d1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.74),
+    0 6px 18px rgba(0, 0, 0, 0.16);
 }
 
 .global-status {
   display: grid;
-  grid-auto-flow: column;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   justify-content: end;
   gap: 10px;
   align-items: stretch;
@@ -145,12 +166,31 @@ body::after {
 .global-chip {
   display: grid;
   gap: 4px;
-  min-width: 128px;
+  min-width: 0;
   padding: 12px 14px;
   border-radius: 14px;
-  background: linear-gradient(180deg, #d7e2d0, #c9d6c2);
-  border: 1px solid rgba(24, 56, 31, 0.12);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48);
+  background: linear-gradient(180deg, rgba(230, 240, 228, 0.98), rgba(201, 214, 198, 0.96));
+  border: 1px solid rgba(24, 56, 31, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.56),
+    0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.global-chip strong {
+  color: #132717;
+  font-size: 14px;
+}
+
+.global-status > .pill {
+  min-height: auto;
+  align-self: center;
+  justify-self: stretch;
+  padding: 12px 14px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  background: linear-gradient(180deg, rgba(18, 208, 115, 0.2), rgba(14, 151, 83, 0.16));
+  border: 1px solid rgba(96, 255, 174, 0.24);
+  color: #9ef0bf;
 }
 
 .page-layout {
@@ -667,7 +707,7 @@ body[data-page="operations"] #page-operations {
   }
 
   .global-status {
-    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-content: stretch;
   }
 
@@ -683,7 +723,9 @@ body[data-page="operations"] #page-operations {
   }
 
   .global-bar {
-    padding: 12px;
+    width: calc(100% + 20px);
+    margin: 0 -10px;
+    padding: 14px;
   }
 
   .ops-copy h1 {
