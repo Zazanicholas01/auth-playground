@@ -1,4 +1,4 @@
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: iot-ui
@@ -15,12 +15,8 @@ spec:
     spec:
       containers:
         - name: ui
-          image: oven/bun:1
+          image: greenhouse-iot-ui:latest 
           imagePullPolicy: IfNotPresent
-          command:
-            - sh
-            - -lc
-            - bun /src/server.js
           ports:
             - containerPort: 8080
               name: http
@@ -29,14 +25,6 @@ spec:
               value: "8080"
             - name: API_BASE
               value: http://iot-api:8080
-          volumeMounts:
-            - name: ui-code
-              mountPath: /src
-              readOnly: true
-      volumes:
-        - name: ui-code
-          configMap:
-            name: iot-ui-code
 ---
 apiVersion: v1
 kind: Service

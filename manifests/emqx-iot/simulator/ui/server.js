@@ -3,7 +3,8 @@ const port = Number(process.env.UI_PORT || 8080);
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8"
+  ".js": "text/javascript; charset=utf-8",
+  ".png": "image/png"
 };
 
 const server = Bun?.serve
