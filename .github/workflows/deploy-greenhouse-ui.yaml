@@ -35,20 +35,20 @@ jobs:
       
       - name: Build and Push image
         env:
-          IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          IMAGE_REF: ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
         run: |
           docker build \
             -f manifests/emqx-iot/simulator/ui/Dockerfile \
             -t "$IMAGE_REF" \
-            -t "ghcr.io/zazanicholas01/${{ env.IMAGE_NAME }}:main" \
+            -t "ghcr.io/${{ env.IMAGE_NAME }}:main" \
             manifests/emqx-iot/simulator/ui
           
           docker push "$IMAGE_REF"
-          docker push "ghcr.io/zazanicholas01/${{ env.IMAGE_NAME }}:main"
+          docker push "ghcr.io/${{ env.IMAGE_NAME }}:main"
       
       - name: Update manifest image tag
         env:
-          IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          IMAGE_REF: ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
         run: |
           perl -0pi -e 's|image:\\s*.*greenhouse-iot-ui:.*|image: '"$IMAGE_REF"'|g' manifests/emqx-iot/simulator/ui-client.yaml
 
