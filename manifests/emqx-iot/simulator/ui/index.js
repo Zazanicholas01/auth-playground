@@ -5,7 +5,12 @@ const currentPage = window.location.pathname === "/operations"
   ? "operations"
   : window.location.pathname === "/graphs"
     ? "graphs"
-    : "twin";
+    : window.location.pathname === "/edge-devices"
+      ? "edge-devices"
+      : window.location.pathname === "/sensors"
+        ? "sensors"
+        : "twin";
+
 let pendingZoneId = new URLSearchParams(window.location.search).get("zone");
 
 document.body.dataset.page = currentPage;
@@ -133,6 +138,11 @@ const state = {
   zones: [],
   alerts: [],
   history: [],
+  edgeDevices: [],
+  edgeAlerts: [],
+  selectedEdgeDeviceId: null,
+  selectedSensorId: null,
+  edgeFilter: "all",
   scenario: "baseline-day",
   graphRange: "medium",
   graphMetricGroup: "all",
@@ -185,11 +195,78 @@ const graphMetricToggleEl = document.getElementById("graph-metric-toggle");
 const graphCompareToggleEl = document.getElementById("graph-compare-toggle");
 const greenhousePhotoUrl = "/dev-assets/greenhouse-twin.png";
 
+const edgeFleetSummaryEl = document.getElementById("edge-fleet-summary");
+const edgeDeviceListEl = document.getElementById("edge-device-list");
+const edgeSummaryEl = document.getElementById("edge-summary");
+const edgeSensorDetailEl = document.getElementById("edge-sensor-detail");
+const edgeAlertListEl = document.getElementById("edge-alert-list");
+const sensorFleetSummaryEl = document.getElementById("sensor-fleet-summary");
+const sensorListEl = document.getElementById("sensor-list");
+const sensorSummaryEl = document.getElementById("sensor-summary");
+const sensorDetailEl = document.getElementById("sensor-detail");
+const sensorAlertListEl = document.getElementById("sensor-alert-list");
+
 function severityClass(severity) {
   if (severity === "critical") return "critical";
   if (severity === "warning") return "warning";
   return "normal";
 }
+
+function edgeSeverityClass(status) {
+  if (status === "offline") return "critical";
+  if (status === "degraded" || status === "stale") return "warning";
+  return "normal";
+}
+
+function selectedEdgeDevice() {
+  return state.edgeDevices.find((device) => device.id === state.selectedEdgeDeviceId) || state.edgeDevices[0] || null;
+}
+function allSensors() {
+  return state.edgeDevices.flatMap((device) => device.sensors.map((sensor) => ({
+    ...sensor,
+    deviceId: device.id,
+    deviceName: device.name,
+    deviceStatus: device.status,
+    zoneId: device.zoneId,
+    zoneName: device.zoneName,
+    signalRssi: device.signalRssi,
+    packetLossPct: device.packetLossPct,
+    brokerLink: device.brokerLink,
+    firmwareVersion: device.firmwareVersion
+  })));
+}
+
+function selectedSensor() {
+  return allSensors().find((sensor) => sensor.id === state.selectedSensorId) || allSensors()[0] || null;
+}
+
+
+function loadEdgeFallback(tick) {
+  state.edgeDevices = createFallbackEdgeDevices(tick);
+  state.edgeAlerts = state.edgeDevices.flatMap((device) => {
+    if (device.status === "healthy") return [];
+    return [{
+      receivedAt: new Date().toISOString(),
+      payload: {
+        severity: device.status === "offline" ? "critical" : "warning",
+        message: device.status === "offline"
+          ? `${device.name} heartbeat lost`
+          : `${device.name} sensor freshness degraded`,
+        edgeDeviceId: device.id,
+        zoneId: device.zoneId
+      }
+    }];
+  });
+
+  if (!state.selectedEdgeDeviceId || !state.edgeDevices.find((device) => device.id === state.selectedEdgeDeviceId)) {
+    state.selectedEdgeDeviceId = state.edgeDevices[0]?.id || null;
+  }
+  const sensors = allSensors();
+  if (!state.selectedSensorId || !sensors.find((sensor) => sensor.id === state.selectedSensorId)) {
+    state.selectedSensorId = sensors[0]?.id || null;
+  }
+}
+
 
 function fmt(value, digits = 1, suffix = "") {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return "--";
@@ -344,6 +421,78 @@ function assetSelectionGraphic(asset, zone) {
   </svg>`;
 }
 
+function sensorMetricIcon(metricType, status) {
+  const tone = status === "offline"
+    ? "#cc5d51"
+    : status === "stale" || status === "degraded"
+      ? "#c98b1f"
+      : "#84f1b2";
+  const common = `viewBox="0 0 40 40" fill="none" stroke="${tone}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"`;
+
+  if (metricType === "temperature") {
+    return `<svg class="sensor-icon-svg" ${common}><rect x="16" y="7" width="8" height="18" rx="4"/><circle cx="20" cy="29" r="7"/><path d="M20 11v13"/></svg>`;
+  }
+  if (metricType === "humidity") {
+    return `<svg class="sensor-icon-svg" ${common}><path d="M20 8c5 7 8 11 8 16a8 8 0 1 1-16 0c0-5 3-9 8-16Z"/><path d="M24 28c-1 2-2 3-4 3"/></svg>`;
+  }
+  if (metricType === "soil moisture") {
+    return `<svg class="sensor-icon-svg" ${common}><path d="M20 7v9"/><path d="M15 14h10"/><path d="M13 20c3-3 6-4 7-4s4 1 7 4"/><path d="M12 25c4 5 7 7 8 7s4-2 8-7"/></svg>`;
+  }
+  if (metricType === "flow") {
+    return `<svg class="sensor-icon-svg" ${common}><path d="M8 20h11"/><path d="M16 14l6 6-6 6"/><path d="M25 13h5"/><path d="M25 20h7"/><path d="M25 27h5"/></svg>`;
+  }
+  return `<svg class="sensor-icon-svg" ${common}><circle cx="20" cy="20" r="11"/><circle cx="20" cy="20" r="3" fill="${tone}" stroke="none"/></svg>`;
+}
+
+function renderEdgeTopology(device) {
+  const count = Math.max(device.sensors.length, 1);
+  const sensorNodes = device.sensors.map((sensor, index) => {
+    const x = 186 + (index * (170 / Math.max(count - 1, 1)));
+    const y = count === 1 ? 78 : 38 + (index % 2) * 80;
+    const tone = sensor.status === "offline"
+      ? "#cc5d51"
+      : sensor.status === "stale" || sensor.status === "degraded"
+        ? "#c98b1f"
+        : "#84f1b2";
+    return `
+      <line x1="112" y1="78" x2="${x}" y2="${y}" stroke="${tone}" stroke-opacity="0.55" stroke-width="2.5" stroke-dasharray="${sensor.status === "offline" ? "5 5" : "none"}" />
+      <circle cx="${x}" cy="${y}" r="16" fill="rgba(10, 26, 17, 0.95)" stroke="${tone}" stroke-width="2.5" />
+      <foreignObject x="${x - 13}" y="${y - 13}" width="26" height="26">${sensorMetricIcon(sensor.metricType, sensor.status)}</foreignObject>
+      <text x="${x}" y="${y + 30}" text-anchor="middle" fill="#b7e7ca" font-size="9.5" font-weight="700">${sensor.name}</text>
+    `;
+  }).join("");
+
+  const gatewayTone = device.status === "offline"
+    ? "#cc5d51"
+    : device.status === "degraded"
+      ? "#c98b1f"
+      : "#84f1b2";
+
+  return `
+    <div class="edge-topology-card">
+      <div class="edge-topology-copy">
+        <div>
+          <div class="section-label">Gateway Topology</div>
+          <strong>${device.name}</strong>
+        </div>
+        <span class="pill ${edgeSeverityClass(device.status)}">${device.sensors.length} sensors</span>
+      </div>
+      <svg class="edge-topology-svg" viewBox="0 0 380 156" role="img" aria-label="Gateway connected to downstream sensors">
+        <rect x="12" y="18" width="100" height="120" rx="18" fill="rgba(17, 41, 27, 0.98)" stroke="${gatewayTone}" stroke-width="2" />
+        <rect x="32" y="42" width="60" height="44" rx="10" fill="rgba(121,255,187,0.08)" stroke="${gatewayTone}" stroke-width="2" />
+        <path d="M44 98h36" stroke="${gatewayTone}" stroke-width="2.5" />
+        <path d="M52 108h20" stroke="${gatewayTone}" stroke-width="2.5" />
+        <circle cx="78" cy="50" r="3" fill="${gatewayTone}" />
+        <text x="62" y="122" text-anchor="middle" fill="#effff5" font-size="11" font-weight="800">Gateway</text>
+        <text x="62" y="134" text-anchor="middle" fill="#9edab8" font-size="9.5">${device.zoneName}</text>
+        ${sensorNodes}
+      </svg>
+    </div>
+  `;
+}
+
+
+
 function normalizeZone(zone, index = 0) {
   const base = zoneBase.find((item) => item.id === (zone.deviceId || zone.zoneId)) || zoneBase[index] || zoneBase[0];
   const indoor = zone.indoor || {};
@@ -371,6 +520,48 @@ function normalizeZone(zone, index = 0) {
       load: assetLoadForType(asset.type, actuators)
     }))
   };
+}
+
+function createFallbackEdgeDevices(tick = 0) {
+  const pulse = Math.sin(tick / 3);
+
+  return [
+    {
+      id: "edge-north-1",
+      name: "North Edge Gateway",
+      zoneId: "greenhouse-a-north",
+      zoneName: "North Bay",
+      status: pulse > 0.55 ? "degraded" : "healthy",
+      lastSeenMs: pulse > 0.55 ? 42000 : 4000,
+      uptimeHours: 312,
+      firmwareVersion: "1.8.2",
+      brokerLink: pulse > 0.55 ? "unstable" : "linked",
+      signalRssi: pulse > 0.55 ? -81 : -62,
+      packetLossPct: pulse > 0.55 ? 4.2 : 0.3,
+      sensors: [
+        { id: "north-temp-1", name: "Canopy Temp", metricType: "temperature", status: "healthy", lastReading: "23.6 C", lastSeenMs: 3000, batteryPct: 91 },
+        { id: "north-hum-1", name: "Humidity Probe", metricType: "humidity", status: "healthy", lastReading: "68 %", lastSeenMs: 5000, batteryPct: 88 },
+        { id: "north-soil-1", name: "Soil Sensor", metricType: "soil moisture", status: pulse > 0.55 ? "stale" : "healthy", lastReading: "0.31", lastSeenMs: pulse > 0.55 ? 52000 : 4000, batteryPct: 54 }
+      ]
+    },
+    {
+      id: "edge-south-1",
+      name: "South Edge Gateway",
+      zoneId: "greenhouse-a-south",
+      zoneName: "South Bay",
+      status: "offline",
+      lastSeenMs: 185000,
+      uptimeHours: 17,
+      firmwareVersion: "1.7.9",
+      brokerLink: "down",
+      signalRssi: -96,
+      packetLossPct: 100,
+      sensors: [
+        { id: "south-temp-1", name: "Canopy Temp", metricType: "temperature", status: "offline", lastReading: "--", lastSeenMs: 185000, batteryPct: 0 },
+        { id: "south-flow-1", name: "Irrigation Flow", metricType: "flow", status: "offline", lastReading: "--", lastSeenMs: 185000, batteryPct: 0 }
+      ]
+    }
+  ];
 }
 
 function createFallbackData(tick) {
@@ -647,6 +838,352 @@ function renderGraphComparisonToggle() {
       renderGraphs();
     });
   });
+}
+
+function renderEdgeFleetSummary() {
+  if (!edgeFleetSummaryEl) return;
+
+  const offline = state.edgeDevices.filter((device) => device.status === "offline").length;
+  const degraded = state.edgeDevices.filter((device) => device.status === "degraded").length;
+
+  edgeFleetSummaryEl.innerHTML = `
+    <div class="summary-card compact-summary">
+      <div class="summary-top">
+        <strong>Edge Fleet</strong>
+        <span class="pill ${offline ? "critical" : degraded ? "warning" : "normal"}">
+          ${offline ? "action" : degraded ? "watch" : "stable"}
+        </span>
+      </div>
+      <div class="summary-grid compact-grid">
+        <div class="mini"><div class="telemetry-label">Devices</div><strong>${state.edgeDevices.length}</strong></div>
+        <div class="mini"><div class="telemetry-label">Offline</div><strong>${offline}</strong></div>
+        <div class="mini"><div class="telemetry-label">Degraded</div><strong>${degraded}</strong></div>
+        <div class="mini"><div class="telemetry-label">Healthy</div><strong>${state.edgeDevices.length - offline - degraded}</strong></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderEdgeDeviceList() {
+  if (!edgeDeviceListEl) return;
+
+  edgeDeviceListEl.innerHTML = state.edgeDevices.map((device) => `
+    <div class="zone-card ${state.selectedEdgeDeviceId === device.id ? "active" : ""}" data-edge-device-id="${device.id}">
+      <div class="zone-card-top">
+        <div class="zone-title-row">
+          <span class="zone-select-indicator" aria-hidden="true"></span>
+          <strong>${device.name}</strong>
+        </div>
+        <span class="pill ${edgeSeverityClass(device.status)}">${device.status}</span>
+      </div>
+      <div class="zone-subline">
+        <span>${device.zoneName}</span>
+        <span>${device.sensors.length} sensors</span>
+        <span>${Math.round(device.lastSeenMs / 1000)}s ago</span>
+      </div>
+      <div class="zone-metrics">
+        <div class="mini"><div class="telemetry-label">Signal</div><strong>${device.signalRssi} dBm</strong></div>
+        <div class="mini"><div class="telemetry-label">Loss</div><strong>${device.packetLossPct}%</strong></div>
+      </div>
+    </div>
+  `).join("");
+
+  edgeDeviceListEl.querySelectorAll("[data-edge-device-id]").forEach((element) => {
+    element.addEventListener("click", () => {
+      state.selectedEdgeDeviceId = element.dataset.edgeDeviceId;
+      render();
+    });
+  });
+}
+
+function renderEdgeSummary() {
+  if (!edgeSummaryEl) return;
+  const device = selectedEdgeDevice();
+  if (!device) return;
+
+  const healthySensors = device.sensors.filter((sensor) => sensor.status === "healthy").length;
+  const unhealthySensors = device.sensors.length - healthySensors;
+
+  edgeSummaryEl.innerHTML = `
+    <div class="summary-card">
+      <div class="summary-top">
+        <strong>Selected Device</strong>
+        <span class="pill ${edgeSeverityClass(device.status)}">${device.status}</span>
+      </div>
+      <div class="muted-value">${device.name} in ${device.zoneName}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-top">
+        <strong>Broker Link</strong>
+        <span class="pill ${device.brokerLink === "down" ? "critical" : device.brokerLink === "unstable" ? "warning" : "normal"}">${device.brokerLink}</span>
+      </div>
+      <div class="muted-value">Last seen ${Math.round(device.lastSeenMs / 1000)} seconds ago</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-top">
+        <strong>Firmware / Uptime</strong>
+        <span class="pill normal">gateway</span>
+      </div>
+      <div class="muted-value">v${device.firmwareVersion} | ${device.uptimeHours}h uptime</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-top">
+        <strong>Sensor Health</strong>
+        <span class="pill ${unhealthySensors ? "warning" : "normal"}">${unhealthySensors} impacted</span>
+      </div>
+      <div class="muted-value">${healthySensors}/${device.sensors.length} sensors healthy</div>
+    </div>
+  `;
+}
+
+function renderEdgeSensorDetail() {
+  if (!edgeSensorDetailEl) return;
+  const device = selectedEdgeDevice();
+  if (!device) return;
+
+  edgeSensorDetailEl.innerHTML = `
+    <div class="detail-card asset-detail-panel">
+      <div class="alert-top">
+        <strong>${device.name}</strong>
+        <span class="pill ${edgeSeverityClass(device.status)}">${device.status}</span>
+      </div>
+      <div class="muted" style="margin-top:6px">${device.zoneName} sensor batch</div>
+      <div class="asset-dataset">
+        ${renderEdgeTopology(device)}
+        <div class="section-label">Downstream Sensors</div>
+        <div class="asset-selector-list">
+          ${device.sensors.map((sensor) => `
+            <div class="asset-selector edge-sensor-row">
+              <span class="asset-selector-icon sensor-icon-wrap">
+                ${sensorMetricIcon(sensor.metricType, sensor.status)}
+              </span>
+              <span class="asset-selector-copy">
+                <strong>${sensor.name}</strong>
+                <span class="sensor-meta">
+                  <span class="sensor-type">${sensor.metricType}</span>
+                  <span class="sensor-state ${edgeSeverityClass(sensor.status)}">${sensor.status}</span>
+                  <span>seen ${Math.round(sensor.lastSeenMs / 1000)}s ago</span>
+                </span>
+              </span>
+              <span class="asset-selector-metric sensor-reading">${sensor.lastReading}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderEdgeAlerts() {
+  if (!edgeAlertListEl) return;
+
+  const rows = state.edgeAlerts.map((event) => `
+    <div class="alert-card ${severityClass(event.payload.severity)}">
+      <div class="alert-time">${new Date(event.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+      <div class="alert-zone">${zoneNames[event.payload.zoneId] || event.payload.zoneId}</div>
+      <div class="alert-severity"><span class="pill ${severityClass(event.payload.severity)}">${event.payload.severity}</span></div>
+      <div class="alert-message">${event.payload.message}</div>
+      <div class="alert-actions"></div>
+    </div>
+  `).join("");
+
+  edgeAlertListEl.innerHTML = `
+    <div class="incident-table">
+      <div class="incident-head">
+        <span>Time</span>
+        <span>Zone</span>
+        <span>State</span>
+        <span>Incident</span>
+        <span></span>
+      </div>
+      ${rows || '<div class="muted" style="padding:10px">No active edge incidents.</div>'}
+    </div>
+  `;
+}
+
+function renderSensorFleetSummary() {
+  if (!sensorFleetSummaryEl) return;
+  const sensors = allSensors();
+  const offline = sensors.filter((sensor) => sensor.status === "offline").length;
+  const stale = sensors.filter((sensor) => sensor.status === "stale" || sensor.status === "degraded").length;
+  const healthy = sensors.length - offline - stale;
+
+  sensorFleetSummaryEl.innerHTML = `
+    <div class="summary-card compact-summary">
+      <div class="summary-top">
+        <strong>Sensor Fleet</strong>
+        <span class="pill ${offline ? "critical" : stale ? "warning" : "normal"}">
+          ${offline ? "action" : stale ? "watch" : "stable"}
+        </span>
+      </div>
+      <div class="summary-grid compact-grid">
+        <div class="mini"><div class="telemetry-label">Sensors</div><strong>${sensors.length}</strong></div>
+        <div class="mini"><div class="telemetry-label">Healthy</div><strong>${healthy}</strong></div>
+        <div class="mini"><div class="telemetry-label">Stale</div><strong>${stale}</strong></div>
+        <div class="mini"><div class="telemetry-label">Offline</div><strong>${offline}</strong></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSensorList() {
+  if (!sensorListEl) return;
+  const sensors = allSensors();
+  sensorListEl.innerHTML = sensors.map((sensor) => `
+    <button class="asset-selector ${state.selectedSensorId === sensor.id ? "active" : ""}" data-sensor-id="${sensor.id}" type="button">
+      <span class="asset-selector-icon sensor-icon-wrap">
+        ${sensorMetricIcon(sensor.metricType, sensor.status)}
+      </span>
+      <span class="asset-selector-copy">
+        <strong>${sensor.name}</strong>
+        <span class="sensor-meta">
+          <span class="sensor-type">${sensor.zoneName}</span>
+          <span class="sensor-state ${edgeSeverityClass(sensor.status)}">${sensor.status}</span>
+          <span>${sensor.deviceName}</span>
+        </span>
+      </span>
+      <span class="asset-selector-metric sensor-reading">${sensor.lastReading}</span>
+    </button>
+  `).join("");
+
+  sensorListEl.querySelectorAll('[data-sensor-id]').forEach((element) => {
+    element.addEventListener('click', () => {
+      state.selectedSensorId = element.dataset.sensorId;
+      render();
+    });
+  });
+}
+
+function renderSensorSummary() {
+  if (!sensorSummaryEl) return;
+  const sensor = selectedSensor();
+  if (!sensor) return;
+
+  sensorSummaryEl.innerHTML = `
+    <div class="summary-card">
+      <div class="summary-top">
+        <strong>Selected Sensor</strong>
+        <span class="pill ${edgeSeverityClass(sensor.status)}">${sensor.status}</span>
+      </div>
+      <div class="muted-value">${sensor.name} in ${sensor.zoneName}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-top">
+        <strong>Last Reading</strong>
+        <span class="pill normal">live</span>
+      </div>
+      <div class="muted-value">${sensor.lastReading}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-top">
+        <strong>Freshness / Battery</strong>
+        <span class="pill ${sensor.lastSeenMs > 60000 ? "warning" : "normal"}">${Math.round(sensor.lastSeenMs / 1000)}s</span>
+      </div>
+      <div class="muted-value">${sensor.batteryPct}% battery remaining</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-top">
+        <strong>Gateway Path</strong>
+        <span class="pill ${edgeSeverityClass(sensor.deviceStatus)}">${sensor.deviceStatus}</span>
+      </div>
+      <div class="muted-value">${sensor.deviceName}</div>
+    </div>
+  `;
+}
+
+function renderSensorDetail() {
+  if (!sensorDetailEl) return;
+  const sensor = selectedSensor();
+  if (!sensor) return;
+
+  sensorDetailEl.innerHTML = `
+    <div class="detail-card asset-detail-panel">
+      <div class="alert-top">
+        <strong>${sensor.name}</strong>
+        <span class="pill ${edgeSeverityClass(sensor.status)}">${sensor.metricType}</span>
+      </div>
+      <div class="muted" style="margin-top:6px">${sensor.zoneName} | attached to ${sensor.deviceName}</div>
+      <div class="asset-dataset">
+        <div class="edge-topology-card">
+          <div class="edge-topology-copy">
+            <div>
+              <div class="section-label">Sensor Path</div>
+              <strong>${sensor.metricType}</strong>
+            </div>
+            <span class="pill ${edgeSeverityClass(sensor.status)}">${sensor.status}</span>
+          </div>
+          <svg class="edge-topology-svg" viewBox="0 0 380 120" role="img" aria-label="Gateway to sensor path">
+            <rect x="16" y="28" width="120" height="64" rx="16" fill="rgba(17, 41, 27, 0.98)" stroke="rgba(132,241,178,0.6)" stroke-width="2" />
+            <text x="76" y="56" text-anchor="middle" fill="#effff5" font-size="11" font-weight="800">${sensor.deviceName}</text>
+            <text x="76" y="72" text-anchor="middle" fill="#9edab8" font-size="9.5">gateway</text>
+            <line x1="136" y1="60" x2="242" y2="60" stroke="${sensor.status === "offline" ? "#cc5d51" : sensor.status === "stale" ? "#c98b1f" : "#84f1b2"}" stroke-width="3" stroke-dasharray="${sensor.status === "offline" ? "6 6" : "none"}" />
+            <circle cx="296" cy="60" r="24" fill="rgba(10, 26, 17, 0.95)" stroke="${sensor.status === "offline" ? "#cc5d51" : sensor.status === "stale" ? "#c98b1f" : "#84f1b2"}" stroke-width="2.5" />
+            <foreignObject x="283" y="47" width="26" height="26">${sensorMetricIcon(sensor.metricType, sensor.status)}</foreignObject>
+            <text x="296" y="100" text-anchor="middle" fill="#b7e7ca" font-size="9.5" font-weight="700">${sensor.name}</text>
+          </svg>
+        </div>
+        <div class="asset-row"><span>Latest reading</span><strong>${sensor.lastReading}</strong></div>
+        <div class="asset-row"><span>Battery</span><strong>${sensor.batteryPct}%</strong></div>
+        <div class="asset-row"><span>Last seen</span><strong>${Math.round(sensor.lastSeenMs / 1000)} seconds ago</strong></div>
+        <div class="asset-row"><span>Gateway signal</span><strong>${sensor.signalRssi} dBm</strong></div>
+        <div class="asset-row"><span>Gateway packet loss</span><strong>${sensor.packetLossPct}%</strong></div>
+        <div class="asset-row"><span>Broker path</span><strong>${sensor.brokerLink}</strong></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSensorAlerts() {
+  if (!sensorAlertListEl) return;
+  const sensor = selectedSensor();
+  if (!sensor) {
+    sensorAlertListEl.innerHTML = '';
+    return;
+  }
+
+  const incidents = [];
+  if (sensor.status !== 'healthy') {
+    incidents.push({
+      receivedAt: new Date().toISOString(),
+      severity: sensor.status === 'offline' ? 'critical' : 'warning',
+      message: sensor.status === 'offline' ? `${sensor.name} stopped reporting` : `${sensor.name} is reporting stale data`
+    });
+  }
+  if (sensor.batteryPct <= 25) {
+    incidents.push({
+      receivedAt: new Date(Date.now() - 120000).toISOString(),
+      severity: 'warning',
+      message: `${sensor.name} battery reserve is low`
+    });
+  }
+  if (sensor.packetLossPct >= 5) {
+    incidents.push({
+      receivedAt: new Date(Date.now() - 240000).toISOString(),
+      severity: 'warning',
+      message: `${sensor.deviceName} is dropping packets on the upstream path`
+    });
+  }
+
+  sensorAlertListEl.innerHTML = `
+    <div class="incident-table">
+      <div class="incident-head">
+        <span>Time</span>
+        <span>Zone</span>
+        <span>State</span>
+        <span>Incident</span>
+        <span></span>
+      </div>
+      ${(incidents.map((event) => `
+        <div class="alert-card ${severityClass(event.severity)}">
+          <div class="alert-time">${new Date(event.receivedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+          <div class="alert-zone">${sensor.zoneName}</div>
+          <div class="alert-severity"><span class="pill ${severityClass(event.severity)}">${event.severity}</span></div>
+          <div class="alert-message">${event.message}</div>
+          <div class="alert-actions"></div>
+        </div>
+      `).join('')) || '<div class="muted" style="padding:10px">No active incidents for this sensor.</div>'}
+    </div>
+  `;
 }
 
 function renderFleetSummary() {
@@ -1061,6 +1598,32 @@ function renderGraphs() {
 }
 
 function render() {
+  if (currentPage === "edge-devices") {
+    scenarioLabelEl.textContent = selectedScenarioLabel();
+    if (selectedZoneLabelEl) selectedZoneLabelEl.textContent = selectedEdgeDevice()?.zoneName || "--";
+    if (selectedAssetHeadingEl) selectedAssetHeadingEl.textContent = "Edge";
+    if (selectedAssetLabelEl) selectedAssetLabelEl.textContent = selectedEdgeDevice()?.name || "--";
+    renderEdgeFleetSummary();
+    renderEdgeDeviceList();
+    renderEdgeSummary();
+    renderEdgeSensorDetail();
+    renderEdgeAlerts();
+    return;
+  }
+
+  if (currentPage === "sensors") {
+    scenarioLabelEl.textContent = selectedScenarioLabel();
+    if (selectedZoneLabelEl) selectedZoneLabelEl.textContent = selectedSensor()?.zoneName || "--";
+    if (selectedAssetHeadingEl) selectedAssetHeadingEl.textContent = "Sensor";
+    if (selectedAssetLabelEl) selectedAssetLabelEl.textContent = selectedSensor()?.name || "--";
+    renderSensorFleetSummary();
+    renderSensorList();
+    renderSensorSummary();
+    renderSensorDetail();
+    renderSensorAlerts();
+    return;
+  }
+
   if (!state.zones.length) return;
   const zone = selectedZone();
   const asset = selectedAsset();
@@ -1153,6 +1716,11 @@ async function refresh() {
     loadFallback(fallbackTick);
   }
 
+  if (currentPage === "edge-devices" || currentPage === "sensors") {
+    fallbackTick += 1;
+    loadEdgeFallback(fallbackTick);
+  }
+
   if (!selectedZone()) {
     state.selectedZoneId = state.zones[0]?.id || state.selectedZoneId;
   }
@@ -1168,3 +1736,5 @@ async function refresh() {
 
 await refresh();
 setInterval(refresh, 3500);
+
+

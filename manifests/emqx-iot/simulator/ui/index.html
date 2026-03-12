@@ -18,6 +18,8 @@
           <a href="/" data-nav="twin">Twin</a>
           <a href="/operations" data-nav="operations">Operations</a>
           <a href="/graphs" data-nav="graphs">Graphs</a>
+          <a href="/edge-devices" data-nav="edge-devices">Edge Devices</a>
+          <a href="/sensors" data-nav="sensors">Sensors</a>
         </nav>
 
         <div class="global-status">
@@ -158,6 +160,86 @@
           </section>
         </main>
       </section>
+
+      <section id="page-edge-devices" class="page-layout operations-layout">
+      <aside class="rail panel">
+        <div class="rail-head">
+          <div>
+            <div class="eyebrow">Edge Fleet</div>
+            <h2>Gateway Health</h2>
+          </div>
+        </div>
+
+        <div class="rail-section">
+          <div class="section-label">Fleet Summary</div>
+          <div id="edge-fleet-summary" class="fleet-summary"></div>
+        </div>
+
+        <div class="rail-section">
+          <div class="section-label">Devices</div>
+          <div id="edge-device-list" class="zone-list"></div>
+        </div>
+      </aside>
+
+      <main class="operations-main">
+        <section class="operations-summary panel">
+          <div class="section-label">Edge Overview</div>
+          <div id="edge-summary" class="ops-summary-grid"></div>
+        </section>
+
+        <section class="operations-support">
+          <div class="support-panel panel">
+            <div class="section-label">Sensor Batch</div>
+            <div id="edge-sensor-detail" class="asset-detail"></div>
+          </div>
+
+          <div class="support-panel events-panel panel">
+            <div class="section-label">Device Incidents</div>
+            <div id="edge-alert-list" class="alert-list"></div>
+          </div>
+        </section>
+      </main>
+    </section>
+
+      <section id="page-sensors" class="page-layout operations-layout">
+      <aside class="rail panel">
+        <div class="rail-head">
+          <div>
+            <div class="eyebrow">Sensor Fleet</div>
+            <h2>Single Sensor Health</h2>
+          </div>
+        </div>
+
+        <div class="rail-section">
+          <div class="section-label">Fleet Summary</div>
+          <div id="sensor-fleet-summary" class="fleet-summary"></div>
+        </div>
+
+        <div class="rail-section">
+          <div class="section-label">Sensors</div>
+          <div id="sensor-list" class="asset-selector-list"></div>
+        </div>
+      </aside>
+
+      <main class="operations-main">
+        <section class="operations-summary panel">
+          <div class="section-label">Sensor Overview</div>
+          <div id="sensor-summary" class="ops-summary-grid"></div>
+        </section>
+
+        <section class="operations-support">
+          <div class="support-panel panel">
+            <div class="section-label">Sensor Detail</div>
+            <div id="sensor-detail" class="asset-detail"></div>
+          </div>
+
+          <div class="support-panel events-panel panel">
+            <div class="section-label">Sensor Incidents</div>
+            <div id="sensor-alert-list" class="alert-list"></div>
+          </div>
+        </section>
+      </main>
+    </section>
     </div>
 
     <script>

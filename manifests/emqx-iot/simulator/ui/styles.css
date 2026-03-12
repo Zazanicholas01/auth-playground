@@ -222,7 +222,9 @@ body::after {
 
 body[data-page="twin"] #page-twin,
 body[data-page="operations"] #page-operations,
-body[data-page="graphs"] #page-graphs {
+body[data-page="graphs"] #page-graphs,
+body[data-page="edge-devices"] #page-edge-devices,
+body[data-page="sensors"] #page-sensors {
   display: grid;
 }
 
@@ -587,9 +589,14 @@ body[data-page="graphs"] #page-graphs {
 .alert-list,
 .toggle-stack,
 .fleet-summary,
-.asset-detail,
+.asset-detail {
+  display: grid;
+  gap: 8px;
+}
+
 .scene-badges {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -1210,6 +1217,82 @@ body[data-page="graphs"] #page-graphs {
   place-items: center;
 }
 
+.sensor-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(121, 255, 187, 0.06);
+  border: 1px solid rgba(121, 255, 187, 0.08);
+}
+
+.sensor-icon-svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
+.sensor-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  letter-spacing: 0.06em;
+}
+
+.sensor-type {
+  color: #b7e7ca;
+}
+
+.sensor-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sensor-state::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.03);
+}
+
+.sensor-reading {
+  min-width: 64px;
+  text-align: right;
+}
+
+.edge-topology-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(11, 31, 20, 0.98), rgba(8, 22, 15, 0.98));
+  border: 1px solid rgba(121, 255, 187, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.edge-topology-copy {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: start;
+}
+
+.edge-topology-copy strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-strong);
+  font-size: 14px;
+}
+
+.edge-topology-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 .asset-selector-copy {
   display: grid;
   gap: 3px;
@@ -1408,6 +1491,10 @@ body[data-page="graphs"] #page-graphs {
     grid-template-columns: 1fr;
   }
 
+  .scene-badges {
+    grid-template-columns: 1fr;
+  }
+
   .global-chip {
     white-space: normal;
   }
@@ -1425,3 +1512,5 @@ body[data-page="graphs"] #page-graphs {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+

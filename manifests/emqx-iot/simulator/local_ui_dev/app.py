@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse, Response
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC_DIR = Path(os.environ.get("UI_STATIC_DIR", ROOT / "ui")).resolve()
-DEV_ASSET_DIR = Path(__file__).resolve().parent
+DEV_ASSET_DIR = Path(os.environ.get("UI_DEV_ASSET_DIR", ROOT / "ui" / "dev-assets")).resolve()
 UPSTREAM_BASE = os.environ.get("IOT_UPSTREAM_BASE", "http://iot.local:8080").rstrip("/")
 PROXY_PREFIXES = ("/api", "/simulator")
 HOP_BY_HOP_HEADERS = {
@@ -128,3 +128,4 @@ async def static_or_spa(asset_path: str) -> FileResponse:
         return _static_response(STATIC_DIR / "index.html")
 
     raise HTTPException(status_code=404, detail="Not found")
+
