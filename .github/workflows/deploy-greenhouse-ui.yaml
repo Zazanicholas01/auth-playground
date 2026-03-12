@@ -40,11 +40,11 @@ jobs:
           docker build \
             -f manifests/emqx-iot/simulator/ui/Dockerfile \
             -t "$IMAGE_REF" \
-            -t "ghcr.io/${{ env.IMAGE_NAME }}:v1.0.0" \
+            -t "ghcr.io/${{ env.IMAGE_NAME }}:v1.0.1" \
             manifests/emqx-iot/simulator/ui
           
           docker push "$IMAGE_REF"
-          docker push "ghcr.io/${{ env.IMAGE_NAME }}:v1.0.0"
+          docker push "ghcr.io/${{ env.IMAGE_NAME }}:v1.0.1"
       
       - name: Update manifest image tag
         env:

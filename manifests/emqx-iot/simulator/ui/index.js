@@ -1,15 +1,20 @@
 const config = window.__IOT_CONFIG__ || {};
 const apiBase = config.apiBase || (window.location.origin + "/api");
 const simulatorBase = config.simulatorBase || (window.location.origin + "/simulator");
-const currentPage = window.location.pathname === "/operations"
-  ? "operations"
-  : window.location.pathname === "/graphs"
-    ? "graphs"
-    : window.location.pathname === "/edge-devices"
-      ? "edge-devices"
-      : window.location.pathname === "/sensors"
-        ? "sensors"
-        : "twin";
+const currentPath = window.location.pathname;
+const currentPage = currentPath === "/map" || currentPath === "/"
+  ? "map"
+  : currentPath === "/twin"
+    ? "twin"
+    : currentPath === "/operations"
+      ? "operations"
+      : currentPath === "/graphs"
+        ? "graphs"
+        : currentPath === "/edge-devices"
+          ? "edge-devices"
+          : currentPath === "/sensors"
+            ? "sensors"
+            : "map";
 
 let pendingZoneId = new URLSearchParams(window.location.search).get("zone");
 
@@ -193,7 +198,8 @@ const graphGridEl = document.getElementById("graph-grid");
 const graphRangeToggleEl = document.getElementById("graph-range-toggle");
 const graphMetricToggleEl = document.getElementById("graph-metric-toggle");
 const graphCompareToggleEl = document.getElementById("graph-compare-toggle");
-const greenhousePhotoUrl = "/dev-assets/greenhouse-twin.png";
+const mapPhotoUrl = "/dev-assets/map.png";
+const twinPhotoUrl = "/dev-assets/greenhouse-twin.png";
 
 const edgeFleetSummaryEl = document.getElementById("edge-fleet-summary");
 const edgeDeviceListEl = document.getElementById("edge-device-list");
@@ -205,6 +211,9 @@ const sensorListEl = document.getElementById("sensor-list");
 const sensorSummaryEl = document.getElementById("sensor-summary");
 const sensorDetailEl = document.getElementById("sensor-detail");
 const sensorAlertListEl = document.getElementById("sensor-alert-list");
+const zoneNetworkMapEl = document.getElementById("zone-network-map");
+const zoneNetworkBadgesEl = document.getElementById("zone-network-badges");
+const twinGatewayListEl = document.getElementById("twin-gateway-list");
 
 function severityClass(severity) {
   if (severity === "critical") return "critical";
@@ -491,7 +500,161 @@ function renderEdgeTopology(device) {
   `;
 }
 
+function createSyntheticZoneEdgeDevice(zone) {
+  const severity = zone.severity === "critical" ? "degraded" : zone.severity === "warning" ? "degraded" : "healthy";
+  const soilStatus = zone.severity === "critical" ? "offline" : zone.severity === "warning" ? "stale" : "healthy";
+  const humidityStatus = zone.severity === "warning" ? "stale" : "healthy";
 
+  return {
+    id: `synthetic-${zone.id}`,
+    name: `${zone.name} Zone Gateway`,
+    zoneId: zone.id,
+    zoneName: zone.name,
+    status: severity,
+    brokerLink: zone.severity === "critical" ? "unstable" : "linked",
+    sensors: [
+      { id: `${zone.id}-air-temp`, name: "Air Temp", metricType: "temperature", status: "healthy" },
+      { id: `${zone.id}-humidity`, name: "Humidity", metricType: "humidity", status: humidityStatus },
+      { id: `${zone.id}-root-water`, name: "Root Moisture", metricType: "soil moisture", status: soilStatus },
+      { id: `${zone.id}-irrigation`, name: "Irrigation Flow", metricType: "flow", status: zone.severity === "critical" ? "stale" : "healthy" }
+    ]
+  };
+}
+
+function zoneDevicesForMap(zone) {
+  const liveDevices = state.edgeDevices.filter((device) => device.zoneId === zone.id);
+  if (liveDevices.length) {
+    return { devices: liveDevices, source: "live edge telemetry" };
+  }
+  return { devices: [createSyntheticZoneEdgeDevice(zone)], source: "inferred from zone twin" };
+}
+
+function allTwinGateways() {
+  if (state.edgeDevices.length) return state.edgeDevices;
+  return state.zones.map((zone) => createSyntheticZoneEdgeDevice(zone));
+}
+
+function gatewayHotspotPosition(device, index, total) {
+  const zone = state.zones.find((candidate) => candidate.id === device.zoneId);
+  if (!zone) {
+    const fallbackX = 120 + (index * (760 / Math.max(total - 1, 1)));
+    return {
+      left: (fallbackX / 980 * 100).toFixed(2),
+      top: '45.00'
+    };
+  }
+
+  const horizontalSpread = Math.min(zone.width * 0.42, 120);
+  const sameZoneDevices = allTwinGateways().filter((candidate) => candidate.zoneId === device.zoneId);
+  const localIndex = sameZoneDevices.findIndex((candidate) => candidate.id === device.id);
+  const startX = zone.x + (zone.width / 2) - (horizontalSpread / 2);
+  const step = sameZoneDevices.length <= 1 ? 0 : horizontalSpread / (sameZoneDevices.length - 1);
+  const hotspotX = sameZoneDevices.length <= 1 ? zone.x + (zone.width / 2) : startX + (step * Math.max(localIndex, 0));
+  const hotspotY = zone.y + Math.max(zone.height * 0.36, 62);
+
+  return {
+    left: ((hotspotX) / 980 * 100).toFixed(2),
+    top: ((hotspotY) / 640 * 100).toFixed(2)
+  };
+}
+
+function renderTwinGatewayMap(zone, devices, activeDevice) {
+  return `
+    <div class="schematic-photo-wrap twin-photo-wrap">
+      <img
+        class="schematic-photo"
+        src="${twinPhotoUrl}"
+        alt="Greenhouse interior with gateway focus overlays"
+      />
+      <div class="schematic-hotspots" aria-label="Zone gateways">
+        ${devices.map((device, index) => {
+          const position = gatewayHotspotPosition(device, index, devices.length);
+          return `
+            <button
+              type="button"
+              class="zone-hotspot gateway-hotspot ${device.id === activeDevice.id ? "active" : ""}"
+              data-gateway-hotspot="${device.id}"
+              style="left:${position.left}%; top:${position.top}%;"
+              aria-pressed="${device.id === activeDevice.id ? "true" : "false"}"
+            >
+              <span class="zone-hotspot-dot" aria-hidden="true"></span>
+              <span class="zone-hotspot-label">${device.name}</span>
+            </button>
+          `;
+        }).join("")}
+      </div>
+      <div class="schematic-selected-zone">
+        <div class="telemetry-label">Twin Focus</div>
+        <strong>${activeDevice.name}</strong>
+        <span>${activeDevice.zoneName} | ${activeDevice.sensors.length} sensors | ${activeDevice.brokerLink}</span>
+      </div>
+      <div class="schematic-photo-caption">
+        <strong>Gateway focus map</strong>
+        <span>Click a gateway hotspot to switch the twin focus inside ${zone.name}.</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderZoneNetworkMap() {
+  if (!zoneNetworkMapEl || !zoneNetworkBadgesEl || !state.zones.length) return;
+  const devices = allTwinGateways();
+  if (!devices.length) return;
+  const activeDeviceCandidate = devices.find((device) => device.id === state.selectedEdgeDeviceId) || devices[0];
+  if (activeDeviceCandidate?.zoneId) {
+    state.selectedZoneId = activeDeviceCandidate.zoneId;
+  }
+  const zone = selectedZone();
+  if (!zone) return;
+
+  const source = state.edgeDevices.length ? "live edge telemetry" : "inferred from zone twin";
+  if (!devices.find((device) => device.id === state.selectedEdgeDeviceId)) {
+    state.selectedEdgeDeviceId = devices[0]?.id || null;
+  }
+  const activeDevice = devices.find((device) => device.id === state.selectedEdgeDeviceId) || devices[0];
+  const sensorCount = devices.reduce((sum, device) => sum + device.sensors.length, 0);
+  const impactedCount = devices.reduce((sum, device) => sum + device.sensors.filter((sensor) => sensor.status !== "healthy").length, 0);
+
+  zoneNetworkBadgesEl.innerHTML = `
+    <div class="scene-badge">
+      <div class="telemetry-label">Focused Zone</div>
+      <strong>${zone.name}</strong>
+      <div class="muted-value">${zone.alerts.length ? zone.alerts.join(" | ") : "Nominal greenhouse conditions"}</div>
+    </div>
+    <div class="scene-badge">
+      <div class="telemetry-label">Topology Source</div>
+      <strong>${source}</strong>
+      <div class="muted-value">${devices.length} gateway${devices.length === 1 ? "" : "s"} mapped in this zone</div>
+    </div>
+    <div class="scene-badge">
+      <div class="telemetry-label">Downstream Sensors</div>
+      <strong>${sensorCount} endpoints</strong>
+      <div class="muted-value">${impactedCount ? `${impactedCount} sensors need attention` : "All downstream sensors healthy"}</div>
+    </div>
+  `;
+
+  zoneNetworkMapEl.innerHTML = `
+    <div class="zone-network-copy">
+      <div>
+        <div class="section-label">Single-Zone Twin</div>
+        <strong>${zone.name}</strong>
+      </div>
+      <span class="pill ${edgeSeverityClass(activeDevice.status)}">${activeDevice.status}</span>
+    </div>
+    ${renderTwinGatewayMap(zone, devices, activeDevice)}
+  `;
+
+  zoneNetworkMapEl.querySelectorAll("[data-gateway-hotspot]").forEach((element) => {
+    element.addEventListener("click", () => {
+      state.selectedEdgeDeviceId = element.dataset.gatewayHotspot;
+      const activeDevice = devices.find((device) => device.id === element.dataset.gatewayHotspot);
+      if (activeDevice) {
+        state.selectedZoneId = activeDevice.zoneId;
+      }
+      render();
+    });
+  });
+}
 
 function normalizeZone(zone, index = 0) {
   const base = zoneBase.find((item) => item.id === (zone.deviceId || zone.zoneId)) || zoneBase[index] || zoneBase[0];
@@ -1186,6 +1349,46 @@ function renderSensorAlerts() {
   `;
 }
 
+function renderTwinGatewayList() {
+  if (!twinGatewayListEl || !state.zones.length) return;
+  const devices = allTwinGateways();
+  if (!devices.length) {
+    twinGatewayListEl.innerHTML = "";
+    return;
+  }
+  if (!devices.find((device) => device.id === state.selectedEdgeDeviceId)) {
+    state.selectedEdgeDeviceId = devices[0]?.id || null;
+  }
+
+  twinGatewayListEl.innerHTML = devices.map((device) => `
+    <div class="zone-card ${state.selectedEdgeDeviceId === device.id ? "active" : ""}" data-twin-gateway-id="${device.id}">
+      <div class="zone-card-top">
+        <div class="zone-title-row">
+          <span class="zone-select-indicator" aria-hidden="true"></span>
+          <strong>${device.name}</strong>
+        </div>
+        <span class="pill ${edgeSeverityClass(device.status)}">${device.status}</span>
+      </div>
+      <div class="zone-subline">
+        <span>${device.zoneName}</span>
+        <span>${device.sensors.length} sensors</span>
+        <span>${device.brokerLink}</span>
+      </div>
+    </div>
+  `).join("");
+
+  twinGatewayListEl.querySelectorAll("[data-twin-gateway-id]").forEach((element) => {
+    element.addEventListener("click", () => {
+      state.selectedEdgeDeviceId = element.dataset.twinGatewayId;
+      const activeDevice = devices.find((device) => device.id === element.dataset.twinGatewayId);
+      if (activeDevice) {
+        state.selectedZoneId = activeDevice.zoneId;
+      }
+      render();
+    });
+  });
+}
+
 function renderFleetSummary() {
   if (!state.summary) {
     setSlotHTML("fleet-summary", "");
@@ -1250,7 +1453,7 @@ function renderZoneList() {
 
   slotEls("zone-list").forEach((container) => container.querySelectorAll("[data-zone-id]").forEach((element) => {
     element.addEventListener("click", async () => {
-      if (currentPage === "twin") {
+      if (currentPage === "map" || currentPage === "twin") {
         await focusZone(element.dataset.zoneId, { ensureManaged: true });
         return;
       }
@@ -1264,14 +1467,14 @@ function renderSceneBadges(zone) {
   const managed = managedZones();
   sceneBadgesEl.innerHTML = `
     <div class="scene-badge">
-      <div class="telemetry-label">Focused Zone</div>
-      <strong>${zone.name}</strong>
-      <div class="muted-value">${fmt(zone.indoor.temperature, 1, " C")} air · ${fmt(zone.soil.moisture, 2, "")} root water</div>
+      <div class="telemetry-label">Facility Map</div>
+      <strong>${state.zones.length} total zones</strong>
+      <div class="muted-value">Tap a zone marker to change the focused zone below.</div>
     </div>
     <div class="scene-badge">
-      <div class="telemetry-label">Managed Set</div>
-      <strong>${managed.length} zones</strong>
-      <div class="muted-value">${managed.map((item) => item.name).join(" · ")}</div>
+      <div class="telemetry-label">Focused Zone</div>
+      <strong>${zone.name}</strong>
+      <div class="muted-value">${fmt(zone.indoor.temperature, 1, " C")} air | ${fmt(zone.soil.moisture, 2, "")} root water | ${managed.length} managed zones</div>
     </div>
   `;
 }
@@ -1282,7 +1485,7 @@ function renderSchematic() {
     <div class="schematic-photo-wrap">
       <img
         class="schematic-photo"
-        src="${greenhousePhotoUrl}"
+        src="${mapPhotoUrl}"
         alt="Greenhouse interior with rows of plants and visible growing infrastructure"
       />
       <div class="schematic-hotspots" aria-label="Greenhouse zones">
@@ -1303,13 +1506,13 @@ function renderSchematic() {
         `).join("")}
       </div>
       <div class="schematic-selected-zone">
-        <div class="telemetry-label">Image focus</div>
+        <div class="telemetry-label">Facility Zone Map</div>
         <strong>${zone.name}</strong>
-        <span>${fmt(zone.indoor.temperature, 1, " C")} air · ${fmt(zone.soil.moisture, 2, "")} moisture</span>
+        <span>${fmt(zone.indoor.temperature, 1, " C")} air | ${fmt(zone.soil.moisture, 2, "")} moisture</span>
       </div>
       <div class="schematic-photo-caption">
-        <strong>Facility reference</strong>
-        <span>Click a zone marker to sync the twin selection.</span>
+        <strong>Multi-zone facility map</strong>
+        <span>Use this view to choose a zone, then inspect that zone's gateway and sensors in the map below.</span>
       </div>
     </div>
   `;
@@ -1323,12 +1526,12 @@ function renderSchematic() {
 
 function renderAlerts() {
   const severityRank = { critical: 0, warning: 1, normal: 2 };
-  const focusedZoneId = selectedZone()?.id;
+  const managedZoneIds = new Set(managedZones().map((zone) => zone.id));
   const scopedAlerts = currentPage === "operations"
     ? state.alerts.filter((event) => {
       const payload = event.payload || {};
       const zoneId = payload.zoneId || payload.deviceId || "";
-      return zoneId === focusedZoneId;
+      return managedZoneIds.has(zoneId);
     })
     : state.alerts;
   const rows = [...scopedAlerts]
@@ -1363,7 +1566,7 @@ function renderAlerts() {
         <span>Incident</span>
         <span>View</span>
       </div>
-      ${rows || `<div class="muted" style="padding:10px">No current events for ${selectedZone()?.name || "focused zone"}.</div>`}
+      ${rows || `<div class="muted" style="padding:10px">No current events for ${currentPage === "operations" ? `${managedZones().length} managed zone${managedZones().length === 1 ? "" : "s"}` : selectedZone()?.name || "focused zone"}.</div>`}
     </div>
   `);
 
@@ -1629,8 +1832,11 @@ function render() {
   const asset = selectedAsset();
   const managed = managedZones();
   scenarioLabelEl.textContent = selectedScenarioLabel();
-  if (selectedZoneLabelEl) selectedZoneLabelEl.textContent = selectedZoneLabel();
-  if (currentPage === "graphs") {
+  if (selectedZoneLabelEl) selectedZoneLabelEl.textContent = currentPage === "twin" ? (selectedEdgeDevice()?.zoneName || zone.name) : selectedZoneLabel();
+  if (currentPage === "twin") {
+    if (selectedAssetHeadingEl) selectedAssetHeadingEl.textContent = "Gateway";
+    if (selectedAssetLabelEl) selectedAssetLabelEl.textContent = selectedEdgeDevice()?.name || allTwinGateways()[0]?.name || "--";
+  } else if (currentPage === "graphs") {
     if (selectedAssetHeadingEl) selectedAssetHeadingEl.textContent = "Mode";
     if (selectedAssetLabelEl) {
       selectedAssetLabelEl.textContent = state.graphComparisonMode === "managed"
@@ -1652,11 +1858,18 @@ function render() {
   if (opsStatusEl) opsStatusEl.innerHTML = statusHtml;
   if (graphsStatusEl) graphsStatusEl.innerHTML = statusHtml;
   renderFleetSummary();
-  renderZoneList();
+  if (currentPage === "twin") {
+    renderTwinGatewayList();
+  } else {
+    renderZoneList();
+  }
   renderSceneBadges(zone);
   renderOperationsSummary();
-  if (currentPage === "twin") {
+  if (currentPage === "map") {
     renderSchematic();
+  }
+  if (currentPage === "twin") {
+    renderZoneNetworkMap();
   }
   renderAlerts();
   renderAssetDetail();
@@ -1716,10 +1929,8 @@ async function refresh() {
     loadFallback(fallbackTick);
   }
 
-  if (currentPage === "edge-devices" || currentPage === "sensors") {
-    fallbackTick += 1;
-    loadEdgeFallback(fallbackTick);
-  }
+  fallbackTick += 1;
+  loadEdgeFallback(fallbackTick);
 
   if (!selectedZone()) {
     state.selectedZoneId = state.zones[0]?.id || state.selectedZoneId;
@@ -1736,5 +1947,3 @@ async function refresh() {
 
 await refresh();
 setInterval(refresh, 3500);
-
-

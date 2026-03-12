@@ -21,7 +21,26 @@ data:
     const topicRoot = process.env.MQTT_TOPIC_ROOT || "site/alpha/devices";
     const intervalMs = Number(process.env.PUBLISH_INTERVAL_MS || 2000);
     const httpPort = Number(process.env.SIMULATOR_PORT || 8080);
-    const zoneId = process.env.ZONE_ID || "greenhouse-a";
+    const configuredZoneIds = (process.env.ZONE_IDS || "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const defaultZones = [
+      { zoneId: "greenhouse-a-north", zoneName: "North Bay", offset: 0.0 },
+      { zoneId: "greenhouse-a-center", zoneName: "Center Bay", offset: 0.7 },
+      { zoneId: "greenhouse-a-south", zoneName: "South Bay", offset: 1.4 },
+      { zoneId: "greenhouse-a-west", zoneName: "West Bay", offset: 2.1 },
+      { zoneId: "greenhouse-a-east", zoneName: "East Bay", offset: 2.8 },
+      { zoneId: "greenhouse-a-propagation", zoneName: "Propagation Bay", offset: 3.5 },
+    ];
+    const zoneConfigs =
+      configuredZoneIds.length > 0
+        ? configuredZoneIds.map((configuredZoneId, index) => ({
+            zoneId: configuredZoneId,
+            zoneName: configuredZoneId,
+            offset: index * 0.7,
+          }))
+        : defaultZones;
     const tickSeconds = intervalMs / 1000;
 
     let scenario = process.env.SCENARIO || "baseline-day";
@@ -101,36 +120,37 @@ data:
       return "normal";
     }
 
-    function createInitialState() {
-      const temperature = 22.0;
-      const humidity = 68.0;
+    function createInitialState(zoneConfig, index) {
+      const temperature = 21.5 + zoneConfig.offset * 0.4;
+      const humidity = 69.0 - zoneConfig.offset * 1.4;
 
       return {
-        zoneId,
+        zoneId: zoneConfig.zoneId,
+        zoneName: zoneConfig.zoneName,
         outdoor: {
-          temperature: 16.0,
-          humidity: 72.0,
+          temperature: 16.0 + zoneConfig.offset * 0.2,
+          humidity: 72.0 - zoneConfig.offset,
           solar: 0.0,
-          wind: 1.2,
+          wind: 1.2 + index * 0.08,
         },
         indoor: {
           temperature,
           humidity,
           absoluteHumidity: absoluteHumidity(temperature, humidity),
-          co2: 520,
+          co2: 520 + index * 18,
           pressure: 1012,
           par: 0,
         },
         soil: {
-          moisture: 0.34,
-          temperature: 20.0,
-          ec: 1.8,
-          ph: 6.2,
-          tankLevel: 82.0,
+          moisture: 0.35 - index * 0.012,
+          temperature: 20.0 + zoneConfig.offset * 0.18,
+          ec: 1.8 + index * 0.04,
+          ph: 6.2 - index * 0.03,
+          tankLevel: 82.0 - index * 4.5,
           irrigationFlow: 0,
         },
         actuators: {
-          vent: 0.15,
+          vent: 0.12 + index * 0.02,
           heater: 0.0,
           fan: 0.0,
           mister: 0.0,
@@ -146,21 +166,25 @@ data:
       };
     }
 
-    let state = createInitialState();
+    function buildInitialZoneStates() {
+      return new Map(zoneConfigs.map((zoneConfig, index) => [zoneConfig.zoneId, createInitialState(zoneConfig, index)]));
+    }
+
+    let zoneStates = buildInitialZoneStates();
 
     function resetStateForScenario(nextScenario) {
       scenario = nextScenario;
       tick = 0;
-      state = createInitialState();
+      zoneStates = buildInitialZoneStates();
     }
 
-    function updateOutdoor(now, activeScenario) {
+    function updateOutdoor(now, activeScenario, zoneConfig) {
       const hour = now.getHours() + now.getMinutes() / 60;
       const solarBase = solarProfile(hour);
-      let solar = clamp(solarBase + noise(0.08), 0, 1);
-      let temperature = outdoorTemperatureProfile(hour) + 7 * solar + noise(0.4);
-      let humidity = 82 - 22 * solar + noise(2.0);
-      let wind = clamp(1.5 + noise(0.6), 0, 6);
+      let solar = clamp(solarBase + zoneConfig.offset * 0.015 + noise(0.08), 0, 1);
+      let temperature = outdoorTemperatureProfile(hour) + 7 * solar + zoneConfig.offset * 0.35 + noise(0.4);
+      let humidity = 82 - 22 * solar - zoneConfig.offset * 0.8 + noise(2.0);
+      let wind = clamp(1.5 + zoneConfig.offset * 0.12 + noise(0.6), 0, 6);
 
       if (activeScenario === "hot-humid-afternoon") {
         temperature += 5;
@@ -528,18 +552,32 @@ data:
       };
     }
 
-    function tickGreenhouse() {
+    function serializeZoneStates() {
+      return Object.fromEntries(zoneStates.entries());
+    }
+
+    function tickGreenhouse(zoneConfig, currentState) {
       const now = new Date();
+      const nextState = {
+        ...currentState,
+        outdoor: updateOutdoor(now, scenario, zoneConfig),
+      };
 
-      tick += 1;
+      nextState.actuators = updateActuators(nextState.actuators, nextState, scenario, tick);
+      nextState.indoor = updateIndoor(
+        nextState.indoor,
+        nextState.outdoor,
+        nextState.soil,
+        nextState.actuators,
+        tickSeconds,
+      );
+      nextState.soil = updateSoil(nextState.soil, nextState.indoor, nextState.actuators, tickSeconds);
+      nextState.derived = updateDerived(nextState.indoor, nextState.soil);
 
-      state.outdoor = updateOutdoor(now, scenario);
-      state.actuators = updateActuators(state.actuators, state, scenario, tick);
-      state.indoor = updateIndoor(state.indoor, state.outdoor, state.soil, state.actuators, tickSeconds);
-      state.soil = updateSoil(state.soil, state.indoor, state.actuators, tickSeconds);
-      state.derived = updateDerived(state.indoor, state.soil);
-
-      return buildTelemetryPayload(state);
+      return {
+        nextState,
+        telemetry: buildTelemetryPayload(nextState),
+      };
     }
 
     const client = mqtt.connect(mqttUrl, {
@@ -553,35 +591,42 @@ data:
         return;
       }
 
-      const telemetry = tickGreenhouse();
-      const status = {
-        zoneId,
-        deviceId: zoneId,
-        online: true,
-        severity: telemetry.severity,
-        scenario,
-        ts: telemetry.ts,
-      };
+      tick += 1;
 
-      client.publish(`${topicRoot}/${zoneId}/telemetry`, JSON.stringify(telemetry));
-      client.publish(`${topicRoot}/${zoneId}/status`, JSON.stringify(status));
+      for (const zoneConfig of zoneConfigs) {
+        const currentState = zoneStates.get(zoneConfig.zoneId) || createInitialState(zoneConfig, 0);
+        const { nextState, telemetry } = tickGreenhouse(zoneConfig, currentState);
+        zoneStates.set(zoneConfig.zoneId, nextState);
 
-      for (const alert of telemetry.alerts) {
-        client.publish(
-          `${topicRoot}/${zoneId}/alerts`,
-          JSON.stringify({
-            zoneId,
-            deviceId: zoneId,
-            severity: alert.severity,
-            code: alert.code,
-            message: alert.message,
-            scenario,
-            ts: telemetry.ts,
-          }),
-        );
+        const status = {
+          zoneId: zoneConfig.zoneId,
+          deviceId: zoneConfig.zoneId,
+          online: true,
+          severity: telemetry.severity,
+          scenario,
+          ts: telemetry.ts,
+        };
+
+        client.publish(`${topicRoot}/${zoneConfig.zoneId}/telemetry`, JSON.stringify(telemetry));
+        client.publish(`${topicRoot}/${zoneConfig.zoneId}/status`, JSON.stringify(status));
+
+        for (const alert of telemetry.alerts) {
+          client.publish(
+            `${topicRoot}/${zoneConfig.zoneId}/alerts`,
+            JSON.stringify({
+              zoneId: zoneConfig.zoneId,
+              deviceId: zoneConfig.zoneId,
+              severity: alert.severity,
+              code: alert.code,
+              message: alert.message,
+              scenario,
+              ts: telemetry.ts,
+            }),
+          );
+        }
       }
 
-      console.log("simulator published greenhouse batch for scenario:", scenario);
+      console.log("simulator published greenhouse batch for zones:", zoneConfigs.map((zone) => zone.zoneId).join(", "));
     }
 
     client.on("connect", () => {
@@ -643,7 +688,8 @@ data:
             mqttUrl,
             mqttConnected: client.connected,
             scenario,
-            zoneId,
+            zoneCount: zoneConfigs.length,
+            zones: zoneConfigs,
           });
         }
 
@@ -655,12 +701,36 @@ data:
         }
 
         if (request.method === "GET" && url.pathname === "/state") {
+          const requestedZoneId = url.searchParams.get("zoneId");
+
+          if (requestedZoneId) {
+            const zoneConfig = zoneConfigs.find((zone) => zone.zoneId === requestedZoneId);
+            const requestedState = zoneStates.get(requestedZoneId);
+
+            if (!zoneConfig || !requestedState) {
+              return json({ error: "unknown zoneId" }, 404);
+            }
+
+            return json({
+              zoneId: requestedZoneId,
+              scenario,
+              tick,
+              state: requestedState,
+              preview: buildTelemetryPayload(requestedState),
+            });
+          }
+
           return json({
-            zoneId,
             scenario,
             tick,
-            state,
-            preview: buildTelemetryPayload(state),
+            zones: zoneConfigs,
+            states: serializeZoneStates(),
+            preview: Object.fromEntries(
+              zoneConfigs.map((zoneConfig) => {
+                const currentState = zoneStates.get(zoneConfig.zoneId);
+                return [zoneConfig.zoneId, buildTelemetryPayload(currentState)];
+              }),
+            ),
           });
         }
 
@@ -707,8 +777,6 @@ spec:
               value: mqtt://emqx-listeners:1883
             - name: MQTT_TOPIC_ROOT
               value: site/alpha/devices
-            - name: ZONE_ID
-              value: greenhouse-a
             - name: PUBLISH_INTERVAL_MS
               value: "2000"
             - name: SCENARIO

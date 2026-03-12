@@ -220,6 +220,7 @@ body::after {
   display: none;
 }
 
+body[data-page="map"] #page-map,
 body[data-page="twin"] #page-twin,
 body[data-page="operations"] #page-operations,
 body[data-page="graphs"] #page-graphs,
@@ -536,6 +537,22 @@ body[data-page="sensors"] #page-sensors {
   border-color: rgba(8, 34, 18, 0.34);
 }
 
+.gateway-hotspot {
+  border-color: rgba(121, 255, 187, 0.2);
+  background: rgba(9, 30, 20, 0.94);
+}
+
+.gateway-hotspot .zone-hotspot-label {
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.twin-photo-wrap {
+  min-height: 520px;
+}
+
 .schematic-selected-zone {
   position: absolute;
   top: 18px;
@@ -598,6 +615,47 @@ body[data-page="sensors"] #page-sensors {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+}
+
+.scene-badges-compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.zone-network-wrap {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background:
+    linear-gradient(138deg, rgba(236, 255, 244, 0) 20%, rgba(236, 255, 244, 0.08) 38%, rgba(210, 255, 227, 0.1) 48%, rgba(236, 255, 244, 0.03) 58%, rgba(236, 255, 244, 0) 74%),
+    linear-gradient(180deg, rgba(7, 54, 24, 0.98), rgba(3, 24, 11, 0.99));
+}
+
+.zone-network-map {
+  display: grid;
+  gap: 12px;
+}
+
+.zone-network-copy {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: start;
+}
+
+.zone-network-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.zone-network-note {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(10, 33, 21, 0.9);
+  border: 1px solid rgba(121, 255, 187, 0.1);
+  color: var(--muted-strong);
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .support-panel {
@@ -1293,6 +1351,10 @@ body[data-page="sensors"] #page-sensors {
   display: block;
 }
 
+.zone-network-grid .edge-topology-card {
+  min-height: 100%;
+}
+
 .asset-selector-copy {
   display: grid;
   gap: 3px;
@@ -1495,6 +1557,11 @@ body[data-page="sensors"] #page-sensors {
     grid-template-columns: 1fr;
   }
 
+  .scene-badges-compact,
+  .zone-network-grid {
+    grid-template-columns: 1fr;
+  }
+
   .global-chip {
     white-space: normal;
   }
@@ -1512,5 +1579,4 @@ body[data-page="sensors"] #page-sensors {
     grid-template-columns: 1fr 1fr;
   }
 }
-
 

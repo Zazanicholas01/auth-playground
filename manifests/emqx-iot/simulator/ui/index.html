@@ -15,7 +15,8 @@
         </div>
 
         <nav class="page-nav" aria-label="Page navigation">
-          <a href="/" data-nav="twin">Twin</a>
+          <a href="/map" data-nav="map">Map</a>
+          <a href="/twin" data-nav="twin">Twin</a>
           <a href="/operations" data-nav="operations">Operations</a>
           <a href="/graphs" data-nav="graphs">Graphs</a>
           <a href="/edge-devices" data-nav="edge-devices">Edge Devices</a>
@@ -39,12 +40,12 @@
         </div>
       </header>
 
-      <section id="page-twin" class="page-layout twin-layout">
+      <section id="page-map" class="page-layout twin-layout">
         <aside class="rail panel">
           <div class="rail-head">
             <div>
               <div class="eyebrow">Zones</div>
-              <h2>Operational Map</h2>
+              <h2>Facility Zone Map</h2>
             </div>
           </div>
 
@@ -54,7 +55,7 @@
           </div>
 
           <div class="rail-section">
-            <div class="section-label">Zone Status</div>
+            <div class="section-label">Zone List</div>
             <div data-slot="zone-list" class="zone-list"></div>
           </div>
         </aside>
@@ -64,7 +65,7 @@
             <div class="schematic-topbar">
               <div class="schematic-title">
                 <div class="eyebrow">Facility Twin</div>
-                <h3>Greenhouse A</h3>
+                <h3>Multi-Zone Layout</h3>
               </div>
               <div id="scene-badges" class="scene-badges"></div>
             </div>
@@ -72,6 +73,41 @@
             <div class="schematic-stage">
               <div id="schematic" class="schematic" aria-label="Greenhouse schematic"></div>
             </div>
+          </section>
+        </main>
+      </section>
+
+      <section id="page-twin" class="page-layout twin-layout">
+        <aside class="rail panel">
+          <div class="rail-head">
+            <div>
+              <div class="eyebrow">Digital Twin</div>
+              <h2>Focused Zone</h2>
+            </div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Fleet Summary</div>
+            <div data-slot="fleet-summary" class="fleet-summary"></div>
+          </div>
+
+          <div class="rail-section">
+            <div class="section-label">Gateways</div>
+            <div id="twin-gateway-list" class="zone-list"></div>
+          </div>
+        </aside>
+
+        <main class="center-stage">
+          <section class="zone-network-wrap panel">
+            <div class="schematic-topbar">
+              <div class="schematic-title">
+                <div class="eyebrow">Focused Zone</div>
+                <h3>Gateway Twin View</h3>
+              </div>
+              <div id="zone-network-badges" class="scene-badges scene-badges-compact"></div>
+            </div>
+
+            <div id="zone-network-map" class="zone-network-map" aria-label="Focused zone device and sensor map"></div>
           </section>
         </main>
       </section>

@@ -204,7 +204,44 @@ data:
             },
           };
         });
-      return [...baseAlerts, ...syntheticAlerts]
+
+      const seenZoneIds = new Set(
+        [...baseAlerts, ...syntheticAlerts]
+          .map((event) => event?.payload?.zoneId || event?.payload?.deviceId)
+          .filter(Boolean)
+      );
+
+      const seededAlerts = [
+        {
+          zoneId: "greenhouse-a-center",
+          severity: "warning",
+          message: "Humidity plume detected below center ridge vent",
+        },
+        {
+          zoneId: "greenhouse-a-south",
+          severity: "critical",
+          message: "Irrigation dosing pressure collapse at south manifold",
+        },
+        {
+          zoneId: "greenhouse-a-east",
+          severity: "warning",
+          message: "Recirculation fan feedback lagging in east canopy row",
+        },
+      ]
+        .filter((seed) => !seenZoneIds.has(seed.zoneId))
+        .map((seed, index) => ({
+          topic: `${topicRoot}/${seed.zoneId}/alerts`,
+          type: "alerts",
+          receivedAt: new Date(Date.now() - (index + 1) * 240_000).toISOString(),
+          payload: {
+            zoneId: seed.zoneId,
+            deviceId: seed.zoneId,
+            severity: seed.severity,
+            message: seed.message,
+          },
+        }));
+
+      return [...baseAlerts, ...syntheticAlerts, ...seededAlerts]
         .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime())
         .slice(0, 100);
     }
