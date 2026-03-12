@@ -14,7 +14,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/greenhouse-iot-ui
+  IMAGE_NAME: zazanicholas01/greenhouse-iot-ui
 
 jobs:
   build-update-manifest:
@@ -40,11 +40,11 @@ jobs:
           docker build \
             -f manifests/emqx-iot/simulator/ui/Dockerfile \
             -t "$IMAGE_REF" \
-            -t "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main" \
+            -t "ghcr.io/zazanicholas01/${{ env.IMAGE_NAME }}:main" \
             manifests/emqx-iot/simulator/ui
           
           docker push "$IMAGE_REF"
-          docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main"
+          docker push "ghcr.io/zazanicholas01/${{ env.IMAGE_NAME }}:main"
       
       - name: Update manifest image tag
         env:
