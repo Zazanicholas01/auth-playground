@@ -40,11 +40,11 @@ jobs:
           docker build \
             -f manifests/emqx-iot/simulator/ui/Dockerfile \
             -t "$IMAGE_REF" \
-            -t "ghcr.io/${{ env.IMAGE_NAME }}:main" \
+            -t "ghcr.io/${{ env.IMAGE_NAME }}:v1.0.0" \
             manifests/emqx-iot/simulator/ui
           
           docker push "$IMAGE_REF"
-          docker push "ghcr.io/${{ env.IMAGE_NAME }}:main"
+          docker push "ghcr.io/${{ env.IMAGE_NAME }}:v1.0.0"
       
       - name: Update manifest image tag
         env:
@@ -60,5 +60,3 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "Deploy greenhouse UI ${GITHUB_SHA}"
           git push
-
-
