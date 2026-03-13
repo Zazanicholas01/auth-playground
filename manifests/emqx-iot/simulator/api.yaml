@@ -452,6 +452,15 @@ data:
       return rows;
     }
 
+    async function checkDbConnected() {
+      try {
+        await db.query("SELECT 1");
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+
     try {
       await initDb();
       await warmCacheFromDb();
@@ -590,10 +599,12 @@ data:
         }
 
         if (url.pathname === "/health") {
+          const dbConnected = await checkDbConnected();
           return json({
             ok: true,
             mqttUrl,
             mqttConnected: mqttClient.connected,
+            dbConnected,
             devices: materializedDevices().length,
             events: events.length,
             historyPoints,
@@ -748,5 +759,6 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
+
 
 

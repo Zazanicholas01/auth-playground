@@ -185,10 +185,10 @@ async function selectZone(zoneId, { updateHistory = true } = {}) {
 }
 
 const brokerPillEl = document.getElementById("broker-pill");
-const scenarioLabelEl = document.getElementById("scenario-label");
-const selectedZoneLabelEl = document.getElementById("selected-zone-label");
-const selectedAssetHeadingEl = document.getElementById("selected-asset-heading");
-const selectedAssetLabelEl = document.getElementById("selected-asset-label");
+const databasePillEl = document.getElementById("database-pill");
+const scenarioPillEl = document.getElementById("scenario-pill");
+const selectedZonePillEl = document.getElementById("selected-zone-pill");
+
 const sceneStatusEl = document.getElementById("scene-status");
 const opsStatusEl = document.getElementById("ops-status");
 const graphsStatusEl = document.getElementById("graphs-status");
@@ -1802,10 +1802,8 @@ function renderGraphs() {
 
 function render() {
   if (currentPage === "edge-devices") {
-    scenarioLabelEl.textContent = selectedScenarioLabel();
-    if (selectedZoneLabelEl) selectedZoneLabelEl.textContent = selectedEdgeDevice()?.zoneName || "--";
-    if (selectedAssetHeadingEl) selectedAssetHeadingEl.textContent = "Edge";
-    if (selectedAssetLabelEl) selectedAssetLabelEl.textContent = selectedEdgeDevice()?.name || "--";
+    scenarioPillEl.textContent = "Scenario " + selectedScenarioLabel();
+    if (selectedZonePillEl) selectedZonePillEl.textContent = "Zone " + (selectedEdgeDevice()?.zoneName || "--");
     renderEdgeFleetSummary();
     renderEdgeDeviceList();
     renderEdgeSummary();
@@ -1815,10 +1813,8 @@ function render() {
   }
 
   if (currentPage === "sensors") {
-    scenarioLabelEl.textContent = selectedScenarioLabel();
-    if (selectedZoneLabelEl) selectedZoneLabelEl.textContent = selectedSensor()?.zoneName || "--";
-    if (selectedAssetHeadingEl) selectedAssetHeadingEl.textContent = "Sensor";
-    if (selectedAssetLabelEl) selectedAssetLabelEl.textContent = selectedSensor()?.name || "--";
+    scenarioPillEl.textContent = "Scenario " + selectedScenarioLabel();
+    if (selectedZonePillEl) selectedZonePillEl.textContent = "Zone " + (selectedSensor()?.zoneName || "--");
     renderSensorFleetSummary();
     renderSensorList();
     renderSensorSummary();
@@ -1829,27 +1825,9 @@ function render() {
 
   if (!state.zones.length) return;
   const zone = selectedZone();
-  const asset = selectedAsset();
-  const managed = managedZones();
-  scenarioLabelEl.textContent = selectedScenarioLabel();
-  if (selectedZoneLabelEl) selectedZoneLabelEl.textContent = currentPage === "twin" ? (selectedEdgeDevice()?.zoneName || zone.name) : selectedZoneLabel();
-  if (currentPage === "twin") {
-    if (selectedAssetHeadingEl) selectedAssetHeadingEl.textContent = "Gateway";
-    if (selectedAssetLabelEl) selectedAssetLabelEl.textContent = selectedEdgeDevice()?.name || allTwinGateways()[0]?.name || "--";
-  } else if (currentPage === "graphs") {
-    if (selectedAssetHeadingEl) selectedAssetHeadingEl.textContent = "Mode";
-    if (selectedAssetLabelEl) {
-      selectedAssetLabelEl.textContent = state.graphComparisonMode === "managed"
-        ? "Zone compare"
-        : "Focused trend";
-    }
-  } else {
-    if (selectedAssetHeadingEl) selectedAssetHeadingEl.textContent = "Asset";
-    if (selectedAssetLabelEl && asset) {
-      selectedAssetLabelEl.textContent = currentPage === "operations"
-        ? asset.name
-        : managed.length > 1 ? `${asset.name} (${asset.zoneName})` : asset.name;
-    }
+  scenarioPillEl.textContent = "Scenario " + selectedScenarioLabel();
+  if (selectedZonePillEl) {
+    selectedZonePillEl.textContent = "Zone " + (currentPage === "twin" ? (selectedEdgeDevice()?.zoneName || zone.name) : selectedZoneLabel());
   }
   const statusHtml = `
     <strong>${state.summary?.critical ? "Intervention priority" : state.summary?.warning ? "Adaptive correction" : "Nominal coordination"}</strong>
@@ -1906,6 +1884,8 @@ async function loadLiveData() {
 
   brokerPillEl.className = "pill " + (health.mqttConnected ? "normal" : "critical");
   brokerPillEl.textContent = health.mqttConnected ? "Broker linked" : "Broker lost";
+  databasePillEl.className = "pill " + (health.dbConnected ? "normal" : "critical");
+  databasePillEl.textContent = health.dbConnected ? "DB linked" : "DB lost";
 }
 
 function loadFallback(tick) {
@@ -1917,6 +1897,8 @@ function loadFallback(tick) {
   state.scenario = fallback.scenario;
   brokerPillEl.className = "pill normal";
   brokerPillEl.textContent = "Synthetic stream";
+  databasePillEl.className = "pill warning";
+  databasePillEl.textContent = "DB unknown";
 }
 
 let fallbackTick = 0;
@@ -1947,3 +1929,7 @@ async function refresh() {
 
 await refresh();
 setInterval(refresh, 3500);
+
+
+
+

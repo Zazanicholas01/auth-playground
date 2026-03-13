@@ -4,6 +4,7 @@ kind: Kustomization
 namespace: iot-playground
 
 resources:
+  - namespace.yaml
   - emqx/emqx.yaml
   - emqx/emqx-route.yaml
 #  - emqx/mqtt-tcp-route.yaml
