@@ -1,0 +1,155 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: iot-timescaledb-secret
+  namespace: iot-playground
+type: Opaque
+stringData:
+  username: iot_app
+  password: password123
+  database: iot_playground
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: iot-timescaledb-data
+  namespace: iot-playground
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iot-timescaledb-init
+  namespace: iot-playground
+data:
+  init.sql: |
+    CREATE EXTENSION IF NOT EXISTS timescaledb;
+
+    CREATE TABLE IF NOT EXISTS iot_events (
+      id BIGSERIAL PRIMARY KEY,
+      topic TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      device_id TEXT,
+      zone_id TEXT,
+      received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      payload JSONB NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS iot_device_state (
+      device_id TEXT PRIMARY KEY,
+      zone_id TEXT NOT NULL,
+      last_topic TEXT,
+      last_seen TIMESTAMPTZ NOT NULL,
+      state JSONB NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS iot_telemetry (
+      ts TIMESTAMPTZ NOT NULL,
+      device_id TEXT NOT NULL,
+      zone_id TEXT NOT NULL,
+      scenario TEXT,
+      severity TEXT,
+      temperature DOUBLE PRECISION,
+      humidity DOUBLE PRECISION,
+      co2 DOUBLE PRECISION,
+      par DOUBLE PRECISION,
+      pressure DOUBLE PRECISION,
+      dew_point DOUBLE PRECISION,
+      vpd DOUBLE PRECISION,
+      soil_moisture DOUBLE PRECISION,
+      soil_temperature DOUBLE PRECISION,
+      tank_level DOUBLE PRECISION,
+      irrigation_flow DOUBLE PRECISION,
+      payload JSONB NOT NULL
+    );
+
+    SELECT create_hypertable('iot_telemetry', 'ts', if_not_exists => TRUE);
+
+    CREATE INDEX IF NOT EXISTS iot_telemetry_device_ts_idx
+      ON iot_telemetry (device_id, ts DESC);
+
+    CREATE INDEX IF NOT EXISTS iot_events_received_at_idx
+      ON iot_events (received_at DESC);
+
+    CREATE INDEX IF NOT EXISTS iot_events_type_received_at_idx
+      ON iot_events (event_type, received_at DESC);
+    
+    CREATE INDEX IF NOT EXISTS iot_device_state_last_seen_idx
+      ON iot_device_state (last_seen DESC);
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: iot-timescaledb
+  namespace: iot-playground
+spec:
+  serviceName: iot-timescaledb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-timescaledb
+  template:
+    metadata:
+      labels:
+        app: iot-timescaledb
+    spec:
+      containers:
+        - name: timescaledb
+          image: timescale/timescaledb:latest-pg16
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: iot-timescaledb-secret
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: iot-timescaledb-secret
+                  key: password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: iot-timescaledb-secret
+                  key: database
+          
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.h
+          
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: iot-timescaledb-data
+        - name: init-sql
+          configMap:
+            name: iot-timescaledb-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iot-timescaledb
+  namespace: iot-playground
+spec:
+  selector:
+    app: iot-timescaledb
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432

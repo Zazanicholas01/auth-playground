@@ -12,6 +12,7 @@ resources:
   - simulator/ui-client.yaml
   - simulator/simulator-route.yaml
   - config.yaml
+  - simulator/timescaledb.yaml
 
 # generatorOptions:
 #   disableNameSuffixHash: true
