@@ -8,27 +8,19 @@ on:
       - "manifests/emqx-iot/simulator/ui/**"
       - ".github/workflows/deploy-greenhouse-ui.yaml"
 
-concurrency:
-  group: deploy-manifests-${{ github.ref }}
-  cancel-in-progress: false
-
 permissions:
-  contents: write
   packages: write
 
 env:
-  REGISTRY: ghcr.io
   IMAGE_NAME: zazanicholas01/greenhouse-iot-ui
 
 jobs:
-  build-update-manifest:
+  build-image:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -37,40 +29,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push image
+      - name: Build and push image tags
         env:
-          IMAGE_REF: ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          IMAGE_SHA: ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          IMAGE_LATEST: ghcr.io/${{ env.IMAGE_NAME }}:latest
+          IMAGE_RUN: ghcr.io/${{ env.IMAGE_NAME }}:run-${{ github.run_id }}
         run: |
           docker build \
             -f manifests/emqx-iot/simulator/ui/Dockerfile \
-            -t "$IMAGE_REF" \
-            -t "ghcr.io/${{ env.IMAGE_NAME }}:latest" \
+            -t "$IMAGE_SHA" \
+            -t "$IMAGE_LATEST" \
+            -t "$IMAGE_RUN" \
             manifests/emqx-iot/simulator/ui
 
-          docker push "$IMAGE_REF"
-          docker push "ghcr.io/${{ env.IMAGE_NAME }}:latest"
-
-      - name: Update manifest image tag
-        env:
-          IMAGE_REF: ghcr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
-        run: |
-          perl -0pi -e 's|image:\s*.*greenhouse-iot-ui:.*|image: '"$IMAGE_REF"'|g' manifests/emqx-iot/simulator/ui-client.yaml
-
-      - name: Commit manifest change
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add manifests/emqx-iot/simulator/ui-client.yaml
-          git diff --cached --quiet && exit 0
-
-          git commit -m "Deploy greenhouse UI ${GITHUB_SHA}"
-
-          for i in 1 2 3; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
-            sleep 5
-          done
-
-          echo "Failed to push after retries"
-          exit 1
-
-
+          docker push "$IMAGE_SHA"
+          docker push "$IMAGE_LATEST"
+          docker push "$IMAGE_RUN"

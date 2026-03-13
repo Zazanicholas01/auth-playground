@@ -1,0 +1,99 @@
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: greenhouse-iot-ui
+  namespace: flux-system
+spec:
+  image: ghcr.io/zazanicholas01/greenhouse-iot-ui
+  interval: 1m
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: greenhouse-iot-ui
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: greenhouse-iot-ui
+  filterTags:
+    pattern: '^run-(?P<num>[0-9]+)$'
+    extract: '$num'
+  policy:
+    numerical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: greenhouse-iot-api
+  namespace: flux-system
+spec:
+  image: ghcr.io/zazanicholas01/greenhouse-iot-api
+  interval: 1m
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: greenhouse-iot-api
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: greenhouse-iot-api
+  filterTags:
+    pattern: '^run-(?P<num>[0-9]+)$'
+    extract: '$num'
+  policy:
+    numerical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: greenhouse-iot-simulator
+  namespace: flux-system
+spec:
+  image: ghcr.io/zazanicholas01/greenhouse-iot-simulator
+  interval: 1m
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: greenhouse-iot-simulator
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: greenhouse-iot-simulator
+  filterTags:
+    pattern: '^run-(?P<num>[0-9]+)$'
+    extract: '$num'
+  policy:
+    numerical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageUpdateAutomation
+metadata:
+  name: playground-manifests
+  namespace: flux-system
+spec:
+  interval: 1m
+  sourceRef:
+    kind: GitRepository
+    name: playground-manifests
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        name: fluxcdbot
+        email: fluxcdbot@users.noreply.github.com
+      messageTemplate: |
+        Update greenhouse images
+
+        Automated update from Flux image automation.
+    push:
+      branch: main
+  update:
+    path: ./manifests/emqx-iot
+    strategy: Setters

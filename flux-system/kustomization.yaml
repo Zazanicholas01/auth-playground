@@ -5,3 +5,5 @@ resources:
   - gitrepository.yaml
   - infrastructure.yaml
   - active-app.yaml
+  - image-automation.yaml
+
