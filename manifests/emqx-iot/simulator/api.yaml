@@ -40,18 +40,15 @@ data:
       }
 
       const restoredEvents = await recentEvents(historySize);
-      events.splice(0, events.lenght, ...restoredEvents);
+      events.splice(0, events.length, ...restoredEvents);
 
-      for (const deviceId of restoredDevices.key()) {
+      for (const deviceId of restoredDevices.keys()) {
         const points = await telemetryHistory(deviceId, historyPoints);
         if (points.length) {
           history.set(deviceId, points);
         }
       }
     }
-
-    await initDb();
-    await warmCacheFromDb();
 
     const port = Number(process.env.API_PORT || 8080);
     const mqttUrl = process.env.MQTT_URL || "mqtt://emqx-listeners:1883";
@@ -243,9 +240,13 @@ data:
       return [...merged.values()].sort((a, b) => a.deviceId.localeCompare(b.deviceId));
     }
 
-    function mergeAlerts(baseAlerts) {
+    function materializedDevices() {
+      return materializedDevicesFrom(devices);
+    }
+
+    function mergeAlerts(baseAlerts, sourceDevices = devices) {
       const syntheticAlerts = syntheticZoneIds
-        .filter((zoneId) => !devices.has(zoneId))
+        .filter((zoneId) => !sourceDevices.has(zoneId))
         .map((zoneId, index) => {
           const seed = seedZoneSnapshot(zoneId);
           return {
@@ -451,6 +452,13 @@ data:
       return rows;
     }
 
+    try {
+      await initDb();
+      await warmCacheFromDb();
+    } catch (error) {
+      console.error("database bootstrap failed:", error.message);
+    }
+
 
     const mqttClient = mqtt.connect(mqttUrl, {
       reconnectPeriod: 3000,
@@ -492,7 +500,7 @@ data:
       console.error("api mqtt error:", error.message);
     });
 
-    mqttClient.on("message", (topic, payload) => {
+    mqttClient.on("message", async (topic, payload) => {
       try {
         const message = JSON.parse(payload.toString());
 
@@ -571,7 +579,7 @@ data:
     
     Bun.serve({
       port,
-      fetch(request) {
+      async fetch(request) {
         const url = new URL(request.url);
 
         if (request.method === "OPTIONS") {
@@ -628,8 +636,9 @@ data:
         }
 
         if (url.pathname === "/alerts") {
+          const persistedDevices = await loadDeviceStates();
           const persistedAlerts = await loadRecentAlerts(100);
-          return json(mergeAlerts(persistedAlerts));
+          return json(mergeAlerts(persistedAlerts, persistedDevices));
         }
 
         if (url.pathname === "/metrics") {
@@ -688,7 +697,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: iot-timescaledb-secret
-                  value: database
+                  key: database
             - name: DB_USER
               valueFrom:
                 secretKeyRef:
@@ -739,3 +748,5 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
+
+

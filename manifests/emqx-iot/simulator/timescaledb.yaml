@@ -125,7 +125,7 @@ spec:
             - name: data
               mountPath: /var/lib/postgresql/data
             - name: init-sql
-              mountPath: /docker-entrypoint-initdb.h
+              mountPath: /docker-entrypoint-initdb.d
           
           readinessProbe:
             exec:
