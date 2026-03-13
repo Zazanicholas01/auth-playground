@@ -44,9 +44,11 @@ jobs:
           docker build \
             -f manifests/emqx-iot/simulator/ui/Dockerfile \
             -t "$IMAGE_REF" \
+            -t "ghcr.io/${{ env.IMAGE_NAME }}:latest" \
             manifests/emqx-iot/simulator/ui
 
           docker push "$IMAGE_REF"
+          docker push "ghcr.io/${{ env.IMAGE_NAME }}:latest"
 
       - name: Update manifest image tag
         env:
@@ -70,3 +72,5 @@ jobs:
 
           echo "Failed to push after retries"
           exit 1
+
+

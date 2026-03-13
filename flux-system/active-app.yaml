@@ -6,11 +6,11 @@ metadata:
 spec:
   dependsOn:
     - name: infrastructure
-  interval: 5m
+  interval: 1m
   path: ./manifests/emqx-iot
   prune: true
   sourceRef:
     kind: GitRepository
     name: playground-manifests
-  timeout: 3m
+  timeout: 5m
   wait: true
