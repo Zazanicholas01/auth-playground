@@ -1,0 +1,10 @@
+{
+  "name": "iot-api",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "mqtt": "^5.13.3",
+    "pg": "^8.16.3"
+  }
+}
+

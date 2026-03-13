@@ -1,0 +1,9 @@
+{
+  "name": "iot-simulator",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "mqtt": "^5.13.3"
+  }
+}
+
