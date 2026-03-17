@@ -14,15 +14,4 @@ resources:
   - simulator/simulator-route.yaml
   - config.yaml
   - simulator/timescaledb.yaml
-
-# generatorOptions:
-#   disableNameSuffixHash: true
-
-# configMapGenerator:
-#   - name: iot-ui-code
-#     files:
-#       - simulator/ui/index.html
-#       - simulator/ui/styles.css
-#       - simulator/ui/index.js
-#       - simulator/ui/server.js
-#       - simulator/ui/dev-assets/greenhouse-twin.png
+  - simulator/dbgate.yaml
