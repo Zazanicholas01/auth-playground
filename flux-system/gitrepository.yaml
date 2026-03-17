@@ -7,6 +7,6 @@ spec:
   interval: 1m
   ref:
     branch: main
-  url: https://github.com/Zazanicholas01/auth-playground.git
+  url: ssh://git@github.com/Zazanicholas01/auth-playground.git
   secretRef:
     name: playground-manifests
