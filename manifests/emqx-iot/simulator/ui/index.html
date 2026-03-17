@@ -9,264 +9,273 @@
   <body>
     <div class="app-shell">
       <header class="global-bar panel">
-        <div class="global-copy">
-          <div class="eyebrow">Greenhouse Digital Twin</div>
-          <h1>Greenhouse A</h1>
+        <div class="brand-block">
+          <div class="brand-eyebrow">EMQX Digital Twin</div>
+          <h1>Greenhouse A Operator Cockpit</h1>
+          <p>Realtime command surface for facility state, incident response, and fleet reliability.</p>
         </div>
 
-        <nav class="page-nav" aria-label="Page navigation">
-          <a href="/map" data-nav="map">Map</a>
-          <a href="/twin" data-nav="twin">Twin</a>
-          <a href="/operations" data-nav="operations">Operations</a>
-          <a href="/graphs" data-nav="graphs">Graphs</a>
-          <a href="/edge-devices" data-nav="edge-devices">Edge Devices</a>
-          <a href="/sensors" data-nav="sensors">Sensors</a>
-        </nav>
+        <div class="nav-cluster">
+          <div class="nav-pillar">Overview</div>
+          <nav class="page-nav" aria-label="Page navigation">
+            <a href="/map" data-nav="map">Map</a>
+            <a href="/twin" data-nav="twin">Twin</a>
+          </nav>
+          <div class="nav-pillar">Operations</div>
+          <nav class="page-nav" aria-label="Operations navigation">
+            <a href="/operations" data-nav="operations">Operations</a>
+            <a href="/graphs" data-nav="graphs">Graphs</a>
+          </nav>
+          <div class="nav-pillar">Fleet</div>
+          <nav class="page-nav" aria-label="Fleet navigation">
+            <a href="/edge-devices" data-nav="edge-devices">Gateways</a>
+            <a href="/sensors" data-nav="sensors">Sensors</a>
+          </nav>
+        </div>
 
-        <div class="global-status">
-          <div id="broker-pill" class="pill normal">Broker linked</div>
-          <div id="database-pill" class="pill normal">DB linked</div>
-          <div id="scenario-pill" class="pill normal">Scenario Baseline day</div>
-          <div id="selected-zone-pill" class="pill normal">Zone North Bay</div>
+        <div class="status-strip">
+          <article class="status-card">
+            <span class="status-label">Broker</span>
+            <div id="broker-pill" class="pill normal">Broker linked</div>
+          </article>
+          <article class="status-card">
+            <span class="status-label">Database</span>
+            <div id="database-pill" class="pill normal">DB linked</div>
+          </article>
+          <article class="status-card">
+            <span class="status-label">Scenario</span>
+            <div id="scenario-pill" class="pill normal">Scenario baseline day</div>
+          </article>
+          <article class="status-card">
+            <span class="status-label">Focus</span>
+            <div id="selected-zone-pill" class="pill normal">Zone North Bay</div>
+          </article>
+          <article class="status-card">
+            <span class="status-label">Provenance</span>
+            <div id="provenance-pill" class="pill normal">Live telemetry</div>
+          </article>
+          <article class="status-card">
+            <span class="status-label">Time</span>
+            <div id="time-pill" class="pill normal">--:--</div>
+          </article>
         </div>
       </header>
 
-      <section id="page-map" class="page-layout twin-layout">
-        <aside class="rail panel">
-          <div class="rail-head">
+      <div class="workspace-shell">
+        <aside class="workspace-rail scope-rail panel">
+          <div class="workspace-rail-head">
             <div>
-              <div class="eyebrow">Zones</div>
-              <h2>Facility Zone Map</h2>
+              <div id="scope-eyebrow" class="eyebrow">Scope Rail</div>
+              <h2 id="scope-title">Managed Facility</h2>
+              <p id="scope-copy" class="workspace-copy">Choose the zones, gateways, or sensors driving the command picture.</p>
             </div>
           </div>
 
-          <div class="rail-section">
-            <div class="section-label">Facility</div>
-            <div data-slot="fleet-summary" class="fleet-summary"></div>
-          </div>
-
-          <div class="rail-section">
-            <div class="section-label">Zone List</div>
-            <div data-slot="zone-list" class="zone-list"></div>
-          </div>
-        </aside>
-
-        <main class="center-stage">
-          <section class="schematic-wrap panel">
-            <div class="schematic-topbar">
-              <div class="schematic-title">
-                <div class="eyebrow">Facility Twin</div>
-                <h3>Multi-Zone Layout</h3>
-              </div>
-              <div id="scene-badges" class="scene-badges"></div>
-            </div>
-
-            <div class="schematic-stage">
-              <div id="schematic" class="schematic" aria-label="Greenhouse schematic"></div>
-            </div>
+          <section class="rail-section panel-subtle">
+            <div class="section-label">Focus Path</div>
+            <div id="workspace-focus-path" class="focus-path">Facility / North Bay</div>
+            <div id="focus-path-note" class="section-copy muted-copy">Selection stays persistent across overview, operations, and fleet workspaces.</div>
           </section>
-        </main>
-      </section>
 
-      <section id="page-twin" class="page-layout twin-layout">
-        <aside class="rail panel">
-          <div class="rail-head">
-            <div>
-              <div class="eyebrow">Digital Twin</div>
-              <h2>Focused Zone</h2>
-            </div>
-          </div>
+          <section class="rail-section panel-subtle">
+            <div class="section-label">Scope Summary</div>
+            <div id="scope-summary" class="scope-summary"></div>
+          </section>
 
-          <div class="rail-section">
-            <div class="section-label">Fleet Summary</div>
-            <div data-slot="fleet-summary" class="fleet-summary"></div>
-          </div>
+          <section class="rail-section page-general page-map page-operations page-graphs">
+            <div class="section-label">Zones</div>
+            <div data-slot="zone-list" class="entity-list"></div>
+          </section>
 
-          <div class="rail-section">
+          <section class="rail-section page-twin">
+            <div class="section-label">Zone Gateways</div>
+            <div id="twin-gateway-list" class="entity-list"></div>
+          </section>
+
+          <section class="rail-section page-edge-devices">
+            <div class="section-label">Gateway Fleet</div>
+            <div id="edge-fleet-summary" class="scope-summary"></div>
+          </section>
+
+          <section class="rail-section page-edge-devices">
             <div class="section-label">Gateways</div>
-            <div id="twin-gateway-list" class="zone-list"></div>
-          </div>
-        </aside>
-
-        <main class="center-stage">
-          <section class="zone-network-wrap panel">
-            <div class="schematic-topbar">
-              <div class="schematic-title">
-                <div class="eyebrow">Focused Zone</div>
-                <h3>Gateway Twin View</h3>
-              </div>
-              <div id="zone-network-badges" class="scene-badges scene-badges-compact"></div>
-            </div>
-
-            <div id="zone-network-map" class="zone-network-map" aria-label="Focused zone device and sensor map"></div>
+            <div id="edge-device-list" class="entity-list"></div>
           </section>
-        </main>
-      </section>
 
-      <section id="page-operations" class="page-layout operations-layout">
-        <aside class="rail panel">
-          <div class="rail-head">
-            <div>
-              <div class="eyebrow">Facility</div>
-              <h2>Zones and Status</h2>
-            </div>
-          </div>
+          <section class="rail-section page-sensors">
+            <div class="section-label">Sensor Fleet</div>
+            <div id="sensor-fleet-summary" class="scope-summary"></div>
+          </section>
 
-          <div class="rail-section">
-            <div class="section-label">Fleet Summary</div>
-            <div data-slot="fleet-summary" class="fleet-summary"></div>
-          </div>
+          <section class="rail-section page-sensors">
+            <div class="section-label">Sensors</div>
+            <div id="sensor-list" class="asset-selector-list"></div>
+          </section>
 
-          <div class="rail-section">
-            <div class="section-label">Active Zones</div>
-            <div data-slot="zone-list" class="zone-list"></div>
-          </div>
-
-          <div class="rail-section">
+          <section class="rail-section page-operations page-graphs">
             <div class="section-label">Time Range</div>
-            <div id="graph-range-toggle" class="graph-range-toggle graph-control-stack" aria-label="Graph time range"></div>
-          </div>
+            <div id="graph-range-toggle" class="toggle-row" aria-label="Graph time range"></div>
+          </section>
 
-          <div class="rail-section">
+          <section class="rail-section page-operations page-graphs">
             <div class="section-label">Metric Grouping</div>
-            <div id="graph-metric-toggle" class="graph-range-toggle graph-control-stack" aria-label="Graph metric grouping"></div>
-          </div>
+            <div id="graph-metric-toggle" class="toggle-row" aria-label="Graph metric grouping"></div>
+          </section>
 
-          <div class="rail-section">
+          <section class="rail-section page-operations page-graphs">
             <div class="section-label">Comparison Mode</div>
-            <div id="graph-compare-toggle" class="graph-range-toggle graph-control-stack" aria-label="Graph comparison mode"></div>
-          </div>
+            <div id="graph-compare-toggle" class="toggle-row" aria-label="Graph comparison mode"></div>
+          </section>
         </aside>
 
-        <main class="operations-main">
-          <section class="operations-summary panel">
-            <div class="section-label">Operational Summary</div>
-            <div id="ops-summary" class="ops-summary-grid"></div>
+        <main class="workspace-main">
+          <section class="workspace-toolbar panel">
+            <div class="workspace-toolbar-copy">
+              <div class="workspace-toolbar-meta-row">
+                <span id="workspace-pillar-label" class="pill normal">Overview</span>
+                <span id="workspace-eyebrow" class="eyebrow">Facility Overview</span>
+              </div>
+              <h2 id="workspace-title">Spatial Twin Command Surface</h2>
+              <p id="workspace-copy" class="workspace-copy">Scan the whole greenhouse, compare managed scope, and move into a zone with one click.</p>
+            </div>
+            <div class="workspace-toolbar-stats">
+              <article class="toolbar-stat">
+                <span class="section-label">Mode</span>
+                <strong id="workspace-mode-label">Overview</strong>
+              </article>
+              <article class="toolbar-stat">
+                <span class="section-label">Selection</span>
+                <strong id="workspace-focus-label">North Bay</strong>
+              </article>
+            </div>
           </section>
 
-          <section class="operations-support">
-            <div class="support-panel events-panel panel">
-              <div class="section-label">Active Events</div>
-              <div data-slot="alert-list" class="alert-list"></div>
+          <section id="page-map" class="page-layout page-map mission-stack">
+            <div id="overview-kpis" class="kpi-grid"></div>
+            <div class="main-stage panel">
+              <div class="stage-head">
+                <div>
+                  <div class="eyebrow">Facility Map</div>
+                  <h3>Managed Footprint</h3>
+                </div>
+                <div id="scene-badges" class="badge-grid"></div>
+              </div>
+              <div class="stage-grid">
+                <div id="schematic" class="stage-canvas"></div>
+                <div id="map-zone-panel" class="stage-side"></div>
+              </div>
             </div>
+          </section>
 
-            <div class="support-panel panel">
-              <div class="section-label">Asset Detail</div>
-              <div data-slot="asset-detail" class="asset-detail"></div>
+          <section id="page-twin" class="page-layout page-twin mission-stack">
+            <div id="twin-zone-summary"></div>
+            <div class="main-stage panel">
+              <div class="stage-head">
+                <div>
+                  <div class="eyebrow">Zone Diagnostics</div>
+                  <h3>Gateway And Asset Topology</h3>
+                </div>
+                <div id="zone-network-badges" class="badge-grid"></div>
+              </div>
+              <div id="zone-network-map" class="stage-canvas"></div>
+            </div>
+          </section>
+
+          <section id="page-operations" class="page-layout page-operations mission-stack">
+            <div id="ops-summary" class="kpi-grid"></div>
+            <div class="main-stage panel">
+              <div class="stage-head">
+                <div>
+                  <div class="eyebrow">Incident Command</div>
+                  <h3>Managed Response Workspace</h3>
+                </div>
+              </div>
+              <div id="operations-board"></div>
+            </div>
+          </section>
+
+          <section id="page-graphs" class="page-layout page-graphs mission-stack">
+            <div class="main-stage panel">
+              <div class="stage-head">
+                <div>
+                  <div class="eyebrow">Trend Analysis</div>
+                  <h3>Comparison-First Telemetry</h3>
+                </div>
+              </div>
+              <div id="graph-grid" class="chart-grid"></div>
+            </div>
+          </section>
+
+          <section id="page-edge-devices" class="page-layout page-edge-devices mission-stack">
+            <div class="main-stage panel">
+              <div class="stage-head">
+                <div>
+                  <div class="eyebrow">Fleet Workspace</div>
+                  <h3>Gateway Health And Topology</h3>
+                </div>
+              </div>
+              <div id="edge-summary"></div>
+            </div>
+          </section>
+
+          <section id="page-sensors" class="page-layout page-sensors mission-stack">
+            <div class="main-stage panel">
+              <div class="stage-head">
+                <div>
+                  <div class="eyebrow">Fleet Workspace</div>
+                  <h3>Sensor Reliability And Freshness</h3>
+                </div>
+              </div>
+              <div id="sensor-summary"></div>
             </div>
           </section>
         </main>
-      </section>
 
-      <section id="page-graphs" class="page-layout graphs-layout">
-        <aside class="rail panel">
-          <div class="rail-head">
+        <aside class="workspace-rail evidence-rail panel">
+          <div class="workspace-rail-head">
             <div>
-              <div class="eyebrow">Analysis</div>
-              <h2>Graph Controls</h2>
+              <div id="context-eyebrow" class="eyebrow">Evidence Rail</div>
+              <h2 id="context-title">Context And Evidence</h2>
+              <p id="context-copy" class="workspace-copy">Keep asset detail, supporting incidents, and data provenance next to the mission canvas.</p>
             </div>
           </div>
 
-          <div class="rail-section">
-            <div class="section-label">Fleet Summary</div>
-            <div data-slot="fleet-summary" class="fleet-summary"></div>
-          </div>
-
-          <div class="rail-section">
-            <div class="section-label">Active Zones</div>
-            <div data-slot="zone-list" class="zone-list"></div>
-          </div>
-        </aside>
-
-        <main class="graphs-main">
-          <section class="graph-board panel">
-            <div class="graph-board-head">
-              <div class="section-label">Telemetry Trends</div>
-            </div>
-            <div id="graph-grid" class="graph-grid"></div>
+          <section class="rail-section panel-subtle">
+            <div class="section-label">Data Provenance</div>
+            <div id="provenance-card" class="provenance-card"></div>
           </section>
-        </main>
-      </section>
 
-      <section id="page-edge-devices" class="page-layout operations-layout">
-      <aside class="rail panel">
-        <div class="rail-head">
-          <div>
-            <div class="eyebrow">Edge Fleet</div>
-            <h2>Gateway Health</h2>
-          </div>
-        </div>
+          <section class="rail-section page-general page-map page-twin page-operations page-graphs">
+            <div class="section-label">Selected Asset</div>
+            <div data-slot="asset-detail" class="asset-detail"></div>
+          </section>
 
-        <div class="rail-section">
-          <div class="section-label">Fleet Summary</div>
-          <div id="edge-fleet-summary" class="fleet-summary"></div>
-        </div>
+          <section class="rail-section page-general page-map page-twin page-operations page-graphs">
+            <div class="section-label">Incident Stream</div>
+            <div data-slot="alert-list" class="alert-list"></div>
+          </section>
 
-        <div class="rail-section">
-          <div class="section-label">Devices</div>
-          <div id="edge-device-list" class="zone-list"></div>
-        </div>
-      </aside>
-
-      <main class="operations-main">
-        <section class="operations-summary panel">
-          <div class="section-label">Edge Overview</div>
-          <div id="edge-summary" class="ops-summary-grid"></div>
-        </section>
-
-        <section class="operations-support">
-          <div class="support-panel panel">
+          <section class="rail-section page-edge-devices">
             <div class="section-label">Sensor Batch</div>
             <div id="edge-sensor-detail" class="asset-detail"></div>
-          </div>
+          </section>
 
-          <div class="support-panel events-panel panel">
-            <div class="section-label">Device Incidents</div>
+          <section class="rail-section page-edge-devices">
+            <div class="section-label">Gateway Incidents</div>
             <div id="edge-alert-list" class="alert-list"></div>
-          </div>
-        </section>
-      </main>
-    </section>
+          </section>
 
-      <section id="page-sensors" class="page-layout operations-layout">
-      <aside class="rail panel">
-        <div class="rail-head">
-          <div>
-            <div class="eyebrow">Sensor Fleet</div>
-            <h2>Single Sensor Health</h2>
-          </div>
-        </div>
-
-        <div class="rail-section">
-          <div class="section-label">Fleet Summary</div>
-          <div id="sensor-fleet-summary" class="fleet-summary"></div>
-        </div>
-
-        <div class="rail-section">
-          <div class="section-label">Sensors</div>
-          <div id="sensor-list" class="asset-selector-list"></div>
-        </div>
-      </aside>
-
-      <main class="operations-main">
-        <section class="operations-summary panel">
-          <div class="section-label">Sensor Overview</div>
-          <div id="sensor-summary" class="ops-summary-grid"></div>
-        </section>
-
-        <section class="operations-support">
-          <div class="support-panel panel">
+          <section class="rail-section page-sensors">
             <div class="section-label">Sensor Detail</div>
             <div id="sensor-detail" class="asset-detail"></div>
-          </div>
+          </section>
 
-          <div class="support-panel events-panel panel">
+          <section class="rail-section page-sensors">
             <div class="section-label">Sensor Incidents</div>
             <div id="sensor-alert-list" class="alert-list"></div>
-          </div>
-        </section>
-      </main>
-    </section>
+          </section>
+        </aside>
+      </div>
     </div>
 
     <script>
@@ -285,5 +294,3 @@
     <script src="/index.js" type="module"></script>
   </body>
 </html>
-
-
