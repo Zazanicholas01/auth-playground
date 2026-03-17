@@ -1,5 +1,12 @@
 # Dependencies
 node_modules/
+**/node_modules/
+
+# Python virtual environments
+.venv/
+**/.venv/
+venv/
+**/venv/
 
 # Logs
 *.log
