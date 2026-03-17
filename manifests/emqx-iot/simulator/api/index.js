@@ -303,11 +303,18 @@ function greenhouseSummary() {
   };
 }
 
-async function persistEvent(event) {
+async function persistBronzeEvent(event) {
   const payload = event.payload || {};
+
   await db.query(
-    `INSERT INTO iot_events (topic, event_type, device_id, zone_id, received_at, payload)
-     VALUES ($1, $2, $3, $4, $5, $6::jsonb)`,
+    `INSERT INTO bronze.events_raw (
+      source_topic,
+      event_type,
+      device_id,
+      zone_id,
+      event_ts,
+      payload
+    ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)`,
     [
       event.topic,
       event.type,
@@ -319,34 +326,24 @@ async function persistEvent(event) {
   );
 }
 
-async function persistTelemetry(normalized) {
+
+
+async function persistBronzeTelemetry(topic, normalized) {
   await db.query(
-    `INSERT INTO iot_telemetry (
-      ts, device_id, zone_id, scenario, severity,
-      temperature, humidity, co2, par, pressure, dew_point, vpd,
-      soil_moisture, soil_temperature, tank_level, irrigation_flow, payload
-    ) VALUES (
-      $1,$2,$3,$4,$5,
-      $6,$7,$8,$9,$10,$11,$12,
-      $13,$14,$15,$16,$17::jsonb
-    )`,
+    `INSERT INTO bronze.telemetry_raw (
+      source_topic,
+      message_type,
+      device_id,
+      zone_id,
+      event_ts,
+      payload
+    ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)`,
     [
-      normalized.ts,
+      topic,
+      "telemetry",
       normalized.deviceId,
       normalized.zoneId,
-      normalized.scenario,
-      normalized.severity,
-      normalized.indoor.temperature ?? null,
-      normalized.indoor.humidity ?? null,
-      normalized.indoor.co2 ?? null,
-      normalized.indoor.par ?? null,
-      normalized.indoor.pressure ?? null,
-      normalized.derived.dewPoint ?? null,
-      normalized.derived.vpd ?? null,
-      normalized.soil.moisture ?? null,
-      normalized.soil.temperature ?? null,
-      normalized.soil.tankLevel ?? null,
-      normalized.soil.irrigationFlow ?? null,
+      normalized.ts,
       JSON.stringify(normalized),
     ]
   );
@@ -519,7 +516,7 @@ mqttClient.on("message", async (topic, payload) => {
       const point = historyPointFromTelemetry(normalized);
       pushHistory(normalized.deviceId, point);
 
-      await persistTelemetry(normalized);
+      await persistBronzeTelemetry(normalized);
       await upsertDeviceState(device);
     }
 
@@ -545,7 +542,7 @@ mqttClient.on("message", async (topic, payload) => {
       events.length = historySize;
     }
 
-    await persistEvent(event);
+    await persistBronzeEvent(event);
 
   } catch (error) {
     console.error("failed to process message:", topic, error.message);
