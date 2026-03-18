@@ -711,8 +711,97 @@ body[data-page="sensors"] .page-sensors {
   .sensor-path-card { grid-template-columns: 1fr; }
 }
 
+.nav-action-link {
+  min-height: 42px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(16, 25, 29, 0.96), rgba(28, 41, 47, 0.98));
+  color: #f3fbf8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  text-transform: uppercase;
+  box-shadow: 0 10px 22px rgba(5, 10, 12, 0.22);
+}
+
+.nav-action-link-muted {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(235, 244, 246, 0.92);
+}
 
 
+.nav-action-link svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
 
+.page-nav a {
+  min-height: 54px;
+  min-width: 148px;
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
 
+.page-nav a > div {
+  display: grid;
+  gap: 2px;
+}
 
+.page-nav a svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.page-nav a span {
+  color: var(--text-strong);
+  font-size: 12px;
+  line-height: 1.15;
+}
+
+.page-nav a small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.page-nav a:hover {
+  transform: translateY(-1px);
+}
+
+.page-nav a.active {
+  color: #f4fbf8;
+}
+
+.page-nav a.active span,
+.page-nav a.active small {
+  color: #f4fbf8;
+}

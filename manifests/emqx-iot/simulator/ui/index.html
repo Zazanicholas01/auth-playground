@@ -9,29 +9,88 @@
   <body>
     <div class="app-shell">
       <header class="global-bar panel">
-        <div class="brand-block">
-          <div class="brand-eyebrow">EMQX Digital Twin</div>
-          <h1>Greenhouse A Operator Cockpit</h1>
-          <p>Realtime command surface for facility state, incident response, and fleet reliability.</p>
-        </div>
+        <div class="global-bar-top">
+          <div class="brand-block">
+            <div class="brand-lockup">
+              <div class="brand-copy">
+                <h1>Greenhouse A Operator Cockpit</h1>
+              </div>
+            </div>
+          </div>
+          <nav class="page-nav" aria-label="Primary navigation">
+            <a href="/map" data-nav="map">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 6.5 9 4l6 2 5-2v13.5L15 20l-6-2-5 2V6.5Z"></path>
+                <path d="M9 4v14"></path>
+                <path d="M15 6v14"></path>
+              </svg>
+              <div>
+                <span>Facility Map</span>
+                <small>Site overview</small>
+              </div>
+            </a>
 
-        <div class="nav-cluster">
-          <div class="nav-pillar">Overview</div>
-          <nav class="page-nav" aria-label="Page navigation">
-            <a href="/map" data-nav="map">Map</a>
-            <a href="/twin" data-nav="twin">Twin</a>
+            <a href="/twin" data-nav="twin">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 4a4 4 0 1 1 0 8a4 4 0 0 1 0-8Z"></path>
+                <path d="M5 20a7 7 0 0 1 14 0"></path>
+                <path d="M18.5 6.5 20 8l-3.5 3.5"></path>
+              </svg>
+              <div>
+                <span>Zone Twin</span>
+                <small>Focused diagnostics</small>
+              </div>
+            </a>
+
+            <a href="/operations" data-nav="operations">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3 21 19H3L12 3Z"></path>
+                <path d="M12 9V13"></path>
+                <path d="M12 16H12.01"></path>
+              </svg>
+              <div>
+                <span>Operations</span>
+                <small>Incident response</small>
+              </div>
+            </a>
+
+            <a href="/graphs" data-nav="graphs">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 19h16"></path>
+                <path d="M7 15 11 11 14 13 19 7"></path>
+                <path d="M19 7v4"></path>
+              </svg>
+              <div>
+                <span>Graphs</span>
+                <small>Trend analysis</small>
+              </div>
+            </a>
+
+            <a href="/edge-devices" data-nav="edge-devices">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="4" y="6" width="16" height="10" rx="2"></rect>
+                <path d="M8 20h8"></path>
+                <path d="M9 10h6"></path>
+              </svg>
+              <div>
+                <span>Gateways</span>
+                <small>Edge fleet</small>
+              </div>
+            </a>
+
+            <a href="/sensors" data-nav="sensors">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 18a2.5 2.5 0 1 0 0.01 0"></path>
+                <path d="M12 14V6"></path>
+                <path d="M8.5 9.5a5 5 0 0 1 7 0"></path>
+                <path d="M6 7a8.5 8.5 0 0 1 12 0"></path>
+              </svg>
+              <div>
+                <span>Sensors</span>
+                <small>Telemetry health</small>
+              </div>
+            </a>
           </nav>
-          <div class="nav-pillar">Operations</div>
-          <nav class="page-nav" aria-label="Operations navigation">
-            <a href="/operations" data-nav="operations">Operations</a>
-            <a href="/graphs" data-nav="graphs">Graphs</a>
-          </nav>
-          <div class="nav-pillar">Fleet</div>
-          <nav class="page-nav" aria-label="Fleet navigation">
-            <a href="/edge-devices" data-nav="edge-devices">Gateways</a>
-            <a href="/sensors" data-nav="sensors">Sensors</a>
-          </nav>
-        </div>
 
         <div class="status-strip">
           <article class="status-card">
@@ -294,3 +353,6 @@
     <script src="/index.js" type="module"></script>
   </body>
 </html>
+
+
+
