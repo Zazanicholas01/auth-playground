@@ -7,3 +7,4 @@ resources:
   - active-app.yaml
   - image-automation.yaml
   - gotk-components.yaml
+  - capacitor.yaml
