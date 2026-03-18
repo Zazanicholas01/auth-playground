@@ -61,6 +61,16 @@ spec:
               port: 8080
             initialDelaySeconds: 15
             periodSeconds: 20
+          
+          volumeMounts:
+            - name: api-code
+              mountPath: /app/index.js
+              subPath: index.js
+          
+      volumes:
+        - name: api-code
+          configMap:
+            name: iot-api-code
 ---
 apiVersion: v1
 kind: Service

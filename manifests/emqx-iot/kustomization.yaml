@@ -15,3 +15,8 @@ resources:
   - config.yaml
   - simulator/timescaledb.yaml
   - simulator/dbgate.yaml
+
+configMapGenerator:
+  - name: iot-api-code
+    files:
+      - simulator/api/index.js
