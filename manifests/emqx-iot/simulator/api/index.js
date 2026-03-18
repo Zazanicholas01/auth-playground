@@ -5,6 +5,10 @@ import pg from "pg";
 const { Pool } = pg;
 
 const bootstrapSqlDir = process.env.DB_BOOTSTRAP_SQL_DIR || "/app/db-init";
+const bootstrapMaxAttempts = Number(process.env.DB_BOOTSTRAP_MAX_ATTEMPTS || 20);
+const bootstrapRetryDelayMs = Number(process.env.DB_BOOTSTRAP_RETRY_DELAY_MS || 3000);
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const db = new Pool({
   host: process.env.DB_HOST || "iot-timescaledb",
@@ -31,6 +35,22 @@ async function initDb() {
 
     console.log(`applying database bootstrap script: ${scriptName}`);
     await db.query(script);
+  }
+}
+
+async function initDbWithRetry() {
+  for (let attempt = 1; attempt <= bootstrapMaxAttempts; attempt += 1) {
+    try {
+      await initDb();
+      return;
+    } catch (error) {
+      if (attempt === bootstrapMaxAttempts) {
+        throw error;
+      }
+
+      console.error(`database bootstrap attempt ${attempt} failed: ${error.message}`);
+      await sleep(bootstrapRetryDelayMs);
+    }
   }
 }
 
@@ -547,7 +567,7 @@ async function checkDbConnected() {
 }
 
 try {
-  await initDb();
+  await initDbWithRetry();
   await warmCacheFromDb();
 } catch (error) {
   console.error("database bootstrap failed:", error.message);
@@ -767,6 +787,4 @@ Bun.serve({
     return json({ error: "not found" }, 404);
   },
 });
-
-
 
