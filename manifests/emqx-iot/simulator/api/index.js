@@ -351,7 +351,13 @@ async function persistBronzeTelemetry(topic, normalized) {
 
 async function upsertDeviceState(device) {
   await db.query(
-    `INSERT INTO iot_device_state (device_id, zone_id, last_topic, last_seen, state)
+    `INSERT INTO silver.device_state_latest (
+      device_id,
+      zone_id,
+      last_topic,
+      last_seen,
+      state
+    )
     VALUES ($1, $2, $3, $4, $5::jsonb)
     ON CONFLICT (device_id) DO UPDATE SET
       zone_id = EXCLUDED.zone_id,
@@ -370,10 +376,14 @@ async function upsertDeviceState(device) {
 
 async function recentEvents(limit = 250) {
   const { rows } = await db.query(
-    `SELECT topic, event_type AS type, received_at AS "receivedAt", payload
-    FROM iot_events
-    ORDER BY received_at DESC
-    LIMIT $1`,
+    `SELECT
+      source_topic AS topic,
+      event_type AS type,
+      event_ts AS "receivedAt",
+      payload
+     FROM bronze.events_raw
+     ORDER BY event_ts DESC, ingest_id DESC
+     LIMIT $1`,
     [limit]
   );
   return rows;
@@ -397,19 +407,20 @@ async function telemetryHistory(deviceId, limit = historyPoints) {
       soil_temperature AS "soilTemperature",
       tank_level AS "tankLevel",
       irrigation_flow AS "irrigationFlow"
-    FROM iot_telemetry
-    WHERE device_id = $1
-    ORDER BY ts DESC
-    LIMIT $2`,
+     FROM silver.telemetry
+     WHERE device_id = $1
+     ORDER BY ts DESC
+     LIMIT $2`,
     [deviceId, limit]
   );
   return rows.reverse();
 }
 
+
 async function loadDeviceStates() {
   const { rows } = await db.query(
     `SELECT device_id, state
-     FROM iot_device_state
+     FROM silver.device_state_latest
      ORDER BY last_seen DESC`
   );
 
@@ -420,16 +431,38 @@ async function loadDeviceStates() {
   return restored;
 }
 
+
 async function loadRecentAlerts(limit = 100) {
-  const { rows } = await db.query(
-    `SELECT topic, event_type AS type, received_at AS "receivedAt", payload
-      FROM iot_events
-      WHERE event_type = 'alerts'
-      ORDER BY received_at DESC
-      LIMIT $1`,
-      [limit]
+  const silverResult = await db.query(
+    `SELECT 
+      source_topic AS topic, 
+      'alerts' AS type, 
+      event_ts AS "receivedAt", 
+      payload
+    FROM silver.alerts
+    ORDER BY event_ts DESC
+    LIMIT $1`,
+    [limit]
   );
-  return rows;
+
+  if (silverResult.rows.length) {
+    return silverResult.rows;
+  }
+
+  const bronzeResult = await db.query(
+    `SELECT
+      source_topic AS topic,
+      event_type AS type,
+      event_ts AS "receivedAt",
+      payload
+     FROM bronze.events_raw
+     WHERE event_type = 'alerts'
+     ORDER BY event_ts DESC, ingest_id DESC
+     LIMIT $1`,
+    [limit]
+  );
+
+  return bronzeResult.rows;
 }
 
 async function checkDbConnected() {
