@@ -516,7 +516,7 @@ mqttClient.on("message", async (topic, payload) => {
       const point = historyPointFromTelemetry(normalized);
       pushHistory(normalized.deviceId, point);
 
-      await persistBronzeTelemetry(normalized);
+      await persistBronzeTelemetry(topic, normalized);
       await upsertDeviceState(device);
     }
 
