@@ -59,7 +59,7 @@ CREATE INDEX IF NOT EXISTS silver_telemetry_zone_ts_idx
     ON silver.telemetry (zone_id, ts DESC);
 
 CREATE TABLE IF NOT EXISTS silver.device_state_latest (
-  device_id TEXT NOT NULL,
+  device_id TEXT PRIMARY KEY,
   zone_id TEXT NOT NULL,
   last_topic TEXT,
   last_seen TIMESTAMPTZ NOT NULL,
