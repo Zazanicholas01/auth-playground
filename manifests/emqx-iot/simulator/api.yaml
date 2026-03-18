@@ -66,11 +66,16 @@ spec:
             - name: api-code
               mountPath: /app/index.js
               subPath: index.js
+            - name: db-init-sql
+              mountPath: /app/db-init
           
       volumes:
         - name: api-code
           configMap:
             name: iot-api-code
+        - name: db-init-sql
+          configMap:
+            name: iot-timescaledb-init
 ---
 apiVersion: v1
 kind: Service
@@ -84,3 +89,5 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
+
+

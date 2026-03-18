@@ -1,7 +1,10 @@
+import { readdir, readFile } from "node:fs/promises";
 import mqtt from "mqtt";
 import pg from "pg";
 
 const { Pool } = pg;
+
+const bootstrapSqlDir = process.env.DB_BOOTSTRAP_SQL_DIR || "/app/db-init";
 
 const db = new Pool({
   host: process.env.DB_HOST || "iot-timescaledb",
@@ -14,6 +17,21 @@ const db = new Pool({
 
 async function initDb() {
   await db.query('CREATE EXTENSION IF NOT EXISTS timescaledb');
+
+  const scriptNames = (await readdir(bootstrapSqlDir))
+    .filter((name) => name.endsWith(".sql"))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+  for (const scriptName of scriptNames) {
+    const script = await readFile(`${bootstrapSqlDir}/${scriptName}`, "utf8");
+
+    if (!script.trim()) {
+      continue;
+    }
+
+    console.log(`applying database bootstrap script: ${scriptName}`);
+    await db.query(script);
+  }
 }
 
 async function warmCacheFromDb() {
@@ -749,4 +767,6 @@ Bun.serve({
     return json({ error: "not found" }, 404);
   },
 });
+
+
 
