@@ -15,8 +15,15 @@ resources:
   - config.yaml
   - simulator/timescaledb.yaml
   - simulator/dbgate.yaml
+  - simulator/bronze-silver-cron.yaml
 
 configMapGenerator:
   - name: iot-api-code
     files:
       - simulator/api/index.js
+  - name: iot-sql-scripts
+    files:
+      - simulator/sql/promote-bronze-to-silver.sql
+  - name: iot-timescaledb-init
+    files:
+      - simulator/sql/init.sql

@@ -12,8 +12,11 @@ from fastapi.responses import FileResponse, Response
 ROOT = Path(__file__).resolve().parent.parent
 STATIC_DIR = Path(os.environ.get("UI_STATIC_DIR", ROOT / "ui")).resolve()
 DEV_ASSET_DIR = Path(os.environ.get("UI_DEV_ASSET_DIR", ROOT / "ui" / "dev-assets")).resolve()
-UPSTREAM_BASE = os.environ.get("IOT_UPSTREAM_BASE", "http://iot.local:8080").rstrip("/")
+
+API_UPSTREAM_BASE = os.environ.get("API_UPSTREAM_BASE", os.environ.get("IOT_UPSTREAM_BASE", "http://127.0.0.1:8080")).rstrip("/")
+SIMULATOR_UPSTREAM_BASE = os.environ.get("SIMULATOR_UPSTREAM_BASE", "http://iot.local").rstrip("/")
 PROXY_PREFIXES = ("/api", "/simulator")
+
 HOP_BY_HOP_HEADERS = {
     "connection",
     "keep-alive",
@@ -65,7 +68,18 @@ async def shutdown() -> None:
 @app.api_route("/api/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
 @app.api_route("/simulator/{path:path}", methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])
 async def proxy(path: str, request: Request) -> Response:
-    upstream_url = f"{UPSTREAM_BASE}{request.url.path}"
+    request_path = request.url.path
+
+    if request_path.startswith("/api/"):
+        upstream_base = API_UPSTREAM_BASE
+        upstream_path = f"/{path}"
+    elif request_path.startswith("/simulator/"):
+        upstream_base = SIMULATOR_UPSTREAM_BASE
+        upstream_path = f"/{path}"
+    else:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    upstream_url = f"{upstream_base}{upstream_path}"
     if request.url.query:
         upstream_url = f"{upstream_url}?{request.url.query}"
 

@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: iot-bronze-to-silver
+  namespace: iot-playground
+spec:
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: promoter
+              image: postgres:16
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: iot-timescaledb-secret
+                      key: password
+              
+              command:
+                - /bin/sh
+                - -c
+                - psql -h iot-timescaledb -U iot_app -d iot_playground -f /sql/promote-bronze-to-silver.sql
+              
+              volumeMounts:
+                - name: sql-scripts
+                  mountPath: /sql
+                
+          volumes:
+            - name: sql-scripts
+              configMap:
+                name: iot-sql-scripts
+                items:
+                  - key: promote-bronze-to-silver.sql
+                    path: promote-bronze-to-silver.sql
