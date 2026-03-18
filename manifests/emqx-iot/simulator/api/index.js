@@ -465,6 +465,60 @@ async function loadRecentAlerts(limit = 100) {
   return bronzeResult.rows;
 }
 
+async function loadGoldFleetSummary() {
+  const { rows } = await db.query(
+    `SELECT *
+     FROM gold.fleet_summary_latest`
+  );
+  return rows[0] || null;
+}
+
+async function loadGoldZoneHealth() {
+  const { rows } = await db.query(
+    `SELECT *
+     FROM gold.zone_health_latest
+     ORDER BY zone_id ASC`
+  );
+  return rows;
+}
+
+async function loadGoldAlertCounts(limit = 72) {
+  const { rows } = await db.query(
+    `SELECT
+      bucket,
+      zone_id,
+      severity,
+      alert_count
+     FROM gold.alert_counts_1h
+     ORDER BY bucket DESC, zone_id ASC, severity ASC
+     LIMIT $1`,
+    [limit]
+  );
+  return rows;
+}
+
+async function loadGoldZoneMetrics(limit = 288) {
+  const { rows } = await db.query(
+    `SELECT
+      bucket,
+      zone_id,
+      avg_temperature,
+      min_temperature,
+      max_temperature,
+      avg_humidity,
+      avg_co2,
+      avg_vpd,
+      avg_soil_moisture,
+      avg_irrigation_flow,
+      sample_count
+     FROM gold.zone_metrics_5m
+     ORDER BY bucket DESC, zone_id ASC
+     LIMIT $1`,
+    [limit]
+  );
+  return rows;
+}
+
 async function checkDbConnected() {
   try {
     await db.query("SELECT 1");
@@ -672,6 +726,24 @@ Bun.serve({
         actuators: ["vent", "heater", "fan", "mister", "irrigation", "growLight"],
         derived: ["dewPoint", "vpd", "evapotranspiration", "irrigationDemand"],
       });
+    }
+
+    if (url.pathname === "/gold/fleet-summary") {
+      return json(await loadGoldFleetSummary());
+    }
+
+    if (url.pathname === "/gold/zones") {
+      return json(await loadGoldZoneHealth());
+    }
+
+    if (url.pathname === "/gold/alerts-hourly") {
+      const limit = Number(url.searchParams.get("limit") || 72);
+      return json(await loadGoldAlertCounts(limit));
+    }
+
+    if (url.pathname === "/gold/zone-metrics") {
+      const limit = Number(url.searchParams.get("limit") || 288);
+      return json(await loadGoldZoneMetrics(limit));
     }
 
     return json({ error: "not found" }, 404);

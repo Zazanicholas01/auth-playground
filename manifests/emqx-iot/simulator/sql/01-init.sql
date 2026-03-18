@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS silver.device_state_latest (
   last_topic TEXT,
   last_seen TIMESTAMPTZ NOT NULL,
   state JSONB NOT NULL
-)
+);
 
 CREATE INDEX IF NOT EXISTS silver_device_state_last_seen_idx
   ON silver.device_state_latest (last_seen DESC);

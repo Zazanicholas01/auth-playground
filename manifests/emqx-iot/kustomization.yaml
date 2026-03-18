@@ -26,4 +26,5 @@ configMapGenerator:
       - simulator/sql/promote-bronze-to-silver.sql
   - name: iot-timescaledb-init
     files:
-      - simulator/sql/init.sql
+      - simulator/sql/01-init.sql
+      - simulator/sql/03-gold-layer.sql
