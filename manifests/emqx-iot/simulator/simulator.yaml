@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: simulator
-          image: ghcr.io/zazanicholas01/greenhouse-iot-simulator:run-23061005984 # {"$imagepolicy": "flux-system:greenhouse-iot-simulator"}
+          image: ghcr.io/zazanicholas01/greenhouse-iot-simulator:run-5 # {"$imagepolicy": "flux-system:greenhouse-iot-simulator"}
           imagePullPolicy: Always
           command: ["bun", "run", "index.js"]
           env:
