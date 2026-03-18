@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: ghcr.io/zazanicholas01/greenhouse-iot-api:run-23061005974 # {"$imagepolicy": "flux-system:greenhouse-iot-api"}
+          image: ghcr.io/zazanicholas01/greenhouse-iot-api:run-5 # {"$imagepolicy": "flux-system:greenhouse-iot-api"}
           imagePullPolicy: Always
           command: ["bun", "run", "index.js"]
           ports:
@@ -34,7 +34,7 @@ spec:
               value: iot-timescaledb
             - name: DB_PORT
               value: "5432"
-            - name: DB_NAME 
+            - name: DB_NAME
               valueFrom:
                 secretKeyRef:
                   name: iot-timescaledb-secret
@@ -61,14 +61,12 @@ spec:
               port: 8080
             initialDelaySeconds: 15
             periodSeconds: 20
-          
           volumeMounts:
             - name: api-code
               mountPath: /app/index.js
               subPath: index.js
             - name: db-init-sql
               mountPath: /app/db-init
-          
       volumes:
         - name: api-code
           configMap:
@@ -89,5 +87,3 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
-
-
