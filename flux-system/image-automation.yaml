@@ -16,7 +16,7 @@ spec:
   imageRepositoryRef:
     name: greenhouse-iot-ui
   filterTags:
-    pattern: '^run-(?P<num>[0-9]+)$'
+    pattern: '^run-(?P<num>[0-9]{1,4})$'
     extract: '$num'
   policy:
     numerical:
@@ -40,8 +40,9 @@ spec:
   imageRepositoryRef:
     name: greenhouse-iot-api
   filterTags:
-    pattern: '^run-(?P<num>[0-9]+)$'
+    pattern: '^run-(?P<num>[0-9]{1,4})$'
     extract: '$num'
+
   policy:
     numerical:
       order: desc
@@ -64,8 +65,9 @@ spec:
   imageRepositoryRef:
     name: greenhouse-iot-simulator
   filterTags:
-    pattern: '^run-(?P<num>[0-9]+)$'
+    pattern: '^run-(?P<num>[0-9]{1,4})$'
     extract: '$num'
+
   policy:
     numerical:
       order: desc
