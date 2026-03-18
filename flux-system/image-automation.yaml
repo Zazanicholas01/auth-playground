@@ -20,7 +20,7 @@ spec:
     extract: '$num'
   policy:
     numerical:
-      order: asc
+      order: desc
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
@@ -44,7 +44,7 @@ spec:
     extract: '$num'
   policy:
     numerical:
-      order: asc
+      order: desc
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageRepository
@@ -68,7 +68,7 @@ spec:
     extract: '$num'
   policy:
     numerical:
-      order: asc
+      order: desc
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageUpdateAutomation
