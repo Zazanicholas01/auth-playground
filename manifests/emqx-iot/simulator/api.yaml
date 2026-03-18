@@ -34,7 +34,7 @@ spec:
               value: iot-timescaledb
             - name: DB_PORT
               value: "5432"
-            - name: DB_NAME
+            - name: DB_NAME 
               valueFrom:
                 secretKeyRef:
                   name: iot-timescaledb-secret
