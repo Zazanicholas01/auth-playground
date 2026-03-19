@@ -34,6 +34,20 @@ async function initDb() {
     }
 
     console.log(`applying database bootstrap script: ${scriptName}`);
+
+    if (scriptName === "04-gold-continuous-aggregates.sql") {
+      const statements = script
+        .split(/;\s*\n/g)
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+      for (const statement of statements) {
+        await db.query(`${statement};`);
+      }
+
+      continue;
+    }
+
     await db.query(script);
   }
 }
