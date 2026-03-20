@@ -14,9 +14,9 @@
   --panel-strong: rgba(6, 10, 12, 0.98);
   --line: rgba(80, 114, 112, 0.15);
   --line-strong: rgba(80, 114, 112, 0.26);
-  --text: #24343a;
-  --text-strong: #10191d;
-  --muted: #687d84;
+  --text: #feffff;
+  --text-strong: #000000;
+  --muted: #000000;
   --accent-green: #3f9567;
   --accent-blue: #4c9bd3;
   --accent-mix: #4f9f9e;
@@ -29,10 +29,17 @@
   --critical: #b65555;
   --critical-soft: #f6e1e1;
   --hero-wash: linear-gradient(135deg, rgba(78, 160, 111, 0.14), rgba(255, 255, 255, 0) 44%, rgba(76, 155, 211, 0.14));
-  --surface-wash: rgb(9, 58, 70);
+  --surface-wash: var(--hero-wash),
+    radial-gradient(circle at top left, rgba(63, 149, 103, 0.10), transparent 28%),
+    radial-gradient(circle at top right, rgba(76, 155, 211, 0.10), transparent 24%),
+    linear-gradient(135deg, rgba(119, 255, 180, 0.97), rgba(58, 94, 77, 0.95) 44%, rgba(51, 158, 112, 0.95) 46%, rgba(31, 94, 66, 0.95) 48%,
+     rgba(11, 56, 94, 0.95) 68%, rgba(23, 145, 245, 0.95) 70%, rgba(8, 43, 100, 0.95) 72%, rgba(0, 2, 8, 0.98));
   --chip-wash: linear-gradient(180deg, rgba(240,247,245,0.98), rgba(227,238,241,1));
   --map-tint: saturate(0.92) contrast(0.98) brightness(1.01);
-  --shadow: 0 16px 36px rgba(8, 12, 14, 0.18);
+  --shadow:
+    0 20px 50px rgba(3, 12, 18, 0.18),
+    0 8px 20px rgba(3, 12, 18, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 * { box-sizing: border-box; }
@@ -41,9 +48,7 @@ body {
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at top left, rgba(63, 149, 103, 0.16), transparent 28%),
-    radial-gradient(circle at top right, rgba(76, 155, 211, 0.16), transparent 24%),
-    linear-gradient(180deg,  rgba(53, 245, 139, 0.8) 0%,  rgba(3, 13, 71, 0.8) 100%);
+    linear-gradient(to right, #434343 0%, black 100%);
 }
 
 a { color: inherit; }
@@ -76,15 +81,16 @@ button { font: inherit; }
     radial-gradient(circle at top left, rgba(63, 149, 103, 0.10), transparent 28%),
     radial-gradient(circle at top right, rgba(76, 155, 211, 0.10), transparent 24%),
     linear-gradient(135deg, rgba(36, 36, 36, 0.97), rgba(23, 34, 29, 0.95) 44%, rgba(75, 240, 168, 0.95) 46%, rgba(31, 94, 66, 0.95) 48%,
-     rgba(11, 56, 94, 0.95) 68%, rgba(23, 145, 245, 0.95) 70%, rgba(8, 43, 100, 0.95) 72%, rgba(0, 2, 8, 0.98));;
+     rgba(11, 56, 94, 0.95) 68%, rgba(23, 145, 245, 0.95) 70%, rgba(8, 43, 100, 0.95) 72%, rgba(0, 2, 8, 0.98));
 }
 
 .brand-block { display: grid; gap: 4px; }
 .brand-eyebrow, .eyebrow, .section-label, .status-label, .kpi-label {
-  color: #def7f5;
+  color: #000000;
   font-size: 10px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  font-weight: bold;
 }
 .brand-block h1,
 .workspace-toolbar-copy h2,
@@ -95,9 +101,10 @@ button { font: inherit; }
 .panel-head-inline h3,
 .zone-hero h3 {
   margin: 0;
-  color: var(--text-strong);
+  color: #040f2e;
   line-height: 1;
   letter-spacing: -0.02em;
+  font-weight: bold;
 }
 .brand-block h1 {
   font-size: 28px;
@@ -281,7 +288,6 @@ button { font: inherit; }
 .incident-list,
 .asset-selector-list,
 .chart-grid,
-.mini-metric-grid,
 .metric-chip-row,
 .fleet-hero-grid,
 .operations-layout-grid,
@@ -295,21 +301,35 @@ button { font: inherit; }
   gap: 10px;
 }
 
+.mini-metric-grid {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
 .panel-subtle,
-.summary-stack-card,
 .detail-card,
 .zone-summary-card,
 .fleet-main-card,
 .command-card,
 .priority-board,
 .chart-card,
-.kpi-card,
 .badge-card,
 .zone-hero {
   padding: 14px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(227,237,236,0.94), rgba(216,228,232,0.99));
+  background: linear-gradient(135deg, rgba(26, 75, 68, 0.94), rgba(31, 31, 31, 0.94) 34%, rgba(0, 0, 0, 0.94) 40%, rgba(36, 88, 71, 0.94) 70%, rgba(0, 0, 0, 0.94) 75%, rgba(119, 119, 119, 0.99));
+  box-shadow: var(--shadow);
+}
+
+.summary-stack-card,
+.kpi-card {
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  background: linear-gradient(180deg, rgba(199, 199, 199, 0.94), rgba(240, 240, 240, 0.99));
 }
 
 .focus-path {
@@ -365,7 +385,7 @@ button { font: inherit; }
   gap: 4px;
   padding: 10px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, rgba(232,241,241,0.92), rgba(224,235,238,0.98));
+  background: linear-gradient(180deg, rgba(201, 233, 233, 0.92), rgba(224,235,238,0.98));
   border: 1px solid var(--line);
 }
 .metric-chip strong,
@@ -446,29 +466,56 @@ body[data-page="sensors"] .page-sensors {
 }
 .map-hotspot {
   position: absolute;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -120%);
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 10px;
+  padding: 10px 12px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(228,238,237,0.96), rgba(217,228,232,0.99));
-  box-shadow: 0 8px 18px rgba(41, 74, 72, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.72),
+    rgba(226, 236, 240, 0.58)
+  );
+  backdrop-filter: blur(14px) saturate(1.1);
+  box-shadow:
+    0 14px 32px rgba(9, 22, 28, 0.18),
+    0 4px 12px rgba(9, 22, 28, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
   color: var(--text);
   cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
 }
-.map-hotspot.active { border-color: var(--line-strong); }
-.map-hotspot.managed {
-  background: linear-gradient(135deg, rgba(223,239,229,0.96), rgba(220,236,248,0.92));
+
+.map-hotspot:hover {
+  transform: translate(-50%, calc(-50% - 2px));
+  box-shadow:
+    0 18px 38px rgba(9, 22, 28, 0.22),
+    0 6px 16px rgba(9, 22, 28, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
 }
+
+.map-hotspot.active {
+  border-color: rgba(79, 159, 158, 0.35);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.82),
+    rgba(226, 241, 240, 0.72)
+  );
+}
+
 .map-hotspot-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: currentColor;
-  opacity: 0.8;
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 18%, transparent);
 }
 .map-hotspot.normal { color: var(--accent-mix); }
 .map-hotspot.warning { color: var(--warning); }

@@ -62,15 +62,9 @@ spec:
             initialDelaySeconds: 15
             periodSeconds: 20
           volumeMounts:
-            - name: api-code
-              mountPath: /app/index.js
-              subPath: index.js
             - name: db-init-sql
               mountPath: /app/db-init
       volumes:
-        - name: api-code
-          configMap:
-            name: iot-api-code
         - name: db-init-sql
           configMap:
             name: iot-timescaledb-init
