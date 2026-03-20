@@ -1,4 +1,15 @@
-import { calcZoneHealthScore, edgeSeverityClass, fmt, severityClass, zoneDeviationSummary } from "./workspace-helpers.js";
+import {
+  calcZoneHealthScore,
+  edgeSeverityClass,
+  fmt,
+  severityClass,
+  surfaceClass,
+  surfaceTextToneClass,
+  textToneClass,
+  zoneDeviationSummary
+} from "./workspace-helpers.js";
+
+
 
 function percent(value) {
   return Math.round((value ?? 0) * 100);
@@ -9,80 +20,81 @@ function severityCount(zones, level) {
 }
 
 function metricCard(label, value, note, tone = "normal") {
+  const surface = "light";
+
   return `
-    <article class="kpi-card">
-      <div class="kpi-label">${label}</div>
+    <article class="kpi-card ${surfaceClass(surface)}">
+      <div class="kpi-label ${surfaceTextToneClass(surface, "soft")}">${label}</div>
       <div class="kpi-value-row">
-        <strong>${value}</strong>
+        <strong class="${surfaceTextToneClass(surface, "strong")}">${value}</strong>
         <span class="pill ${tone}">${tone === "normal" ? "stable" : tone}</span>
       </div>
-      <p>${note}</p>
+      <p class="${surfaceTextToneClass(surface, "muted")}">${note}</p>
     </article>
   `;
 }
 
+
 function zoneStageBadge(title, value, note, tone = "normal") {
+  const surface = "dark";
+
   return `
-    <article class="badge-card">
-      <span class="section-label">${title}</span>
-      <strong>${value}</strong>
-      <span>${note}</span>
-      <span class="pill ${tone}">${tone}</span>
+    <article class="badge-card ${surfaceClass(surface)}">
+      <div class="badge-card-top">
+        <span class="section-label ${surfaceTextToneClass(surface, "soft")}">${title}</span>
+        <span class="pill ${tone}">${tone}</span>
+      </div>
+
+      <div class="badge-card-main">
+        <strong class="badge-card-value ${surfaceTextToneClass(surface, "strong")}">${value}</strong>
+        <p class="badge-card-note ${surfaceTextToneClass(surface, "muted")}">${note}</p>
+      </div>
     </article>
   `;
 }
+
+
+
 
 function mapHotspot(zone, active, managed) {
   return `
     <button
       type="button"
-      class="map-hotspot ${active ? "active" : ""} ${managed ? "managed" : ""} ${severityClass(zone.severity)}"
+      class="map-hotspot ${surfaceClass("light")} ${active ? "active" : ""} ${managed ? "managed" : ""} ${severityClass(zone.severity)}"
       data-zone-hotspot="${zone.id}"
       style="left:${((zone.x + zone.width / 2) / 980 * 100).toFixed(2)}%; top:${((zone.y + zone.height / 2) / 640 * 100).toFixed(2)}%;"
       aria-pressed="${active ? "true" : "false"}"
     >
       <span class="map-hotspot-dot"></span>
       <span class="map-hotspot-copy">
-        <strong>${zone.name}</strong>
-        <span>${calcZoneHealthScore(zone)} health</span>
+        <strong class="${textToneClass("strong")}">${zone.name}</strong>
+        <span class="${textToneClass("muted")}">${calcZoneHealthScore(zone)} health</span>
       </span>
     </button>
   `;
 }
 
-function renderAssetGrid(zone) {
-  return `
-    <div class="asset-matrix">
-      ${zone.assets.map((asset) => `
-        <article class="asset-load-card ${severityClass(zone.severity)}">
-          <div class="asset-load-head">
-            <strong>${asset.name}</strong>
-            <span>${asset.type}</span>
-          </div>
-          <div class="asset-load-bar"><span style="width:${percent(asset.load)}%"></span></div>
-          <div class="asset-load-meta">
-            <span>${asset.metricLabel}</span>
-            <strong>${percent(asset.load)}%</strong>
-          </div>
-        </article>
-      `).join("")}
-    </div>
-  `;
-}
 
 function renderGatewayFocus(devices, activeDevice) {
+  const surface = "light";
+
   return `
     <div class="gateway-cluster">
       ${devices.map((device) => `
-        <button type="button" class="gateway-chip ${device.id === activeDevice.id ? "active" : ""}" data-gateway-hotspot="${device.id}">
+        <button
+          type="button"
+          class="gateway-chip ${surfaceClass(surface)} ${device.id === activeDevice.id ? "active" : ""}"
+          data-gateway-hotspot="${device.id}"
+        >
           <span class="pill ${edgeSeverityClass(device.status)}">${device.status}</span>
-          <strong>${device.name}</strong>
-          <span>${device.sensors.length} sensors</span>
+          <strong class="${surfaceTextToneClass(surface, "strong")}">${device.name}</strong>
+          <span class="${surfaceTextToneClass(surface, "muted")}">${device.sensors.length} sensors</span>
         </button>
       `).join("")}
     </div>
   `;
 }
+
 
 export function renderMapWorkspacePage({
   state,
@@ -106,7 +118,7 @@ export function renderMapWorkspacePage({
 
   if (overviewKpisEl) {
     overviewKpisEl.innerHTML = [
-      metricCard("Managed scope", `${managed.length}/${state.zones.length}`, `${managed.map((item) => item.name).join(" � ")}`, "normal"),
+      metricCard("Managed scope", `${managed.length}/${state.zones.length}`, `${managed.map((item) => item.name).join(" - ")}`, "normal"),
       metricCard("Facility heat", fmt(avgTemp, 1, " C"), `${criticalCount} critical zone${criticalCount === 1 ? "" : "s"} in command view`, criticalCount ? "critical" : warningCount ? "warning" : "normal"),
       metricCard("Root-zone posture", fmt(avgMoisture, 2, ""), `${warningCount} warning zone${warningCount === 1 ? "" : "s"} drifting from recipe`, warningCount ? "warning" : "normal"),
       metricCard("Incident pressure", `${state.alerts.length}`, zoneDeviationSummary(zone), criticalCount ? "critical" : state.alerts.length ? "warning" : "normal")
@@ -117,7 +129,7 @@ export function renderMapWorkspacePage({
     sceneBadgesEl.innerHTML = [
       zoneStageBadge("Focused zone", zone.name, zoneDeviationSummary(zone), severityClass(zone.severity)),
       zoneStageBadge("Managed footprint", `${managed.length} zones`, `${managed.reduce((sum, item) => sum + item.assets.length, 0)} addressable assets`, "normal"),
-      zoneStageBadge("Telemetry posture", `${calcZoneHealthScore(zone)} health`, `${fmt(zone.indoor.temperature, 1, " C")} air � ${fmt(zone.derived.vpd, 2, " kPa")} VPD`, severityClass(zone.severity))
+      zoneStageBadge("Telemetry posture", `${calcZoneHealthScore(zone)} health`, `${fmt(zone.indoor.temperature, 1, " C")} air - ${fmt(zone.derived.vpd, 2, " kPa")} VPD`, severityClass(zone.severity))
     ].join("");
   }
 
@@ -147,22 +159,75 @@ export function renderMapWorkspacePage({
 
   if (mapZonePanelEl) {
     mapZonePanelEl.innerHTML = `
-      <article class="zone-summary-card ${severityClass(zone.severity)}">
+      <article class="zone-summary-card ${surfaceClass("dark")} ${severityClass(zone.severity)}">
         <div class="zone-summary-head">
           <div>
-            <span class="section-label">Selected Zone</span>
-            <h3>${zone.name}</h3>
+            <span class="section-label ${textToneClass("soft")}">Selected Zone</span>
+            <h3 class="${textToneClass("strong")}">${zone.name}</h3>
           </div>
           <span class="pill ${severityClass(zone.severity)}">${zone.severity}</span>
         </div>
-        <p>${zoneDeviationSummary(zone)}</p>
+
+        <p class="${textToneClass("muted")}">${zoneDeviationSummary(zone)}</p>
+
         <div class="mini-metric-grid">
-          <div class="mini-metric"><span>Air</span><strong>${fmt(zone.indoor.temperature, 1, " C")}</strong></div>
-          <div class="mini-metric"><span>Humidity</span><strong>${fmt(zone.indoor.humidity, 0, " %")}</strong></div>
-          <div class="mini-metric"><span>Root moisture</span><strong>${fmt(zone.soil.moisture, 2, "")}</strong></div>
-          <div class="mini-metric"><span>Irrigation</span><strong>${fmt(zone.soil.irrigationFlow, 1, " L/min")}</strong></div>
+          <div class="mini-metric ${surfaceClass("light")} mini-metric--air">
+            <div class="mini-metric-copy">
+              <span class="${textToneClass("soft")}">Air</span>
+              <strong class="${textToneClass("strong")}">${fmt(zone.indoor.temperature, 1, " C")}</strong>
+            </div>
+            <span class="mini-metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" class="mini-metric-svg">
+                <path d="M12 3v10" />
+                <path d="M9 6a3 3 0 1 1 6 0v7a5 5 0 1 1-6 0V6" />
+              </svg>
+            </span>
+          </div>
+
+          <div class="mini-metric ${surfaceClass("light")} mini-metric--humidity">
+            <div class="mini-metric-copy">
+              <span class="${textToneClass("soft")}">Humidity</span>
+              <strong class="${textToneClass("strong")}">${fmt(zone.indoor.humidity, 0, " %")}</strong>
+            </div>
+            <span class="mini-metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" class="mini-metric-svg">
+                <path d="M12 3C9 7 7 9.5 7 13a5 5 0 0 0 10 0c0-3.5-2-6-5-10Z" />
+              </svg>
+            </span>
+          </div>
+
+          <div class="mini-metric ${surfaceClass("light")} mini-metric--root">
+            <div class="mini-metric-copy">
+              <span class="${textToneClass("soft")}">Root moisture</span>
+              <strong class="${textToneClass("strong")}">${fmt(zone.soil.moisture, 2, "")}</strong>
+            </div>
+            <span class="mini-metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" class="mini-metric-svg">
+                <path d="M12 4v8" />
+                <path d="M12 12c-4 0-6 2-6 5" />
+                <path d="M12 12c4 0 6 2 6 5" />
+                <path d="M12 12c0 4-1 6-3 8" />
+                <path d="M12 12c0 4 1 6 3 8" />
+              </svg>
+            </span>
+          </div>
+
+          <div class="mini-metric ${surfaceClass("light")} mini-metric--irrigation">
+            <div class="mini-metric-copy">
+              <span class="${textToneClass("soft")}">Irrigation</span>
+              <strong class="${textToneClass("strong")}">${fmt(zone.soil.irrigationFlow, 1, " L/min")}</strong>
+            </div>
+            <span class="mini-metric-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" class="mini-metric-svg">
+                <path d="M4 13h8" />
+                <path d="M12 10v6" />
+                <path d="M15 8c3 2 5 4 5 7a3 3 0 0 1-6 0c0-2 1-4 1-7Z" />
+              </svg>
+            </span>
+          </div>
+
+
         </div>
-        ${renderAssetGrid(zone)}
       </article>
     `;
   }
@@ -206,15 +271,29 @@ export function renderTwinWorkspacePage({
 
   if (twinGatewayListEl) {
     twinGatewayListEl.innerHTML = devices.map((device) => `
-      <button type="button" class="entity-card ${device.id === activeDevice.id ? "active" : ""}" data-twin-gateway-id="${device.id}">
+      <button
+        type="button"
+        class="entity-card ${surfaceClass("light")} ${device.id === activeDevice.id ? "active" : ""}"
+        data-twin-gateway-id="${device.id}"
+      >
         <div class="entity-header">
-          <strong>${device.name}</strong>
+          <strong class="${textToneClass("strong")}">${device.name}</strong>
           <span class="pill ${edgeSeverityClass(device.status)}">${device.status}</span>
         </div>
-        <div class="entity-meta">${device.sensors.length} sensors � ${device.brokerLink}</div>
+
+        <div class="entity-meta ${textToneClass("muted")}">
+          ${device.sensors.length} sensors &middot; ${device.brokerLink}
+        </div>
+
         <div class="metric-chip-row">
-          <span class="metric-chip"><label>Signal</label><strong>${device.signalRssi} dBm</strong></span>
-          <span class="metric-chip"><label>Loss</label><strong>${device.packetLossPct}%</strong></span>
+          <span class="metric-chip ${surfaceClass("light")}">
+            <label class="${textToneClass("soft")}">Signal</label>
+            <strong class="${textToneClass("strong")}">${device.signalRssi} dBm</strong>
+          </span>
+          <span class="metric-chip ${surfaceClass("light")}">
+            <label class="${textToneClass("soft")}">Loss</label>
+            <strong class="${textToneClass("strong")}">${device.packetLossPct}%</strong>
+          </span>
         </div>
       </button>
     `).join("");
@@ -252,15 +331,15 @@ export function renderTwinWorkspacePage({
         </div>
         <div class="sensor-flow-grid">
           ${activeDevice.sensors.map((sensor) => `
-            <article class="sensor-flow-card ${edgeSeverityClass(sensor.status)}">
+            <article class="sensor-flow-card ${surfaceClass("light")} ${edgeSeverityClass(sensor.status)}">
               <div>
-                <span class="section-label">Sensor path</span>
-                <strong>${sensor.name}</strong>
+                <span class="section-label ${textToneClass("soft")}">Sensor path</span>
+                <strong class="${textToneClass("strong")}">${sensor.name}</strong>
               </div>
-              <span>${sensor.metricType}</span>
+              <span class="${textToneClass("muted")}">${sensor.metricType}</span>
               <div class="sensor-flow-line"></div>
               <div class="sensor-flow-meta">
-                <span>${sensor.lastReading || "--"}</span>
+                <span class="${textToneClass("muted")}">${sensor.lastReading || "--"}</span>
                 <span class="pill ${edgeSeverityClass(sensor.status)}">${sensor.status}</span>
               </div>
             </article>
@@ -293,7 +372,7 @@ export function renderOperationsWorkspacePage({ state, opsSummaryEl, operationsB
 
   if (opsSummaryEl) {
     opsSummaryEl.innerHTML = [
-      metricCard("Managed zones", `${managed.length}`, managed.map((zone) => zone.name).join(" � "), "normal"),
+      metricCard("Managed zones", `${managed.length}`, managed.map((zone) => zone.name).join(" - "), "normal"),
       metricCard("Focused zone", focused.name, zoneDeviationSummary(focused), severityClass(focused.severity)),
       metricCard("Average climate", fmt(avgTemp, 1, " C"), `${fmt(avgHumidity, 0, " %")} RH across command scope`, "normal"),
       metricCard("Assets / alerts", `${totalAssets}`, `${state.alerts.length} active incidents in the command picture`, state.alerts.length ? "warning" : "normal")
@@ -303,20 +382,28 @@ export function renderOperationsWorkspacePage({ state, opsSummaryEl, operationsB
   if (operationsBoardEl) {
     operationsBoardEl.innerHTML = `
       <section class="command-strip">
-        <article class="command-card ${severityClass(riskQueue[0]?.severity || "normal")}">
-          <span class="section-label">Highest-risk zone</span>
-          <strong>${riskQueue[0]?.name || "--"}</strong>
-          <p>${riskQueue[0] ? zoneDeviationSummary(riskQueue[0]) : "No zone selected"}</p>
+        <article class="command-card ${surfaceClass("light")} ${severityClass(riskQueue[0]?.severity || "normal")}">
+          <span class="section-label ${textToneClass("soft")}">Highest-risk zone</span>
+          <strong class="${textToneClass("strong")}">${riskQueue[0]?.name || "--"}</strong>
+          <p class="${textToneClass("muted")}">
+            ${riskQueue[0] ? zoneDeviationSummary(riskQueue[0]) : "No zone selected"}
+          </p>
         </article>
-        <article class="command-card ${state.alerts.length ? "warning" : "normal"}">
-          <span class="section-label">Incident queue</span>
-          <strong>${state.alerts.length}</strong>
-          <p>${state.alerts.length ? "Use the evidence rail to pivot into graph and asset context." : "No active incidents in managed scope."}</p>
+
+        <article class="command-card ${surfaceClass("light")} ${state.alerts.length ? "warning" : "normal"}">
+          <span class="section-label ${textToneClass("soft")}">Incident queue</span>
+          <strong class="${textToneClass("strong")}">${state.alerts.length}</strong>
+          <p class="${textToneClass("muted")}">
+            ${state.alerts.length ? "Use the evidence rail to pivot into graph and asset context." : "No active incidents in managed scope."}
+          </p>
         </article>
-        <article class="command-card ${severityClass(focused.severity)}">
-          <span class="section-label">Focused response</span>
-          <strong>${focused.name}</strong>
-          <p>${focused.alerts[0] || "No explicit alarms, continue monitoring asset load and drift."}</p>
+
+        <article class="command-card ${surfaceClass("light")} ${severityClass(focused.severity)}">
+          <span class="section-label ${textToneClass("soft")}">Focused response</span>
+          <strong class="${textToneClass("strong")}">${focused.name}</strong>
+          <p class="${textToneClass("muted")}">
+            ${focused.alerts[0] || "No explicit alarms, continue monitoring asset load and drift."}
+          </p>
         </article>
       </section>
       <section class="operations-layout-grid">
@@ -422,23 +509,42 @@ export function renderGraphWorkspacePage({ state, graphGridEl, managedZones, sel
     const values = history.map((point) => metric.getHistory(point)).filter((value) => typeof value === "number");
     const min = Math.min(...values);
     const max = Math.max(...values);
+
     return `
-      <article class="chart-card">
+      <article class="chart-card ${surfaceClass("light")}">
         <div class="chart-head">
           <div>
-            <span class="section-label">${state.graphComparisonMode === "managed" ? "Managed comparison" : `Focused trend / ${zone.name}`}</span>
-            <h3>${metric.label}</h3>
+            <span class="section-label ${textToneClass("soft")}">
+              ${state.graphComparisonMode === "managed" ? "Managed comparison" : `Focused trend / ${zone.name}`}
+            </span>
+            <h3 class="${textToneClass("strong")}">${metric.label}</h3>
           </div>
           <span class="pill normal">${history.length} pts</span>
         </div>
-        <div class="chart-meta"><span>Min ${fmt(min, metric.digits, metric.suffix)}</span><span>Max ${fmt(max, metric.digits, metric.suffix)}</span></div>
+
+        <div class="chart-meta">
+          <span class="${textToneClass("muted")}">Min ${fmt(min, metric.digits, metric.suffix)}</span>
+          <span class="${textToneClass("muted")}">Max ${fmt(max, metric.digits, metric.suffix)}</span>
+        </div>
+
         ${trendChart(values, metric.color)}
+
         <div class="chart-comparisons">
           ${state.graphComparisonMode === "managed"
-            ? managed.map((item) => `<div class="chart-row"><span>${item.name}</span><strong>${fmt(metric.getCurrent(item), metric.digits, metric.suffix)}</strong></div>`).join("")
-            : `<div class="chart-note">Focused on ${zone.name} while keeping incidents and asset evidence visible.</div>`}
+            ? managed.map((item) => `
+                <div class="chart-row ${surfaceClass("light")}">
+                  <span class="${textToneClass("muted")}">${item.name}</span>
+                  <strong class="${textToneClass("strong")}">${fmt(metric.getCurrent(item), metric.digits, metric.suffix)}</strong>
+                </div>
+              `).join("")
+            : `<div class="chart-note ${textToneClass("muted")}">Focused on ${zone.name} while keeping incidents and asset evidence visible.</div>`}
         </div>
-        <div class="chart-meta time-axis"><span>${startLabel}</span><span>${middleLabel}</span><span>${endLabel}</span></div>
+
+        <div class="chart-meta time-axis">
+          <span class="${textToneClass("soft")}">${startLabel}</span>
+          <span class="${textToneClass("soft")}">${middleLabel}</span>
+          <span class="${textToneClass("soft")}">${endLabel}</span>
+        </div>
       </article>
     `;
   }).join("");

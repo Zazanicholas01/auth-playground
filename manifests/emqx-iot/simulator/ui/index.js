@@ -26,8 +26,11 @@ import {
   selectedZone,
   selectedZoneLabel,
   severityClass,
+  surfaceClass,
+  surfaceTextToneClass,
   zoneDeviationSummary
 } from "./workspace-helpers.js";
+
 import {
   renderGraphWorkspacePage,
   renderMapWorkspacePage,
@@ -132,21 +135,25 @@ const twinPhotoUrl = "/dev-assets/greenhouse-twin.png";
 
 function incidentCardHtml({ timeLabel, scopeLabel, severity, message, actionHtml = "", dataAttrs = "" }) {
   const severityTone = severityClass(severity);
+  const surface = "light";
+
   return `
-    <article class="event-card ${severityTone}" ${dataAttrs}>
+    <article class="event-card ${surfaceClass(surface)} ${severityTone}" ${dataAttrs}>
       <div class="event-rail"></div>
       <div class="event-main">
         <div class="event-topline">
-          <span class="event-time">${timeLabel}</span>
+          <span class="event-time ${surfaceTextToneClass(surface, "soft")}">${timeLabel}</span>
           <span class="pill ${severityTone}">${severity || "normal"}</span>
         </div>
-        <strong>${scopeLabel}</strong>
-        <p>${message}</p>
+        <strong class="${surfaceTextToneClass(surface, "strong")}">${scopeLabel}</strong>
+        <p class="${surfaceTextToneClass(surface, "muted")}">${message}</p>
       </div>
       <div class="event-actions">${actionHtml}</div>
     </article>
   `;
 }
+
+
 
 function incidentEmptyHtml(message) {
   return `<div class="empty-state">${message}</div>`;
@@ -285,50 +292,105 @@ function renderScopeSummary() {
   const focused = selectedZone(state);
   const critical = managed.filter((zone) => zone.severity === "critical").length;
   const warning = managed.filter((zone) => zone.severity === "warning").length;
+
   if (!scopeSummaryEl || !focused) return;
+
   scopeSummaryEl.innerHTML = `
-    <article class="summary-stack-card">
-      <div><span class="section-label">Managed</span><strong>${managed.length} zones</strong></div>
-      <p>${managed.map((zone) => zone.name).join(" · ")}</p>
+    <article class="summary-stack-card surface-dark">
+      <div class="summary-card-head">
+        <span class="section-label surface-text-soft">Managed</span>
+        <strong class="summary-card-value surface-text-strong">${managed.length} zone${managed.length === 1 ? "" : "s"}</strong>
+      </div>
+      <p class="summary-card-detail surface-text-muted">${managed.map((zone) => zone.name).join(", ")}</p>
     </article>
-    <article class="summary-stack-card">
-      <div><span class="section-label">Focused</span><strong>${focused.name}</strong></div>
-      <p>${calcZoneHealthScore(focused)} health · ${zoneDeviationSummary(focused)}</p>
+
+    <article class="summary-stack-card surface-dark">
+      <div class="summary-card-head">
+        <span class="section-label surface-text-soft">Focused</span>
+        <strong class="summary-card-value surface-text-strong">${focused.name}</strong>
+      </div>
+      <p class="summary-card-detail surface-text-muted">
+        ${calcZoneHealthScore(focused)} health, ${zoneDeviationSummary(focused)}
+      </p>
     </article>
-    <article class="summary-stack-card">
-      <div><span class="section-label">Risk mix</span><strong>${critical} critical / ${warning} warning</strong></div>
-      <p>${state.alerts.length} active incidents across the managed command picture.</p>
+
+    <article class="summary-stack-card surface-dark">
+      <div class="summary-card-head">
+        <span class="section-label surface-text-soft">Risk Mix</span>
+        <strong class="summary-card-value surface-text-strong">${critical} critical / ${warning} warning</strong>
+      </div>
+      <p class="summary-card-detail surface-text-muted">
+        ${state.alerts.length} active incident${state.alerts.length === 1 ? "" : "s"} across the managed command picture.
+      </p>
     </article>
   `;
 }
 
+
 function renderZoneList() {
   const zone = selectedZone(state);
-  const listHtml = state.zones.map((item) => `
-    <button type="button" class="entity-card ${item.id === zone?.id ? "active" : ""} ${isManagedZone(state, item.id) ? "managed" : ""}" data-zone-id="${item.id}">
-      <div class="entity-header">
-        <strong>${item.name}</strong>
-        <span class="pill ${severityClass(item.severity)}">${item.severity}</span>
-      </div>
-      <div class="entity-meta">${calcZoneHealthScore(item)} health · ${zoneDeviationSummary(item)}</div>
-      <div class="metric-chip-row">
-        <span class="metric-chip"><label>Air</label><strong>${fmt(item.indoor.temperature, 1, " C")}</strong></span>
-        <span class="metric-chip"><label>Root</label><strong>${fmt(item.soil.moisture, 2, "")}</strong></span>
-      </div>
-      <div class="entity-actions">
-        <button type="button" class="scope-toggle ${isManagedZone(state, item.id) ? "active" : ""}" data-zone-manage="${item.id}">${isManagedZone(state, item.id) ? "Managed" : "Add to scope"}</button>
-      </div>
-    </button>
-  `).join("");
+
+  const listHtml = state.zones.map((item) => {
+    const health = calcZoneHealthScore(item);
+    const tone = severityClass(item.severity);
+    const surface = "light";
+
+    return `
+      <button
+        type="button"
+        class="entity-card ${surfaceClass(surface)} ${item.id === zone?.id ? "active" : ""} ${isManagedZone(state, item.id) ? "managed" : ""}"
+        data-zone-id="${item.id}"
+      >
+        <div class="entity-header">
+          <strong class="${surfaceTextToneClass(surface, "strong")}">${item.name}</strong>
+          <span class="pill ${tone}">${item.severity}</span>
+        </div>
+
+        <div class="entity-meta ${surfaceTextToneClass(surface, "muted")}">
+          <div class="zone-health-block ${tone}">
+            <div class="asset-load-meta">
+              <span class="${surfaceTextToneClass(surface, "soft")}">Health</span>
+              <strong class="${surfaceTextToneClass(surface, "strong")}">${health}%</strong>
+            </div>
+            <div class="asset-load-bar">
+              <span style="width:${health}%"></span>
+            </div>
+          </div>
+          <span>${zoneDeviationSummary(item)}</span>
+        </div>
+
+        <div class="metric-chip-row">
+          <span class="metric-chip ${surfaceClass(surface)}">
+            <label class="${surfaceTextToneClass(surface, "soft")}">Air</label>
+            <strong class="${surfaceTextToneClass(surface, "strong")}">${fmt(item.indoor.temperature, 1, " C")}</strong>
+          </span>
+          <span class="metric-chip ${surfaceClass(surface)}">
+            <label class="${surfaceTextToneClass(surface, "soft")}">Root</label>
+            <strong class="${surfaceTextToneClass(surface, "strong")}">${fmt(item.soil.moisture, 2, "")}</strong>
+          </span>
+        </div>
+
+        <div class="entity-actions">
+          <button
+            type="button"
+            class="scope-toggle ${isManagedZone(state, item.id) ? "active" : ""}"
+            data-zone-manage="${item.id}"
+          >
+            ${isManagedZone(state, item.id) ? "Managed" : "Add to scope"}
+          </button>
+        </div>
+      </button>
+    `;
+  }).join("");
 
   setSlotHTML("zone-list", listHtml);
   slotEls("zone-list").forEach((container) => {
     container.querySelectorAll("[data-zone-id]").forEach((element) => {
-      element.addEventListener("click", async (event) => {
-        if (event.target.closest("[data-zone-manage]")) return;
+      element.addEventListener("click", async () => {
         await focusZone(element.dataset.zoneId, { ensureManaged: true });
       });
     });
+
     container.querySelectorAll("[data-zone-manage]").forEach((element) => {
       element.addEventListener("click", async (event) => {
         event.stopPropagation();
@@ -338,11 +400,18 @@ function renderZoneList() {
   });
 }
 
+
 function renderAssetDetail() {
   const zone = selectedZone(state);
   const asset = selectedAsset();
   const assets = currentPage === "operations"
-    ? (zone?.assets || []).map((item) => ({ ...item, zoneId: zone.id, zoneName: zone.name, zoneSeverity: zone.severity, faultContext: zone.alerts[0] || "Nominal" }))
+    ? (zone?.assets || []).map((item) => ({
+        ...item,
+        zoneId: zone.id,
+        zoneName: zone.name,
+        zoneSeverity: zone.severity,
+        faultContext: zone.alerts[0] || "Nominal"
+      }))
     : managedAssets(state);
 
   if (!zone || !asset) {
@@ -350,34 +419,61 @@ function renderAssetDetail() {
     return;
   }
 
+  const selectorSurface = "light";
+  const detailSurface = "dark";
+
   const datasetHtml = assets.map((candidate) => `
-    <button class="asset-selector ${candidate.id === asset.id ? "active" : ""}" data-asset-id="${candidate.id}" type="button">
+    <button
+      class="asset-selector ${surfaceClass(selectorSurface)} ${candidate.id === asset.id ? "active" : ""}"
+      data-asset-id="${candidate.id}"
+      type="button"
+    >
       <span class="asset-selector-icon" aria-hidden="true">${assetTypeIcon(candidate.type)}</span>
       <span class="asset-selector-copy">
-        <strong>${candidate.name}</strong>
-        <span>${candidate.zoneName} · ${candidate.type}</span>
+        <strong class="${surfaceTextToneClass(selectorSurface, "strong")}">${candidate.name}</strong>
+        <span class="${surfaceTextToneClass(selectorSurface, "muted")}">${candidate.zoneName} Â· ${candidate.type}</span>
       </span>
-      <span class="asset-selector-metric">${fmt((candidate.load ?? 0) * 100, 0, " %")}</span>
+      <span class="asset-selector-metric ${surfaceTextToneClass(selectorSurface, "strong")}">
+        ${fmt((candidate.load ?? 0) * 100, 0, " %")}
+      </span>
     </button>
   `).join("");
 
   const html = `
-    <article class="detail-card">
+    <article class="detail-card ${surfaceClass(detailSurface)}">
       <div class="detail-head">
         <div>
-          <span class="section-label">Selected Asset</span>
-          <strong>${asset.name}</strong>
+          <span class="section-label ${surfaceTextToneClass(detailSurface, "soft")}">Selected Asset</span>
+          <strong class="${surfaceTextToneClass(detailSurface, "strong")}">${asset.name}</strong>
         </div>
         <span class="pill ${severityClass(asset.zoneSeverity || zone.severity)}">${asset.type}</span>
       </div>
-      <p class="detail-copy">${asset.zoneName || zone.name} · ${asset.metricLabel || "Control load"} · ${assetLoadBand(asset.load ?? 0)}</p>
+
+      <p class="detail-copy ${surfaceTextToneClass(detailSurface, "muted")}">
+        ${asset.zoneName || zone.name} Â· ${asset.metricLabel || "Control load"} Â· ${assetLoadBand(asset.load ?? 0)}
+      </p>
+
       ${assetSelectionGraphic(asset, { name: asset.zoneName || zone.name })}
+
       <div class="mini-metric-grid">
-        <div class="mini-metric"><span>Current load</span><strong>${fmt((asset.load ?? 0) * 100, 0, asset.metricUnit || " %")}</strong></div>
-        <div class="mini-metric"><span>Fault context</span><strong>${asset.faultContext || "Nominal"}</strong></div>
-        <div class="mini-metric"><span>Dataset</span><strong>${assets.length} assets</strong></div>
-        <div class="mini-metric"><span>Health</span><strong>${calcZoneHealthScore(zone)}</strong></div>
+        <div class="mini-metric ${surfaceClass(selectorSurface)}">
+          <span class="${surfaceTextToneClass(selectorSurface, "soft")}">Current load</span>
+          <strong class="${surfaceTextToneClass(selectorSurface, "strong")}">${fmt((asset.load ?? 0) * 100, 0, asset.metricUnit || " %")}</strong>
+        </div>
+        <div class="mini-metric ${surfaceClass(selectorSurface)}">
+          <span class="${surfaceTextToneClass(selectorSurface, "soft")}">Fault context</span>
+          <strong class="${surfaceTextToneClass(selectorSurface, "strong")}">${asset.faultContext || "Nominal"}</strong>
+        </div>
+        <div class="mini-metric ${surfaceClass(selectorSurface)}">
+          <span class="${surfaceTextToneClass(selectorSurface, "soft")}">Dataset</span>
+          <strong class="${surfaceTextToneClass(selectorSurface, "strong")}">${assets.length} assets</strong>
+        </div>
+        <div class="mini-metric ${surfaceClass(selectorSurface)}">
+          <span class="${surfaceTextToneClass(selectorSurface, "soft")}">Health</span>
+          <strong class="${surfaceTextToneClass(selectorSurface, "strong")}">${calcZoneHealthScore(zone)}</strong>
+        </div>
       </div>
+
       <div class="asset-selector-list">${datasetHtml}</div>
     </article>
   `;
@@ -391,6 +487,7 @@ function renderAssetDetail() {
     });
   });
 }
+
 
 function renderAlerts() {
   const managedZoneIds = new Set(managedZones(state).map((zone) => zone.id));
@@ -432,9 +529,12 @@ function renderProvenance() {
   }
   if (provenanceCardEl) {
     provenanceCardEl.innerHTML = `
-      <article class="summary-stack-card">
-        <div><span class="section-label">Source</span><strong>${provenance.label}</strong></div>
-        <p>${provenance.description}</p>
+      <article class="provenance-summary-card surface-dark">
+        <div class="provenance-card-head">
+          <span class="section-label surface-text-soft">Source</span>
+          <strong class="provenance-card-value surface-text-strong">${provenance.label}</strong>
+        </div>
+        <p class="provenance-card-detail surface-text-muted">${provenance.description}</p>
       </article>
     `;
   }

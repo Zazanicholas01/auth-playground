@@ -1,17 +1,21 @@
-import { edgeSeverityClass } from "./workspace-helpers.js";
+import { edgeSeverityClass, surfaceClass, surfaceTextToneClass } from "./workspace-helpers.js";
 
 function fleetSummaryCard(label, value, note, tone) {
+  const surface = "light";
+
   return `
-    <article class="kpi-card">
-      <div class="kpi-label">${label}</div>
+    <article class="kpi-card ${surfaceClass(surface)}">
+      <div class="kpi-label ${surfaceTextToneClass(surface, "soft")}">${label}</div>
       <div class="kpi-value-row">
-        <strong>${value}</strong>
+        <strong class="${surfaceTextToneClass(surface, "strong")}">${value}</strong>
         <span class="pill ${tone}">${tone}</span>
       </div>
-      <p>${note}</p>
+      <p class="${surfaceTextToneClass(surface, "muted")}">${note}</p>
     </article>
   `;
 }
+
+
 
 function renderGatewayTopology(device) {
   const count = Math.max(device.sensors.length, 1);
@@ -57,25 +61,42 @@ export function renderEdgeWorkspacePage({
 
   if (edgeFleetSummaryEl) {
     edgeFleetSummaryEl.innerHTML = [
-      fleetSummaryCard("Gateways", `${state.edgeDevices.length}`, `${offline} offline · ${degraded} degraded`, offline ? "critical" : degraded ? "warning" : "normal"),
+      fleetSummaryCard("Gateways", `${state.edgeDevices.length}`, `${offline} offline - ${degraded} degraded`, offline ? "critical" : degraded ? "warning" : "normal"),
       fleetSummaryCard("Broker path", `${state.edgeDevices.filter((device) => device.brokerLink === "linked").length}`, `${state.edgeDevices.length} total tracked`, degraded ? "warning" : "normal")
     ].join("");
   }
 
   if (edgeDeviceListEl) {
+    const surface = "light";
+
     edgeDeviceListEl.innerHTML = state.edgeDevices.map((device) => `
-      <button type="button" class="entity-card ${state.selectedEdgeDeviceId === device.id ? "active" : ""}" data-edge-device-id="${device.id}">
+      <button
+        type="button"
+        class="entity-card ${surfaceClass(surface)} ${state.selectedEdgeDeviceId === device.id ? "active" : ""}"
+        data-edge-device-id="${device.id}"
+      >
         <div class="entity-header">
-          <strong>${device.name}</strong>
+          <strong class="${surfaceTextToneClass(surface, "strong")}">${device.name}</strong>
           <span class="pill ${edgeSeverityClass(device.status)}">${device.status}</span>
         </div>
-        <div class="entity-meta">${device.zoneName} · ${device.sensors.length} sensors · ${Math.round(device.lastSeenMs / 1000)}s ago</div>
+
+        <div class="entity-meta ${surfaceTextToneClass(surface, "muted")}">
+          ${device.zoneName} Â· ${device.sensors.length} sensors Â· ${Math.round(device.lastSeenMs / 1000)}s ago
+        </div>
+
         <div class="metric-chip-row">
-          <span class="metric-chip"><label>RSSI</label><strong>${device.signalRssi} dBm</strong></span>
-          <span class="metric-chip"><label>Loss</label><strong>${device.packetLossPct}%</strong></span>
+          <span class="metric-chip ${surfaceClass(surface)}">
+            <label class="${surfaceTextToneClass(surface, "soft")}">RSSI</label>
+            <strong class="${surfaceTextToneClass(surface, "strong")}">${device.signalRssi} dBm</strong>
+          </span>
+          <span class="metric-chip ${surfaceClass(surface)}">
+            <label class="${surfaceTextToneClass(surface, "soft")}">Loss</label>
+            <strong class="${surfaceTextToneClass(surface, "strong")}">${device.packetLossPct}%</strong>
+          </span>
         </div>
       </button>
     `).join("");
+
 
     edgeDeviceListEl.querySelectorAll("[data-edge-device-id]").forEach((element) => {
       element.addEventListener("click", () => {
@@ -91,7 +112,7 @@ export function renderEdgeWorkspacePage({
     const impacted = device.sensors.filter((sensor) => sensor.status !== "healthy").length;
     edgeSummaryEl.innerHTML = `
       <section class="fleet-hero-grid">
-        ${fleetSummaryCard("Selected gateway", device.name, `${device.zoneName} · ${device.firmwareVersion}`, edgeSeverityClass(device.status))}
+        ${fleetSummaryCard("Selected gateway", device.name, `${device.zoneName} - ${device.firmwareVersion}`, edgeSeverityClass(device.status))}
         ${fleetSummaryCard("Broker link", device.brokerLink, `Last seen ${Math.round(device.lastSeenMs / 1000)}s ago`, device.brokerLink === "down" ? "critical" : device.brokerLink === "unstable" ? "warning" : "normal")}
         ${fleetSummaryCard("Uptime", `${device.uptimeHours}h`, `${device.sensors.length} downstream sensors`, "normal")}
         ${fleetSummaryCard("Sensor impact", `${impacted}`, `${device.sensors.length - impacted} healthy in current batch`, impacted ? "warning" : "normal")}
@@ -124,7 +145,7 @@ export function renderEdgeWorkspacePage({
             <div class="asset-selector">
               <span class="asset-selector-copy">
                 <strong>${sensor.name}</strong>
-                <span>${sensor.metricType} · ${Math.round(sensor.lastSeenMs / 1000)}s ago</span>
+                <span>${sensor.metricType} - ${Math.round(sensor.lastSeenMs / 1000)}s ago</span>
               </span>
               <span class="asset-selector-metric">${sensor.lastReading}</span>
               <span class="pill ${edgeSeverityClass(sensor.status)}">${sensor.status}</span>
@@ -166,19 +187,25 @@ export function renderSensorWorkspacePage({
 
   if (sensorFleetSummaryEl) {
     sensorFleetSummaryEl.innerHTML = [
-      fleetSummaryCard("Sensors", `${sensors.length}`, `${offline} offline · ${stale} stale`, offline ? "critical" : stale ? "warning" : "normal"),
+      fleetSummaryCard("Sensors", `${sensors.length}`, `${offline} offline - ${stale} stale`, offline ? "critical" : stale ? "warning" : "normal"),
       fleetSummaryCard("Gateways", `${new Set(sensors.map((sensor) => sensor.deviceId)).size}`, `Across ${new Set(sensors.map((sensor) => sensor.zoneId)).size} zones`, "normal")
     ].join("");
   }
 
   if (sensorListEl) {
+    const surface = "light";
+
     sensorListEl.innerHTML = sensors.map((sensor) => `
-      <button type="button" class="asset-selector ${state.selectedSensorId === sensor.id ? "active" : ""}" data-sensor-id="${sensor.id}">
+      <button
+        type="button"
+        class="asset-selector ${surfaceClass(surface)} ${state.selectedSensorId === sensor.id ? "active" : ""}"
+        data-sensor-id="${sensor.id}"
+      >
         <span class="asset-selector-copy">
-          <strong>${sensor.name}</strong>
-          <span>${sensor.zoneName} · ${sensor.deviceName}</span>
+          <strong class="${surfaceTextToneClass(surface, "strong")}">${sensor.name}</strong>
+          <span class="${surfaceTextToneClass(surface, "muted")}">${sensor.zoneName} Â· ${sensor.deviceName}</span>
         </span>
-        <span class="asset-selector-metric">${sensor.lastReading}</span>
+        <span class="asset-selector-metric ${surfaceTextToneClass(surface, "strong")}">${sensor.lastReading}</span>
         <span class="pill ${edgeSeverityClass(sensor.status)}">${sensor.status}</span>
       </button>
     `).join("");
@@ -196,10 +223,10 @@ export function renderSensorWorkspacePage({
   if (sensorSummaryEl) {
     sensorSummaryEl.innerHTML = `
       <section class="fleet-hero-grid">
-        ${fleetSummaryCard("Selected sensor", sensor.name, `${sensor.zoneName} · ${sensor.metricType}`, edgeSeverityClass(sensor.status))}
+        ${fleetSummaryCard("Selected sensor", sensor.name, `${sensor.zoneName} - ${sensor.metricType}`, edgeSeverityClass(sensor.status))}
         ${fleetSummaryCard("Reading", sensor.lastReading, `${sensor.deviceName} upstream path`, "normal")}
         ${fleetSummaryCard("Freshness", `${Math.round(sensor.lastSeenMs / 1000)}s`, `${sensor.batteryPct}% battery remaining`, sensor.lastSeenMs > 60000 ? "warning" : "normal")}
-        ${fleetSummaryCard("Gateway path", sensor.deviceName, `${sensor.signalRssi} dBm · ${sensor.packetLossPct}% loss`, edgeSeverityClass(sensor.deviceStatus))}
+        ${fleetSummaryCard("Gateway path", sensor.deviceName, `${sensor.signalRssi} dBm - ${sensor.packetLossPct}% loss`, edgeSeverityClass(sensor.deviceStatus))}
       </section>
       <section class="fleet-main-card">
         <div class="panel-head-inline">

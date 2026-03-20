@@ -9,7 +9,6 @@ const PAGE_META = {
     scopeCopy: "Choose the zones driving KPIs, map severity, and downstream evidence.",
     contextEyebrow: "Evidence Rail",
     contextTitle: "Zone Evidence",
-    contextCopy: "Keep the selected zone, active control surfaces, and incident context visible.",
     modeLabel: "Overview"
   },
   twin: {

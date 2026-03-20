@@ -160,3 +160,31 @@ export function focusPathLabel({ currentPage, zone, edgeDevice, sensor, asset })
   if (asset) return [...base, asset.name].join(" / ");
   return base.join(" / ");
 }
+
+export function surfaceClass(surface = "light") {
+  return surface === "dark" ? "surface-dark" : "surface-light";
+}
+
+export function textToneClass(tone = "strong", inverse = false) {
+  if (inverse) {
+    if (tone === "muted") return "text-muted-inverse";
+    if (tone === "soft") return "text-soft-inverse";
+    return "text-strong-inverse";
+  }
+
+  if (tone === "muted") return "text-muted";
+  if (tone === "soft") return "text-soft";
+  return "text-strong";
+}
+
+export function textClasses({ surface = "light", tone = "strong" } = {}) {
+  return `${surfaceClass(surface)} ${tone === "muted"
+    ? "surface-text-muted"
+    : tone === "soft"
+      ? "surface-text-soft"
+      : "surface-text-strong"}`;
+}
+
+export function surfaceTextToneClass(surface = "light", tone = "strong") {
+  return textToneClass(tone, surface === "dark");
+}
