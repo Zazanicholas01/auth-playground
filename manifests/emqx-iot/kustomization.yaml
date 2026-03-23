@@ -18,10 +18,9 @@ resources:
   - simulator/bronze-silver-cron.yaml
 
 configMapGenerator:
-
   - name: iot-sql-scripts
     files:
-      - simulator/sql/promote-bronze-to-silver.sql
+      - simulator/api/app/sql/promote-bronze-to-silver.sql
 
   - name: iot-timescaledb-init
     files:
