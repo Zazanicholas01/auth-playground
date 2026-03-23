@@ -2,19 +2,20 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VENV_DIR="${ROOT_DIR}/.venv"
+UI_DIR="${ROOT_DIR}/../ui"
 
-if [[ ! -d "${VENV_DIR}" ]]; then
-  python3 -m venv "${VENV_DIR}"
+cd "${UI_DIR}"
+
+if ! command -v bun >/dev/null 2>&1; then
+  echo "bun is required to run the local UI." >&2
+  exit 1
 fi
 
-source "${VENV_DIR}/bin/activate"
-python -m pip install -r "${ROOT_DIR}/requirements.txt"
+if [[ ! -d node_modules ]]; then
+  bun install
+fi
 
-export UI_STATIC_DIR="${UI_STATIC_DIR:-${ROOT_DIR}/../ui}"
-export IOT_UPSTREAM_BASE="${IOT_UPSTREAM_BASE:-http://iot.local:8080}"
+export UI_PORT="${UI_PORT:-8081}"
+export IOT_UPSTREAM_BASE="${IOT_UPSTREAM_BASE:-http://127.0.0.1:8080}"
 
-echo "Serving local UI from ${UI_STATIC_DIR}"
-echo "Proxying API and simulator requests to ${IOT_UPSTREAM_BASE}"
-
-exec python -m uvicorn --app-dir "${ROOT_DIR}" app:app --host 0.0.0.0 --port 3200 --reload
+exec bun run ./local-server.mjs

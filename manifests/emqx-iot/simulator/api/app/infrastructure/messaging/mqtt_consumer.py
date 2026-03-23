@@ -4,7 +4,7 @@ import logging
 from urllib.parse import urlparse
 
 from aiomqtt import Client
-from settings import settings
+from app.settings import settings
 
 
 logger = logging.getLogger(__name__)

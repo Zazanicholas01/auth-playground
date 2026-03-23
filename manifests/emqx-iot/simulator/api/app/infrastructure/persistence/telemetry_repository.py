@@ -1,12 +1,7 @@
 import json
 from datetime import date, datetime
-from db import db
 
-
-def coerce_ts(value):
-    if isinstance(value, datetime):
-        return value
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+from app.infrastructure.persistence.db import db
 
 
 def decode_json(value):
@@ -25,7 +20,7 @@ def json_safe(value):
     return value
 
 
-class TelemetryRepository:
+class PostgresTelemetryRepository:
     async def persist_bronze_event(self, event: dict) -> None:
         payload = event.get("payload", {})
         await db.execute(
@@ -42,7 +37,6 @@ class TelemetryRepository:
             json.dumps(json_safe(payload)),
         )
 
-
     async def persist_bronze_telemetry(self, topic: str, normalized: dict) -> None:
         await db.execute(
             """
@@ -57,7 +51,6 @@ class TelemetryRepository:
             normalized["ts"],
             json.dumps(json_safe(normalized)),
         )
-
 
     async def upsert_device_state(self, device: dict) -> None:
         await db.execute(
@@ -79,7 +72,7 @@ class TelemetryRepository:
             json.dumps(json_safe(device)),
         )
 
-    async def load_device_states(self) -> dict:
+    async def load_device_states(self) -> dict[str, dict]:
         rows = await db.fetch(
             """
             SELECT device_id, state
@@ -87,10 +80,7 @@ class TelemetryRepository:
             ORDER BY last_seen DESC
             """
         )
-        return {
-            row["device_id"]: decode_json(row["state"])
-            for row in rows
-        }
+        return {row["device_id"]: decode_json(row["state"]) for row in rows}
 
     async def recent_events(self, limit: int) -> list[dict]:
         rows = await db.fetch(
@@ -102,13 +92,7 @@ class TelemetryRepository:
             """,
             limit,
         )
-        return [
-            {
-                **dict(row),
-                "payload": decode_json(row["payload"]),
-            }
-            for row in rows
-        ]
+        return [{**dict(row), "payload": decode_json(row["payload"])} for row in rows]
 
     async def telemetry_history(self, device_id: str, limit: int) -> list[dict]:
         rows = await db.fetch(
@@ -148,13 +132,7 @@ class TelemetryRepository:
             """,
             limit,
         )
-        return [
-            {
-                **dict(row),
-                "payload": decode_json(row["payload"]),
-            }
-            for row in rows
-        ]
+        return [{**dict(row), "payload": decode_json(row["payload"])} for row in rows]
 
     async def load_gold_fleet_summary(self) -> dict | None:
         row = await db.fetchrow("SELECT * FROM gold.fleet_summary_latest")

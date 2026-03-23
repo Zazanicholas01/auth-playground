@@ -1,5 +1,6 @@
 import asyncpg
-from settings import settings
+
+from app.settings import settings
 
 
 class Database:
@@ -39,7 +40,7 @@ class Database:
         async with self._require_pool().acquire() as conn:
             return await conn.execute(query, *args)
 
-    async def check_connected(self) -> bool:
+    async def is_db_connected(self) -> bool:
         try:
             await self.fetchrow("SELECT 1")
             return True

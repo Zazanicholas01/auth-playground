@@ -1,39 +1,50 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from api.routes import router
-from bootstrap import init_db_with_retry
-from db import db
-from mqtt.client import MqttConsumer
-from repositories.telemetry import TelemetryRepository
-from services.telemetry import TelemetryService
-from state import ApiState
-from synthetic.zones import SyntheticService
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.bootstrap import init_db_with_retry
+from app.container import build_container
+from app.infrastructure.messaging.mqtt_consumer import MqttConsumer
+from app.presentation.api.routes import router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await db.connect()
+    mqtt_consumer = MqttConsumer(None)
+    container = build_container(mqtt_consumer)
+    mqtt_consumer.telemetry_service = container.telemetry_use_case
+
+    app.state.container = container
+
+    await container.db.connect()
     await init_db_with_retry()
-
-    repo = TelemetryRepository()
-    state = ApiState()
-    synthetic = SyntheticService()
-    telemetry_service = TelemetryService(repo=repo, state=state, synthetic=synthetic)
-    await telemetry_service.warm_cache()
-
-    mqtt_consumer = MqttConsumer(telemetry_service)
+    await container.telemetry_use_case.warm_cache()
     await mqtt_consumer.start()
-
-    app.state.telemetry_service = telemetry_service
-    app.state.mqtt_consumer = mqtt_consumer
 
     try:
         yield
     finally:
         await mqtt_consumer.stop()
-        await db.close()
+        await container.db.close()
 
 
-app = FastAPI(lifespan=lifespan)
-app.include_router(router)
+def create_app() -> FastAPI:
+    app = FastAPI(lifespan=lifespan)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://127.0.0.1:8081",
+            "http://localhost:8081",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    app.include_router(router)
+    return app
+
+
+app = create_app()

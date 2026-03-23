@@ -1,8 +1,8 @@
 import asyncio
 from pathlib import Path
 
-from db import db
-from settings import settings
+from app.infrastructure.persistence.db import db
+from app.settings import settings
 
 
 async def init_db() -> None:

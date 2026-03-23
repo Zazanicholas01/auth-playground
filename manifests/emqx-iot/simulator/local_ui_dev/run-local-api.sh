@@ -2,36 +2,34 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-API_DIR="${ROOT_DIR}/../api"
-SQL_DIR="${ROOT_DIR}/../sql"
+PROJECT_DIR="${ROOT_DIR}/../api"
+API_DIR="${PROJECT_DIR}/app"
+SQL_DIR="${API_DIR}/sql"
 VENV_DIR="${API_DIR}/.venv"
-PYTHON_BIN="${VENV_DIR}/bin/python"
-PIP_BIN="${VENV_DIR}/bin/pip"
-UVICORN_BIN="${VENV_DIR}/bin/uvicorn"
 
-cd "${API_DIR}"
+cd "${PROJECT_DIR}"
+
+export PATH="${HOME}/.local/bin:${PATH}"
 
 if ! command -v python3 >/dev/null 2>&1; then
   echo "python3 is required to run the local API." >&2
   exit 1
 fi
 
-if [[ ! -d "${VENV_DIR}" ]]; then
-  python3 -m venv "${VENV_DIR}"
+UV_BIN="$(command -v uv || true)"
+if [[ -z "${UV_BIN}" && -x "${HOME}/.local/bin/uv" ]]; then
+  UV_BIN="${HOME}/.local/bin/uv"
 fi
 
-if [[ ! -x "${PIP_BIN}" ]]; then
-  echo "Missing pip in virtualenv: ${PIP_BIN}" >&2
+if [[ -z "${UV_BIN}" ]]; then
+  echo "uv is required to run the local API." >&2
   exit 1
 fi
 
-if ! "${PYTHON_BIN}" - <<'PY' >/dev/null 2>&1
-import importlib.util
-mods = ["fastapi", "uvicorn", "asyncpg", "aiomqtt", "pydantic_settings"]
-raise SystemExit(0 if all(importlib.util.find_spec(m) for m in mods) else 1)
-PY
-then
-  "${PIP_BIN}" install -r requirements.txt
+if [[ ! -d "${VENV_DIR}" ]]; then
+  (cd "${API_DIR}" && "${UV_BIN}" sync --frozen --no-dev)
+elif [[ ! -x "${VENV_DIR}/bin/uvicorn" ]]; then
+  (cd "${API_DIR}" && "${UV_BIN}" sync --frozen --no-dev)
 fi
 
 export API_PORT="${API_PORT:-8080}"
@@ -51,50 +49,4 @@ export DB_BOOTSTRAP_RETRY_DELAY_MS="${DB_BOOTSTRAP_RETRY_DELAY_MS:-3000}"
 export EVENT_HISTORY_SIZE="${EVENT_HISTORY_SIZE:-250}"
 export HISTORY_POINTS="${HISTORY_POINTS:-300}"
 
-required_files=(
-  "${API_DIR}/app/main.py"
-  "${API_DIR}/app/settings.py"
-  "${API_DIR}/app/db.py"
-  "${API_DIR}/app/bootstrap.py"
-  "${API_DIR}/app/state.py"
-  "${API_DIR}/app/api/routes.py"
-  "${API_DIR}/app/mqtt/client.py"
-  "${API_DIR}/app/repositories/telemetry.py"
-  "${API_DIR}/app/services/telemetry.py"
-  "${API_DIR}/app/synthetic/zones.py"
-  "${API_DIR}/requirements.txt"
-)
-
-for file in "${required_files[@]}"; do
-  if [[ ! -f "${file}" ]]; then
-    echo "Missing required API module: ${file}" >&2
-    exit 1
-  fi
-done
-
-required_sql=(
-  "${DB_BOOTSTRAP_SQL_DIR}/01-init.sql"
-  "${DB_BOOTSTRAP_SQL_DIR}/03-gold-layer.sql"
-  "${DB_BOOTSTRAP_SQL_DIR}/04-gold-continuous-aggregates.sql"
-)
-
-for file in "${required_sql[@]}"; do
-  if [[ ! -f "${file}" ]]; then
-    echo "Missing SQL bootstrap file: ${file}" >&2
-    exit 1
-  fi
-done
-
-cat <<EOF
-Starting local FastAPI IoT API with:
-  API_PORT=${API_PORT}
-  MQTT_URL=${MQTT_URL}
-  DB_HOST=${DB_HOST}
-  DB_PORT=${DB_PORT}
-  DB_NAME=${DB_NAME}
-  DB_USER=${DB_USER}
-  DB_BOOTSTRAP_SQL_DIR=${DB_BOOTSTRAP_SQL_DIR}
-  VENV_DIR=${VENV_DIR}
-EOF
-
-exec "${UVICORN_BIN}" app.main:app --host 0.0.0.0 --port "${API_PORT}"
+exec "${UV_BIN}" run --project "${API_DIR}" uvicorn app.main:app --host 0.0.0.0 --port "${API_PORT}"
