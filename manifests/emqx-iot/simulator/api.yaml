@@ -17,7 +17,6 @@ spec:
         - name: api
           image: ghcr.io/zazanicholas01/greenhouse-iot-api:run-14 # {"$imagepolicy": "flux-system:greenhouse-iot-api"}
           imagePullPolicy: Always
-          command: ["bun", "run", "index.js"]
           ports:
             - containerPort: 8080
               name: http
@@ -30,6 +29,10 @@ spec:
               value: site/alpha/devices
             - name: EVENT_HISTORY_SIZE
               value: "250"
+            - name: HISTORY_POINTS
+              value: "300"
+            - name: DB_BOOTSTRAP_SQL_DIR
+              value: /app/sql
             - name: DB_HOST
               value: iot-timescaledb
             - name: DB_PORT
@@ -63,7 +66,7 @@ spec:
             periodSeconds: 20
           volumeMounts:
             - name: db-init-sql
-              mountPath: /app/db-init
+              mountPath: /app/sql
       volumes:
         - name: db-init-sql
           configMap:

@@ -38,4 +38,3 @@ manifests/emqx-iot/simulator/local_ui_dev/run-local-api.sh
 ```bash
 IOT_UPSTREAM_BASE=http://127.0.0.1:8080 manifests/emqx-iot/simulator/local_ui_dev/run-local-ui.sh
 ```
-

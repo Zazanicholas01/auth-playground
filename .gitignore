@@ -8,6 +8,14 @@ node_modules/
 venv/
 **/venv/
 
+# Python caches / artifacts
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+
 # Logs
 *.log
 npm-debug.log*
