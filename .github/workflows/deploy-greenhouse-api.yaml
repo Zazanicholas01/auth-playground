@@ -46,8 +46,8 @@ jobs:
       - name: Build and push image tags
         uses: docker/build-push-action@v6
         with:
-          context: manifests/emqx-iot/simulator/api
-          file: manifests/emqx-iot/simulator/api/Dockerfile
+          context: manifests/emqx-iot/simulator/api/app
+          file: manifests/emqx-iot/simulator/api/app/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
