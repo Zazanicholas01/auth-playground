@@ -25,6 +25,6 @@ configMapGenerator:
 
   - name: iot-timescaledb-init
     files:
-      - simulator/sql/01-init.sql
-      - simulator/sql/03-gold-layer.sql
-      - simulator/sql/04-gold-continuous-aggregates.sql
+      - simulator/api/app/sql/01-init.sql
+      - simulator/api/app/sql/03-gold-layer.sql
+      - simulator/api/app/sql/04-gold-continuous-aggregates.sql
