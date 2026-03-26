@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: local-llm-pull-qwen25-3b
+  namespace: iot-playground
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: pull-model
+          image: curlimages/curl:8.7.1
+          command:
+            - sh
+            - -c
+            - |
+              curl -fsS http://local-llm:11434/api/pull -d '{
+                "name": "qwen2.5:3b",
+                "stream": false
+              }'

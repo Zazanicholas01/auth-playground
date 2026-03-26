@@ -52,6 +52,12 @@ spec:
                 secretKeyRef:
                   name: iot-timescaledb-secret
                   key: password
+            - name: LOCAL_LLM_URL
+              value: http://local-llm:11434
+            - name: LOCAL_LLM_MODEL
+              value: qwen2.5:3b
+            - name: TWIN_REPORT_TIMEOUT_MS
+              value: "15000"
           readinessProbe:
             httpGet:
               path: /health

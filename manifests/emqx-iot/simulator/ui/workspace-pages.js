@@ -74,6 +74,57 @@ function mapHotspot(zone, active, managed) {
   `;
 }
 
+function twinReportCard(reportState, loading) {
+  if (loading) {
+    return `
+      <article class="zone-summary-card ${surfaceClass("dark")}">
+        <div class="zone-summary-head">
+          <div>
+            <span class="section-label ${textToneClass("soft")}">AI Report</span>
+            <h3 class="${textToneClass("strong")}">Generating operational summary</h3>
+          </div>
+          <span class="pill warning">loading</span>
+        </div>
+        <p class="${textToneClass("muted")}">Checking twin, alerts, and recent metrics.</p>
+      </article>
+    `;
+  }
+
+  const report = reportState?.report;
+  if (!report) return "";
+
+  return `
+    <article class="zone-summary-card ${surfaceClass("dark")} ${severityClass(report.status || "normal")}">
+      <div class="zone-summary-head">
+        <div>
+          <span class="section-label ${textToneClass("soft")}">AI Report</span>
+          <h3 class="${textToneClass("strong")}">${report.headline}</h3>
+        </div>
+        <span class="pill ${severityClass(report.status || "normal")}">${report.status || "normal"}</span>
+      </div>
+
+      <p class="${textToneClass("muted")}">${report.summary}</p>
+
+      <div class="mini-metric-grid">
+        <div class="mini-metric ${surfaceClass("light")}">
+          <span class="${textToneClass("soft")}">Findings</span>
+          <strong class="${textToneClass("strong")}">${(report.findings || []).length}</strong>
+        </div>
+        <div class="mini-metric ${surfaceClass("light")}">
+          <span class="${textToneClass("soft")}">Actions</span>
+          <strong class="${textToneClass("strong")}">${(report.recommendedActions || []).length}</strong>
+        </div>
+      </div>
+
+      <div class="${textToneClass("muted")}">
+        ${(report.findings || []).map((item) => `<p>- ${item}</p>`).join("")}
+        ${(report.recommendedActions || []).map((item) => `<p><strong>Action:</strong> ${item}</p>`).join("")}
+      </div>
+    </article>
+  `;
+}
+
+
 
 function renderGatewayFocus(devices, activeDevice) {
   const surface = "light";
@@ -266,8 +317,11 @@ export function renderTwinWorkspacePage({
           <div><span>Sensors</span><strong>${devices.reduce((sum, device) => sum + device.sensors.length, 0)}</strong></div>
         </div>
       </article>
+
+      ${twinReportCard(state.twinReport, state.twinReportLoading)}
     `;
   }
+
 
   if (twinGatewayListEl) {
     twinGatewayListEl.innerHTML = devices.map((device) => `

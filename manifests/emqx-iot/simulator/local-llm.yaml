@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-llm
+  namespace: iot-playground
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-llm
+  template:
+    metadata:
+      labels:
+        app: local-llm
+    spec:
+      containers:
+        - name: ollama
+          image: ollama/ollama:latest
+          command:
+            - sh
+            - -c
+            - |
+              set -eu
+              ollama serve &
+              pid=$!
+              until curl -fsS http://127.0.0.1:11434/api/tags >/dev/null; do
+                sleep 2
+              done
+              ollama pull qwen2.5:3b
+              wait $pid
+          ports:
+            - containerPort: 11434
+              name: http
+          env:
+            - name: OLLAMA_KEEP_ALIVE
+              value: "24h"
+          volumeMounts:
+            - name: ollama-data
+              mountPath: /root/.ollama
+          startupProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            failureThreshold: 60
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 20
+            periodSeconds: 20
+      volumes:
+        - name: ollama-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: local-llm
+  namespace: iot-playground
+spec:
+  selector:
+    app: local-llm
+  ports:
+    - name: http
+      port: 11434
+      targetPort: 11434
