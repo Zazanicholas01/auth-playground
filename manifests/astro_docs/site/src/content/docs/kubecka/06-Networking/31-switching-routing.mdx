@@ -1,0 +1,58 @@
+---
+title: Switching & Routing
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+La rete di Kubernetes si basa su switching locale, routing tra nodi e gateway per traffico in ingresso e in uscita.
+
+### *Switching*
+
+Quando due Pod sono sullo stesso nodo, il traffico resta locale.
+
+- il nodo usa un bridge virtuale
+- ogni Pod è collegato tramite `veth pair`
+- il traffico viene inoltrato internamente come in una LAN
+
+### *Routing*
+
+Quando i Pod sono su nodi diversi, il traffico deve attraversare la rete del cluster.
+
+<Steps>
+1. Ogni nodo riceve un intervallo IP per i suoi Pod.
+2. Il CNI conosce quali IP appartengono a ciascun nodo.
+3. Configura routing o annuncia le rotte.
+4. Se necessario, usa tunnel overlay come `VXLAN` o `Geneve`.
+</Steps>
+
+### *Gateways*
+
+| Direzione | Funzione |
+| --- | --- |
+| `Egress` | Permette ai Pod di uscire dal cluster verso l'esterno |
+| `Ingress` | Permette al traffico esterno di entrare verso i Service |
+
+- in `egress` spesso viene usato `NAT`
+- in `ingress` agiscono `Ingress Controller` o API gateway
+
+### *Ruolo del CNI*
+
+Il `CNI` implementa la rete del cluster.
+
+<CardGrid>
+  <Card title="Flannel" icon="information">
+    Overlay semplice, adatto per iniziare.
+  </Card>
+
+  <Card title="Calico" icon="list-format">
+    Routing efficiente e policy di rete avanzate.
+  </Card>
+
+  <Card title="Cilium" icon="rocket">
+    Networking moderno con `eBPF`, sicurezza e osservabilita`.
+  </Card>
+</CardGrid>

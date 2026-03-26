@@ -1,0 +1,100 @@
+---
+title: TLS
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+<Aside type="note">
+Kubernetes usa `TLS` per proteggere le comunicazioni tra componenti e verificare l'identita` reciproca.
+</Aside>
+
+### *Catena della fiducia*
+
+<CardGrid>
+  <Card title="CA del cluster" icon="setting">
+    Firma i certificati dei componenti e stabilisce il `Trust`.
+  </Card>
+
+  <Card title="Certificati" icon="document">
+    Ogni componente usa certificati specifici per comunicare in modo sicuro.
+  </Card>
+</CardGrid>
+
+### *CA del cluster*
+
+La `Certificate Authority` del cluster e` la radice di fiducia.
+
+- viene creata durante l'installazione
+- firma i certificati dei componenti
+- un certificato firmato dalla CA viene considerato affidabile
+
+### *Tipi di certificati*
+
+| Tipo | Scopo |
+| --- | --- |
+| Server Certificate | Permette al client di verificare il server |
+| Client Certificate | Permette al server di verificare il client |
+| Peer Certificate | Usato tra nodi `etcd` |
+
+### *Mutual TLS*
+
+Kubernetes usa spesso `mTLS`.
+
+<Steps>
+1. Il server invia il proprio certificato.
+2. Il client invia il proprio certificato.
+3. Entrambi verificano la firma con la stessa `CA`.
+4. Se la verifica riesce, la connessione viene stabilita.
+</Steps>
+
+### *Certificati per le applicazioni*
+
+Per i certificati applicativi si usa spesso `cert-manager`.
+
+- `Issuer`: definisce chi emette il certificato
+- `Certificate`: richiede un certificato per un dominio o servizio
+- `cert-manager` gestisce rinnovo e automazione
+
+## Certificates API
+
+<Aside type="note">
+La `Certificates API` permette di richiedere, approvare e rinnovare certificati in modo scalabile.
+</Aside>
+
+### *Flusso CSR*
+
+<Steps>
+1. Il client genera una coppia di chiavi.
+2. Invia una `CertificateSigningRequest` all'`API Server`.
+3. La richiesta viene approvata.
+4. Il certificato viene firmato con la `CA` del cluster.
+5. Il client scarica e usa il certificato firmato.
+</Steps>
+
+### *Kubelet TLS Bootstrapping*
+
+<CardGrid>
+  <Card title="Bootstrap Token" icon="warning">
+    Il `Kubelet` usa un token temporaneo per autenticarsi inizialmente.
+  </Card>
+
+  <Card title="CSR" icon="document">
+    Invia una richiesta per ottenere il certificato client.
+  </Card>
+
+  <Card title="Identità permanente" icon="approve-check">
+    Dopo l'approvazione, il nodo comunica in modo sicuro con l'`API Server`.
+  </Card>
+</CardGrid>
+
+### *Gestione con kubectl*
+
+| Comando | Scopo |
+| --- | --- |
+| `kubectl get csr` | Elenca le richieste |
+| `kubectl certificate approve <nome-csr>` | Approva una richiesta |
+| `kubectl certificate deny <nome-csr>` | Rifiuta una richiesta |

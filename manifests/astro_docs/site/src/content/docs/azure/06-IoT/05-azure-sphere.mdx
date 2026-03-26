@@ -1,0 +1,122 @@
+---
+title: Azure Sphere
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Sphere`, the Microsoft platform designed for securing small connected devices.
+
+### *Azure Sphere*
+
+`Azure Sphere` is a security platform for internet-connected devices built around three main parts:
+
+- secured hardware
+- a secured operating system
+- a cloud-based security service
+
+It is designed for small-purpose devices that need strong built-in protection from the start.
+
+Examples include:
+
+- industrial controllers
+- smart appliances
+- connected sensors
+- embedded devices
+
+<Aside type="note">
+`Azure Sphere` focuses on device security first. It is not mainly about telemetry or dashboards, but about protecting connected devices against modern threats.
+</Aside>
+
+### *Core Components*
+
+<CardGrid>
+  <Card title="Secured MCU" icon="document">
+    Certified hardware designed with built-in security features for connected devices.
+  </Card>
+
+  <Card title="Azure Sphere OS" icon="setting">
+    A Microsoft-managed operating system built specifically for secured embedded devices.
+  </Card>
+
+  <Card title="Security Service" icon="warning">
+    A cloud service that supports authentication, updates, and ongoing device protection.
+  </Card>
+</CardGrid>
+
+### *Why Azure Sphere Exists*
+
+Traditional embedded devices are often weak in security because they:
+
+- use outdated software
+- lack secure update mechanisms
+- share credentials
+- are exposed directly to the internet
+
+Azure Sphere is designed to reduce those risks by building security into the entire device platform.
+
+### *The Security Model*
+
+Azure Sphere follows a defense-in-depth approach.
+
+<CardGrid>
+  <Card title="Hardware Root Of Trust" icon="document">
+    Security begins in the chip itself and helps establish device identity and trusted boot.
+  </Card>
+
+  <Card title="Secure Boot" icon="setting">
+    The device starts only trusted software that has been validated.
+  </Card>
+
+  <Card title="Ongoing Updates" icon="warning">
+    Microsoft provides update and maintenance support to reduce long-term vulnerabilities.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+<Steps>
+1. A certified Azure Sphere device is manufactured with secured hardware.
+2. The device runs `Azure Sphere OS`.
+3. The device authenticates through the Azure Sphere security service.
+4. Microsoft helps maintain trust, certificate handling, and software updates.
+5. The device continues operating with a stronger security posture over time.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Industrial Devices" icon="document">
+    Protect factory equipment and control systems that are connected to networks.
+  </Card>
+
+  <Card title="Consumer Electronics" icon="database">
+    Secure smart products such as appliances or connected home devices.
+  </Card>
+
+  <Card title="Embedded Security" icon="setting">
+    Add stronger security to small-purpose connected devices that cannot rely on traditional server-style protection.
+  </Card>
+</CardGrid>
+
+### *Azure Sphere Vs. IoT Hub*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Sphere` | Securing the device platform itself |
+| `Azure IoT Hub` | Managing communication between devices and the cloud |
+
+`Azure Sphere` protects the device foundation.
+
+`IoT Hub` manages cloud communication and device interaction at scale.
+
+### *Summary*
+
+- `Azure Sphere` is a security platform for connected embedded devices
+- It combines secured hardware, a secured OS, and a cloud security service
+- It is designed to reduce the risk of vulnerable internet-connected devices
+- It focuses on device security rather than only telemetry or dashboards
+- It complements broader Azure IoT services by securing the device layer

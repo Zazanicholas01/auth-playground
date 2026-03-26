@@ -1,0 +1,172 @@
+---
+title: Azure SQL Architecture
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section explains the architecture and deployment models behind `Azure SQL Database`.
+
+### *Azure SQL Architecture*
+
+`Azure SQL Database` is a managed relational database platform built on the SQL Server engine.
+
+Its architecture is designed to reduce operational overhead while still providing strong relational capabilities, backup management, scaling options, and built-in availability.
+
+A good architecture decision is not only about "using SQL", but also about choosing the right deployment and service model.
+
+### *Main Deployment Models*
+
+Azure SQL is usually approached through three main models.
+
+| Model | Best For |
+| --- | --- |
+| Single Database | One isolated application database |
+| Elastic Pool | Multiple databases sharing compute resources |
+| Managed Instance | Higher SQL Server compatibility for migration scenarios |
+
+### *Single Database*
+
+A `Single Database` is the simplest model.
+
+It is best when one application or one service needs its own isolated database with dedicated resources.
+
+Typical use cases:
+
+- one business application
+- one API backend
+- one production database with isolated performance needs
+
+### *Elastic Pool*
+
+An `Elastic Pool` is used when multiple databases have variable or unpredictable usage patterns.
+
+Instead of giving each database its own full compute allocation, the databases share a pool of resources.
+
+This is useful when:
+
+- many small application databases exist
+- peak usage does not happen at the same time
+- cost optimization matters
+
+<CardGrid>
+  <Card title="Shared Compute" icon="document">
+    Multiple databases consume from the same pool of resources.
+  </Card>
+
+  <Card title="Cost Efficiency" icon="setting">
+    Reduces waste when many databases are idle for part of the day.
+  </Card>
+
+  <Card title="Multi-App Scenarios" icon="database">
+    Useful for SaaS-style or multi-tenant environments.
+  </Card>
+</CardGrid>
+
+### *Managed Instance*
+
+`Managed Instance` provides higher compatibility with traditional SQL Server environments.
+
+It is often chosen when migrating older systems that depend on SQL Server features not fully matched by the simpler database model.
+
+It is best for:
+
+- lift-and-shift migrations
+- legacy SQL Server applications
+- environments needing higher instance-level compatibility
+
+### *Compute Models*
+
+Azure SQL can scale through different compute approaches depending on the selected service tier.
+
+Main architectural considerations include:
+
+- CPU and memory capacity
+- storage size
+- transaction volume
+- concurrency
+- workload predictability
+
+The database should be sized according to the actual workload, not only the current size of the data.
+
+### *High Availability And Backups*
+
+High availability is built into the managed platform.
+
+Azure also manages:
+
+- automated backups
+- point-in-time restore
+- platform resilience
+- failover handling at the service level
+
+<Aside type="note">
+One of the biggest advantages of Azure SQL is that backup and baseline high availability are part of the service design rather than being built manually by the customer.
+</Aside>
+
+### *Networking And Access*
+
+Azure SQL supports multiple access patterns.
+
+| Access Pattern | Best For |
+| --- | --- |
+| Public Endpoint With Firewall Rules | Simpler controlled access |
+| Private Endpoint / Private Link | Production environments with stronger network isolation |
+
+In secure production environments, private connectivity is often preferred because it reduces exposure and fits better with enterprise networking patterns.
+
+### *Security Layers*
+
+A strong Azure SQL design often includes multiple security controls.
+
+<CardGrid>
+  <Card title="Firewall Rules" icon="warning">
+    Restrict which public IP ranges can connect to the database service.
+  </Card>
+
+  <Card title="Private Networking" icon="database">
+    Use `Private Endpoint` to access the database through private Azure networking.
+  </Card>
+
+  <Card title="Secrets Management" icon="setting">
+    Store connection strings and credentials in `Azure Key Vault`.
+  </Card>
+
+  <Card title="Least Privilege" icon="document">
+    Give applications and administrators only the permissions they actually need.
+  </Card>
+</CardGrid>
+
+### *Typical Architecture Flow*
+
+<Steps>
+1. Choose the deployment model: `Single Database`, `Elastic Pool`, or `Managed Instance`.
+2. Size compute and storage according to workload needs.
+3. Configure networking and access controls.
+4. Create users, databases, and application roles.
+5. Connect the application with SQL drivers or tools.
+6. Monitor usage, scaling, and recovery requirements over time.
+</Steps>
+
+### *Architecture Mindset*
+
+A good Azure SQL architecture balances:
+
+- relational consistency
+- operational simplicity
+- performance needs
+- security requirements
+- cost efficiency
+
+The right model depends on whether the workload needs strong isolation, pooled efficiency, or maximum SQL Server compatibility.
+
+### *Summary*
+
+- `Azure SQL Database` supports several deployment models
+- `Single Database` is best for isolated workloads
+- `Elastic Pool` is best for multiple databases sharing capacity
+- `Managed Instance` is best for higher SQL Server compatibility
+- Networking, backups, HA, and security are all key parts of the architecture

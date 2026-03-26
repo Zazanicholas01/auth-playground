@@ -1,0 +1,23 @@
+---
+title: Q&A
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+<Steps>
+1. Come vengono pensate le policy di Taints / Tolerations / Affinity
+2. Standard Guidelines di sizing di requests/limits sia a livello di Nodo che di Pod
+3. Gestione di Secrets a livello aziendale in quanto non sicuri per natura
+4. Con che criteri vengono decise le repliche di applicativi all'intero dei Deployment
+5. Aggiornamenti cluster e componenti:
+    - Applicativo da aggiornare
+    - Aggiornamento versione Kubernetes
+    - Sistema operativo VM Underlying
+6. Pratiche di Backup / Restore / Disaster Recovery:
+    - Backup di ETCD e restore
+    - Backup Database in HA
+</Steps>

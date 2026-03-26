@@ -1,0 +1,66 @@
+---
+title: Network Troubleshooting
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Se un'applicazione è `Running` ma non riceve traffico, il problema e` spesso in uno dei livelli della rete.
+
+### *Percorso diagnostico*
+
+<Steps>
+1. Verifica la connettivita` diretta verso il Pod.
+2. Controlla `Service` ed `Endpoints`.
+3. Verifica la risoluzione DNS.
+4. Controlla `Ingress` o gateway.
+5. Analizza eventuali `NetworkPolicy`.
+</Steps>
+
+### *Livelli da controllare*
+
+<CardGrid>
+  <Card title="Pod" icon="document">
+    Verifica che l'app ascolti sulla porta corretta.
+  </Card>
+
+  <Card title="Service" icon="list-format">
+    Controlla selector, endpoints e mapping delle porte.
+  </Card>
+
+  <Card title="DNS" icon="setting">
+    Verifica CoreDNS e la risoluzione dei nomi.
+  </Card>
+
+  <Card title="Ingress" icon="warning">
+    Controlla controller, backend e routing HTTP/HTTPS.
+  </Card>
+
+  <Card title="NetworkPolicy" icon="close">
+    Verifica che il traffico non venga bloccato.
+  </Card>
+</CardGrid>
+
+### *Controlli principali*
+
+| Strato | Test | Cosa controllare |
+| --- | --- | --- |
+| `Pod` | `kubectl exec` + `curl` / `wget` | L'app risponde sulla porta corretta |
+| `Service` | `kubectl get endpoints` | Label e selector combaciano |
+| `DNS` | `nslookup` | `CoreDNS` e raggiungibilita` DNS |
+| `Ingress` | log del controller | Routing, backend, certificati |
+| `CNI` | route e connettivita` tra nodi | Comunicazione tra Pod su nodi diversi |
+
+### *Errori comuni*
+
+- `Endpoints` vuoti: problema di `labels` o `selectors`
+- nome DNS non risolto: problema di `CoreDNS`
+- `404` o `502` da Ingress: backend o regole errate
+- traffico bloccato: `NetworkPolicy` troppo restrittiva
+
+<Aside type="note">
+Una `NetworkPolicy` puo` bloccare traffico DNS o traffico tra namespace senza mostrare errori evidenti nell'applicazione.
+</Aside>

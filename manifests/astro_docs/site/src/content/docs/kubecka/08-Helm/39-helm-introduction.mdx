@@ -1,0 +1,58 @@
+---
+title: Helm Introduction
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+`Helm` e` il package manager di Kubernetes e semplifica installazione, configurazione e aggiornamento di applicazioni complesse.
+
+### *Concetti chiave*
+
+<CardGrid>
+  <Card title="Chart" icon="document">
+    Pacchetto Helm che contiene template e configurazioni.
+  </Card>
+
+  <Card title="Release" icon="rocket">
+    Istanza di una chart installata nel cluster.
+  </Card>
+
+  <Card title="Repo" icon="list-format">
+    Archivio online da cui scaricare chart.
+  </Card>
+</CardGrid>
+
+### *Installazione e uso base*
+
+<Steps>
+1. Installa il binario `Helm`.
+2. Verifica con `helm version`.
+3. Aggiungi un repository con `helm repo add`.
+4. Aggiorna l'indice con `helm repo update`.
+5. Cerca una chart con `helm search repo`.
+6. Installa con `helm install`.
+</Steps>
+
+
+### *Configurazione*
+
+- puoi personalizzare una chart tramite `values.yaml`
+- puoi anche usare `--set` per modifiche rapide
+- Helm genera i manifest Kubernetes a partire dai template
+
+### *Ciclo di vita*
+
+| Comando | Scopo |
+| --- | --- |
+| `helm install` | Crea una nuova release |
+| `helm upgrade` | Aggiorna una release esistente |
+| `helm rollback` | Torna a una revisione precedente |
+| `helm uninstall` | Rimuove la release |
+
+<Aside type="note">
+`Helm` tiene traccia della cronologia delle release, quindi supporta rollback rapidi.
+</Aside>

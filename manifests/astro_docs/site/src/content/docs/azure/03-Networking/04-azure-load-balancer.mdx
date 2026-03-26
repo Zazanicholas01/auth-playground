@@ -1,0 +1,126 @@
+---
+title: Azure Load Balancer
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Load Balancer`, the Azure service used to distribute network traffic across multiple backend resources.
+
+### *Azure Load Balancer*
+
+`Azure Load Balancer` is a Layer 4 load balancer.
+
+It distributes `TCP` and `UDP` traffic based on:
+
+- source IP
+- destination IP
+- source port
+- destination port
+- protocol
+
+It is designed for very high performance and high availability, but it does not inspect HTTP content like URLs or cookies.
+
+<Aside type="note">
+`Azure Load Balancer` works at the transport layer. If you need Layer 7 features such as SSL termination, path-based routing, or a web application firewall, `Application Gateway` is usually the better choice.
+</Aside>
+
+### *Main Load Balancer Types*
+
+Azure Load Balancer is commonly used in two forms.
+
+<CardGrid>
+  <Card title="Public Load Balancer" icon="document">
+    Distributes internet-facing traffic to backend resources such as virtual machines or scale sets.
+  </Card>
+
+  <Card title="Internal Load Balancer" icon="database">
+    Distributes private traffic inside a virtual network or between internal applications.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+`Azure Load Balancer` sends traffic to healthy backend instances.
+
+The core pieces are:
+
+<CardGrid>
+  <Card title="Frontend IP" icon="document">
+    The IP address that clients connect to, either public or private.
+  </Card>
+
+  <Card title="Backend Pool" icon="setting">
+    The group of virtual machines, VM scale sets, or IP addresses that receive traffic.
+  </Card>
+
+  <Card title="Health Probes" icon="warning">
+    Checks whether a backend instance is healthy before traffic is sent to it.
+  </Card>
+</CardGrid>
+
+### *Load Balancing Rules*
+
+A load balancer uses rules to map frontend traffic to the backend pool.
+
+Typical examples include:
+
+- forward frontend port `80` to backend port `80`
+- forward frontend port `443` to backend port `443`
+
+If a backend instance fails the health probe, it is removed from traffic rotation until it becomes healthy again.
+
+### *SKU Options*
+
+| SKU | Typical Use | Notes |
+| --- | --- | --- |
+| Basic | Small or legacy deployments | Limited features and smaller scope |
+| Standard | Production workloads | More secure, more scalable, and recommended for modern deployments |
+
+<Aside type="note">
+`Standard Load Balancer` is the preferred option for production because it offers better scalability, availability, and security controls.
+</Aside>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="VM Redundancy" icon="document">
+    Distribute traffic across multiple virtual machines so one server failure does not bring down the application.
+  </Card>
+
+  <Card title="Scale Sets" icon="setting">
+    Balance traffic across instances in a `VM Scale Set`.
+  </Card>
+
+  <Card title="Internal Services" icon="database">
+    Expose backend services privately inside a `VNet` without making them public on the internet.
+  </Card>
+</CardGrid>
+
+### *Traffic Flow*
+
+<Steps>
+1. A client connects to the frontend IP of the load balancer.
+2. The load balancer checks the configured rule for the destination port and protocol.
+3. Healthy backend instances are identified through health probes.
+4. Traffic is forwarded to one of the healthy backends.
+5. If a backend fails the probe, it stops receiving traffic.
+</Steps>
+
+### *Azure Load Balancer Vs. Application Gateway*
+
+| Service | Layer | Best For |
+| --- | --- | --- |
+| `Azure Load Balancer` | Layer 4 | High-performance TCP and UDP traffic distribution |
+| `Application Gateway` | Layer 7 | Web traffic with routing, TLS termination, and WAF support |
+
+### *Summary*
+
+- `Azure Load Balancer` distributes `TCP` and `UDP` traffic at Layer 4
+- It can be public or internal
+- It relies on frontend IPs, backend pools, rules, and health probes
+- `Standard` is the recommended SKU for production
+- It is commonly used with VMs and VM scale sets

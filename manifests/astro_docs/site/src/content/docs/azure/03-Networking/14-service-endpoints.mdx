@@ -1,0 +1,110 @@
+---
+title: Service Endpoints
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Service Endpoints`, a feature that extends virtual network identity to supported Azure platform services.
+
+### *Service Endpoints*
+
+A `Service Endpoint` allows resources in a subnet to connect more securely to Azure platform services such as:
+
+- `Azure Storage`
+- `Azure SQL`
+- `Key Vault`
+
+The service still uses its public endpoint, but Azure recognizes that the traffic is coming from an approved subnet inside your virtual network.
+
+This improves security without requiring a private IP address for the service.
+
+<Aside type="note">
+`Service Endpoints` are simpler than `Private Link`, but they do not make the service fully private because the service still exposes a public endpoint.
+</Aside>
+
+### *How Service Endpoints Work*
+
+When a service endpoint is enabled on a subnet:
+
+- Azure extends the identity of that subnet to the target Azure service
+- the service can restrict access to only that subnet
+- traffic goes over the Azure backbone instead of the public internet path
+
+This means the service can trust the subnet as an approved source.
+
+### *Why Use Service Endpoints*
+
+<CardGrid>
+  <Card title="Improved Security" icon="warning">
+    Restrict access to a supported Azure service so only selected VNets or subnets can reach it.
+  </Card>
+
+  <Card title="Simple Setup" icon="document">
+    Easier to configure than a private endpoint for many basic scenarios.
+  </Card>
+
+  <Card title="Azure Backbone" icon="setting">
+    Traffic stays on the Azure network path instead of leaving through the public internet route.
+  </Card>
+</CardGrid>
+
+### *Typical Flow*
+
+<Steps>
+1. Enable a `Service Endpoint` on a subnet.
+2. Select the Azure service type, such as `Storage` or `SQL`.
+3. Configure the target service firewall to allow that subnet.
+4. Resources in the subnet access the service through its normal public endpoint.
+5. Azure validates that the request comes from an approved subnet.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Storage Security" icon="document">
+    Limit a storage account so only workloads from specific subnets can access it.
+  </Card>
+
+  <Card title="Database Protection" icon="database">
+    Restrict platform databases such as `Azure SQL` to selected virtual network subnets.
+  </Card>
+
+  <Card title="Platform Integration" icon="setting">
+    Secure access to Azure services without deploying a private endpoint in every scenario.
+  </Card>
+</CardGrid>
+
+### *Service Endpoints Vs. Private Link*
+
+| Feature | Service Endpoints | Private Link |
+| --- | --- | --- |
+| Service Exposure | Still uses public endpoint | Uses private IP inside the VNet |
+| Complexity | Simpler | More advanced |
+| Isolation Level | Improved but not fully private | Stronger private isolation |
+| DNS Requirement | Usually simpler | Often requires private DNS configuration |
+
+### *When To Choose It*
+
+Use `Service Endpoints` when:
+
+- you want a simpler security improvement
+- public endpoint usage is acceptable
+- you want subnet-based access restriction to supported Azure services
+
+Use `Private Link` when:
+
+- the service must not be publicly exposed
+- stronger private isolation is required
+- private IP-based access is preferred
+
+### *Summary*
+
+- `Service Endpoints` extend subnet identity to supported Azure services
+- The service still uses a public endpoint
+- Traffic stays on the Azure backbone
+- They are simpler than `Private Link`
+- They help restrict Azure platform services to approved subnets

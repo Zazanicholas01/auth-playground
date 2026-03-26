@@ -1,0 +1,51 @@
+---
+title: Architecture Components
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+### Master Nodes VS Worker Nodes
+
+
+<CardGrid>
+    <Card title="Control Plane Node" icon="setting">
+        - Orchestrazione
+        - Componenti
+            - API Server
+            - ETCD
+            - Scheduler
+            - Controller Manager
+    </Card>
+
+    <Card title="Worker Node" icon="rocket">
+        - Eseguire workload
+        - Componenti
+            - Kubelet
+            - Kube-Proxy
+            - Container Runtime
+    </Card>
+</CardGrid>
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+
+#### Componenti del Control Plane
+
+| Componente | Funzione |
+| --- | --- |
+| API Server | Espone e gestisce le richieste Kubernetes |
+| ETCD | Salva lo stato del cluster |
+| Scheduler | Assegna i Pod ai nodi |
+| Controller Manager | Controlla e corregge lo stato del cluster |
+
+#### Componenti del Worker Node
+
+| Componente | Funzione |
+| --- | --- |
+| Kubelet | Esegue e monitora i Pod sul nodo |
+| Kube Proxy | Gestisce il traffico di rete dei Service |
+| Container Runtime | Avvia ed esegue i container |

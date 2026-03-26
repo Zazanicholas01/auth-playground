@@ -1,0 +1,119 @@
+---
+title: Scopes
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+
+This section explains the `Azure Management Hierarchy`, which defines the scopes where access control, policy, and governance are applied.
+
+Understanding these levels is essential for scaling an Azure environment without losing control.
+
+### *The Azure Hierarchy Of Scopes*
+
+Azure uses a nested parent-child structure.
+
+Decisions made at a higher level are inherited by the levels below.
+
+<Steps>
+1. `Management Groups`
+2. `Subscriptions`
+3. `Resource Groups`
+4. `Resources`
+</Steps>
+
+### *Management Groups*
+
+If an organization has many subscriptions, `Management Groups` provide a governance layer above the subscription level.
+
+<CardGrid>
+  <Card title="Scale" icon="document">
+    Supports up to `10,000` management groups in a single directory.
+  </Card>
+
+  <Card title="Hierarchy" icon="setting">
+    Can be nested up to `6` levels deep, in addition to the root and subscription levels.
+  </Card>
+
+  <Card title="Use Case" icon="warning">
+    Apply policies such as regional restrictions or security requirements across many subscriptions at once.
+  </Card>
+</CardGrid>
+
+### *Subscriptions*
+
+A `Subscription` is a logical unit of Azure services linked to an Azure account.
+
+<CardGrid>
+  <Card title="Billing Boundary" icon="document">
+    Invoices are generated at the subscription level.
+  </Card>
+
+  <Card title="Quota Boundary" icon="database">
+    Azure service limits, such as CPU core quotas, are usually applied per subscription.
+  </Card>
+
+  <Card title="Use Case" icon="warning">
+    Separate `Production` and `Development` environments so cost tracking and quotas remain isolated.
+  </Card>
+</CardGrid>
+
+### *Resource Groups*
+
+A `Resource Group` is a container for related resources that belong to the same Azure solution.
+
+<CardGrid>
+  <Card title="Lifecycle Boundary" icon="warning">
+    Resources in the same group often share the same lifecycle. Deleting the group deletes everything inside it.
+  </Card>
+
+  <Card title="Deployment Boundary" icon="setting">
+    `ARM` templates and `Bicep` deployments are usually targeted at a specific resource group.
+  </Card>
+
+  <Card title="Note" icon="document">
+    A resource can belong to only one resource group, even though resources in the same group may exist in different regions.
+  </Card>
+</CardGrid>
+
+`Resources` are the lowest level in the hierarchy.
+
+These are the individual Azure services you create, such as:
+
+- `Virtual Machines`
+- `Storage Accounts`
+- `SQL Databases`
+- `Virtual Networks`
+
+You can apply `RBAC` directly at the resource level when very granular access is needed.
+
+### *Scope Inheritance*
+
+Inheritance is one of the most important concepts in Azure governance.
+
+If a role or policy is assigned at a higher scope, it automatically applies to all child scopes below it.
+
+<Aside type="note">
+A permission assigned high in the hierarchy creates a wider blast radius because it affects more resources through inheritance.
+</Aside>
+
+### *Blast Radius Comparison*
+
+| Scope Level | Impact Of A Change | Recommended Usage |
+| --- | --- | --- |
+| Management Group | Huge | Corporate-wide policies, centralized security controls |
+| Subscription | High | Billing owners, environment-wide administrators |
+| Resource Group | Medium | Project teams, application contributors |
+| Resource | Low | Just-in-time access, specialized tasks |
+
+### *How To Think About Scope*
+
+<Steps>
+1. Start at the highest scope only when the rule should apply broadly.
+2. Use subscription scope for environment-wide control.
+3. Use resource group scope for application ownership.
+4. Use resource scope only when access must be very specific.
+</Steps>

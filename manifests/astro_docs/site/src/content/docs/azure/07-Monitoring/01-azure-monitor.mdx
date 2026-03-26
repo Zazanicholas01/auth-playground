@@ -1,0 +1,118 @@
+---
+title: Azure Monitor
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Monitor`, the central Azure service for collecting, analyzing, and acting on operational data.
+
+### *Azure Monitor*
+
+`Azure Monitor` is the main observability platform in Azure.
+
+It helps you understand the health, performance, and behavior of resources and applications by collecting telemetry from across the environment.
+
+Typical data sources include:
+
+- virtual machines
+- containers
+- databases
+- applications
+- network resources
+- Azure platform services
+
+<Aside type="note">
+`Azure Monitor` is the umbrella service for metrics, logs, alerts, dashboards, and deeper monitoring integrations across Azure.
+</Aside>
+
+### *What Azure Monitor Collects*
+
+Azure Monitor works with two main data types.
+
+<CardGrid>
+  <Card title="Metrics" icon="document">
+    Lightweight numerical values collected over time, such as CPU usage, memory pressure, or request count.
+  </Card>
+
+  <Card title="Logs" icon="database">
+    Detailed records and events used for troubleshooting, investigation, and advanced query analysis.
+  </Card>
+</CardGrid>
+
+### *Why Use Azure Monitor*
+
+<CardGrid>
+  <Card title="Health Visibility" icon="document">
+    Track the health and status of Azure resources and workloads.
+  </Card>
+
+  <Card title="Performance Analysis" icon="setting">
+    Understand trends such as latency, utilization, or throughput over time.
+  </Card>
+
+  <Card title="Alerting" icon="warning">
+    Trigger notifications or actions when important conditions occur.
+  </Card>
+
+  <Card title="Centralized Monitoring" icon="database">
+    Bring together data from many Azure services into one monitoring platform.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+<Steps>
+1. Azure resources and applications emit telemetry.
+2. `Azure Monitor` collects metrics and logs.
+3. Data is stored and made available for visualization and analysis.
+4. Alerts can be created on top of this telemetry.
+5. Teams use dashboards, queries, and notifications to respond to issues.
+</Steps>
+
+### *Main Monitoring Capabilities*
+
+| Capability | Purpose |
+| --- | --- |
+| Metrics | Real-time numeric monitoring and trending |
+| Logs | Detailed investigation and troubleshooting |
+| Alerts | Notify teams or trigger actions |
+| Dashboards | Visualize resource and application behavior |
+| Insights | Prebuilt monitoring experiences for services such as VMs and applications |
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Infrastructure Monitoring" icon="document">
+    Watch CPU, memory, disk, and network signals from compute and platform resources.
+  </Card>
+
+  <Card title="Application Monitoring" icon="setting">
+    Observe application health, failures, and request performance.
+  </Card>
+
+  <Card title="Operational Alerting" icon="warning">
+    Notify teams when a threshold is crossed or a resource becomes unhealthy.
+  </Card>
+</CardGrid>
+
+### *Azure Monitor And Related Services*
+
+Azure Monitor works closely with other monitoring tools in the Azure ecosystem.
+
+| Service | Role |
+| --- | --- |
+| `Azure Monitor` | Central platform for metrics, logs, alerts, and monitoring |
+| `Log Analytics` | Query and analyze log data |
+| `Application Insights` | Application-level observability and performance monitoring |
+
+### *Summary*
+
+- `Azure Monitor` is the main observability platform in Azure
+- It collects both metrics and logs
+- It supports dashboards, alerts, and operational analysis
+- It works across infrastructure, applications, and platform services
+- It acts as the foundation for deeper Azure monitoring tools

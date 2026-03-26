@@ -1,0 +1,120 @@
+---
+title: Azure Blob Storage
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Blob Storage`, the Azure service used for storing large amounts of unstructured object data.
+
+### *Azure Blob Storage*
+
+`Azure Blob Storage` is object storage for unstructured data.
+
+It is commonly used for:
+
+- images
+- videos
+- backups
+- logs
+- static website assets
+- analytics and AI datasets
+
+Blob storage is one of the most common services inside an `Azure Storage Account`.
+
+<Aside type="note">
+Blob storage is designed for scalability and durability, making it one of the default choices for cloud-native file and object storage.
+</Aside>
+
+### *Blob Structure*
+
+Blob data is organized in a simple hierarchy.
+
+<Steps>
+1. Create a `Storage Account`
+2. Create a `Container`
+3. Store one or more `Blobs` inside the container
+</Steps>
+
+A container is similar to a folder boundary for blobs, while each blob is an individual object.
+
+### *Blob Types*
+
+Azure Blob Storage supports different blob types.
+
+| Blob Type | Best For |
+| --- | --- |
+| Block Blob | Documents, images, videos, and general object storage |
+| Append Blob | Logging scenarios where data is continuously added |
+| Page Blob | Random read/write storage, commonly used for virtual machine disks |
+
+### *Access Tiers*
+
+Blob data can be placed into different access tiers depending on how often it is used.
+
+<CardGrid>
+  <Card title="Hot" icon="document">
+    Best for frequently accessed data. Higher storage cost, lower access cost.
+  </Card>
+
+  <Card title="Cool" icon="setting">
+    Best for infrequently accessed data kept for at least `30` days.
+  </Card>
+
+  <Card title="Cold" icon="warning">
+    Best for less frequently accessed data stored for at least `90` days.
+  </Card>
+
+  <Card title="Archive" icon="database">
+    Best for long-term retention. Data is offline and must be rehydrated before it can be read.
+  </Card>
+</CardGrid>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Static Content" icon="document">
+    Store images, CSS, JavaScript files, and website assets.
+  </Card>
+
+  <Card title="Backups And Logs" icon="database">
+    Keep backup files, diagnostic logs, and audit data.
+  </Card>
+
+  <Card title="Analytics Data" icon="setting">
+    Store large datasets for reporting, AI, and big data workloads.
+  </Card>
+</CardGrid>
+
+### *How Blob Storage Is Accessed*
+
+Blob data can be accessed in multiple ways.
+
+- Azure SDKs
+- REST APIs
+- Azure Portal
+- shared access signatures
+- managed identity integrations
+
+Access can be private or public depending on the storage configuration.
+
+### *Typical Flow*
+
+<Steps>
+1. Create a `Storage Account`.
+2. Create a blob `Container`.
+3. Upload one or more blobs.
+4. Set the correct access tier and permissions.
+5. Read, update, archive, or delete the blobs as needed.
+</Steps>
+
+### *Summary*
+
+- `Azure Blob Storage` is object storage for unstructured data
+- Data is organized as storage account -> container -> blob
+- Different blob types support different workload patterns
+- Access tiers help optimize cost
+- Blob Storage is commonly used for media, backups, logs, and datasets

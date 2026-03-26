@@ -1,0 +1,112 @@
+---
+title: Virtual Network
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Virtual Network`, the core networking service used to build private connectivity in Azure.
+
+### *Virtual Network*
+
+A `Virtual Network (VNet)` is a logically isolated private network in Azure.
+
+It acts as your own network sandbox where you define private IP address ranges, such as `10.0.0.0/16`.
+
+Inside a VNet, resources can communicate privately and can be segmented according to function or security needs.
+
+<Aside type="note">
+A `VNet` is the foundation for most Azure networking designs, including subnets, private workloads, hybrid connectivity, and hub-and-spoke architectures.
+</Aside>
+
+### *Subnets*
+
+`Subnets` are smaller network segments inside a `VNet`.
+
+They are used to organize resources and apply different security boundaries.
+
+<CardGrid>
+  <Card title="Public Subnet" icon="document">
+    Typically used for resources such as web servers that need connectivity to the internet.
+  </Card>
+
+  <Card title="Private Subnet" icon="warning">
+    Used for internal services such as databases that should not be directly reachable from the internet.
+  </Card>
+
+  <Card title="Gateway Subnet" icon="setting">
+    Reserved subnet required for services such as `VPN Gateway` when connecting Azure to on-premises environments.
+  </Card>
+</CardGrid>
+
+### *VNet Peering*
+
+By default, two different `VNets` cannot communicate.
+
+`VNet Peering` creates a private connection between them.
+
+<CardGrid>
+  <Card title="Low Latency" icon="document">
+    Peered traffic stays on Microsoft's private global network and does not traverse the public internet.
+  </Card>
+
+  <Card title="Regional Or Global" icon="setting">
+    VNets can be peered within the same region or across different regions.
+  </Card>
+
+  <Card title="Non-Transitive" icon="warning">
+    If `VNet A` is peered with `VNet B`, and `VNet B` is peered with `VNet C`, then `VNet A` cannot automatically talk to `VNet C`.
+  </Card>
+</CardGrid>
+
+
+### *Hybrid Connectivity Options*
+
+When Azure must communicate with physical infrastructure on-premises, there are three main connectivity models.
+
+| Option | Description | Typical Use |
+| --- | --- | --- |
+| Point-to-Site VPN | One computer connects to Azure through an encrypted tunnel | Remote developers, small environments |
+| Site-to-Site VPN | An entire office network connects to Azure through a permanent encrypted tunnel over the internet | Small and medium businesses |
+| ExpressRoute | Dedicated private connection between the datacenter and Azure | Large enterprises with high bandwidth and low latency requirements |
+
+### *Hub And Spoke Architecture*
+
+A common Azure networking design is the `Hub and Spoke` model.
+
+<CardGrid>
+  <Card title="Hub" icon="document">
+    Central VNet containing shared services such as firewalls, VPN gateways, or ExpressRoute gateways.
+  </Card>
+
+  <Card title="Spokes" icon="database">
+    Separate VNets used by individual applications, teams, or projects.
+  </Card>
+
+  <Card title="Connection" icon="setting">
+    Each spoke is peered to the hub so workloads can share common connectivity and security services.
+  </Card>
+</CardGrid>
+
+
+### *Typical Flow*
+
+<Steps>
+1. Create a `Virtual Network` with a defined address space.
+2. Divide the VNet into subnets based on workload type and security needs.
+3. Peer VNets together when separate environments must communicate.
+4. Add hybrid connectivity with `VPN` or `ExpressRoute` if on-premises access is required.
+5. Use a `Hub and Spoke` design when multiple projects must share central networking services.
+</Steps>
+
+
+### *Summary*
+
+- `VNet` is the private networking foundation of Azure
+- `Subnets` organize and isolate workloads
+- `VNet Peering` connects VNets privately but is not transitive
+- `VPN` and `ExpressRoute` connect Azure to on-premises networks
+- `Hub and Spoke` is a common enterprise design for shared connectivity and security

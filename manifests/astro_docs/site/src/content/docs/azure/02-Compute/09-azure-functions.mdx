@@ -1,0 +1,126 @@
+---
+title: Azure Functions
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Functions`, the serverless compute service used to run small units of code in response to events.
+
+### *Azure Functions*
+
+`Azure Functions` is a `serverless` compute platform.
+
+Instead of managing virtual machines or full application servers, you deploy individual functions that run only when triggered.
+
+This makes it ideal for:
+
+- event-driven applications
+- background automation
+- API endpoints
+- scheduled tasks
+
+<Aside type="note">
+With Azure Functions, Microsoft manages the underlying infrastructure, while you focus on the function code and trigger logic.
+</Aside>
+
+### *How Functions Work*
+
+A function runs when a specific trigger occurs.
+
+Common triggers include:
+
+- HTTP requests
+- timer schedules
+- storage events
+- queue messages
+- service bus events
+
+After the trigger fires, the function executes code and can optionally send output to another service.
+
+### *Main Features*
+
+<CardGrid>
+  <Card title="Event Driven" icon="document">
+    Functions run in response to events instead of staying online all the time.
+  </Card>
+
+  <Card title="Scale Automatically" icon="setting">
+    Azure automatically adds or removes instances depending on workload demand.
+  </Card>
+
+  <Card title="Pay For Execution" icon="warning">
+    In serverless plans, you pay only for execution time and consumed resources.
+  </Card>
+</CardGrid>
+
+### *Hosting Plans*
+
+Azure Functions supports different hosting models.
+
+| Plan | Best For |
+| --- | --- |
+| Consumption | Fully serverless workloads with unpredictable or burst traffic |
+| Premium | More control, no cold start for some workloads, VNet support, and higher scale needs |
+| Dedicated | Run functions on an existing App Service Plan |
+
+### *Common Triggers*
+
+<CardGrid>
+  <Card title="HTTP Trigger" icon="document">
+    Run a function when an HTTP request is received, useful for APIs and webhooks.
+  </Card>
+
+  <Card title="Timer Trigger" icon="setting">
+    Run code on a schedule, such as every hour or every night.
+  </Card>
+
+  <Card title="Queue Or Event Trigger" icon="database">
+    Process messages from queues, event streams, or service bus systems.
+  </Card>
+</CardGrid>
+
+### *Typical Flow*
+
+<Steps>
+1. Define a function and choose a trigger.
+2. Azure listens for the trigger event.
+3. When the event occurs, the function code runs.
+4. The function processes the input and optionally writes output.
+5. Azure scales the function platform based on execution demand.
+</Steps>
+
+### *Functions Vs. App Service Vs. Container Apps*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Functions` | Event-driven code and short-lived automation |
+| `App Service` | Full web apps and APIs with traditional hosting patterns |
+| `Azure Container Apps` | Containerized microservices and event-driven apps needing more runtime flexibility |
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Automation" icon="document">
+    Run background jobs such as cleanup tasks, scheduled reports, or maintenance jobs.
+  </Card>
+
+  <Card title="API Endpoints" icon="setting">
+    Expose lightweight APIs or webhook receivers without managing servers.
+  </Card>
+
+  <Card title="Event Processing" icon="warning">
+    React to storage uploads, queue messages, or service bus events in real time.
+  </Card>
+</CardGrid>
+
+### *Summary*
+
+- `Azure Functions` is a serverless compute service
+- Functions run in response to triggers
+- Azure handles scaling automatically
+- It is ideal for automation, APIs, and event-driven workloads
+- Different hosting plans support different performance and networking needs

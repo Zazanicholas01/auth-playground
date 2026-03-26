@@ -1,0 +1,97 @@
+---
+title: Azure Container Instances
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Container Instances`, the fastest and simplest way to run containers in Azure without managing servers or orchestrators.
+
+### *Azure Container Instances*
+
+If a `Virtual Machine` is a house and a `Scale Set` is a housing development, `Azure Container Instances (ACI)` is like a hotel room.
+
+You start it when needed, use it for a short time, and stop paying when it is no longer required.
+
+`ACI` is a serverless container service.
+
+You provide a container image, and Azure runs it without requiring VM management or a Kubernetes cluster.
+
+<Aside type="note">
+`ACI` is ideal when you need containers quickly but do not want the operational overhead of managing infrastructure.
+</Aside>
+
+### *Why ACI Is Considered Serverless*
+
+<CardGrid>
+  <Card title="Zero Infrastructure Management" icon="document">
+    You do not manage the underlying VM, operating system, patching, or physical hardware.
+  </Card>
+
+  <Card title="Rapid Startup" icon="setting">
+    Containers can start in seconds, which is much faster than most virtual machine startup times.
+  </Card>
+
+  <Card title="Per-Second Billing" icon="warning">
+    Billing is based on the `vCPU` and memory consumed, calculated down to the second.
+  </Card>
+</CardGrid>
+
+### *Container Groups*
+
+The top-level ACI resource is a `Container Group`.
+
+A container group is a collection of containers scheduled on the same host machine.
+
+Containers inside the same group share:
+
+- lifecycle
+- local network
+- mounted storage volumes
+
+This makes ACI useful for the `sidecar pattern`, where one container runs the main application and another handles tasks such as logging or synchronization.
+
+### *How ACI Works*
+
+<Steps>
+1. You provide a container image, usually from a container registry.
+2. Azure creates a `Container Group`.
+3. The containers start on shared infrastructure managed by Microsoft.
+4. The workload runs for as long as needed.
+5. When the workload finishes, the container group can stop and billing ends.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="CI/CD Build Agents" icon="document">
+    A container starts during a pipeline run, builds the application, executes tests, and then shuts down.
+  </Card>
+
+  <Card title="Data Processing" icon="database">
+    A file event triggers a container to start, process data, write results, and exit.
+  </Card>
+
+  <Card title="Bursting From Kubernetes" icon="warning">
+    `AKS` can temporarily offload extra work into `ACI` when demand spikes.
+  </Card>
+</CardGrid>
+
+### *When To Use ACI*
+
+| Good Fit | Why |
+| --- | --- |
+| Short-lived workloads | Fast startup and per-second billing |
+| Simple container execution | No cluster or VM management required |
+| Event-driven jobs | Containers can run only when triggered |
+| Temporary burst capacity | Useful for handling short demand peaks |
+
+### *Summary*
+
+- `ACI` is the simplest Azure service for running containers
+- It is a `serverless container` platform
+- `Container Groups` allow multiple containers to share lifecycle and networking
+- It works well for temporary, event-driven, and burst workloads

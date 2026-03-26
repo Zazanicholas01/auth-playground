@@ -1,0 +1,115 @@
+---
+title: Microsoft Sentinel
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Microsoft Sentinel`, the cloud-native SIEM and SOAR platform in Azure.
+
+### *Microsoft Sentinel*
+
+`Microsoft Sentinel` is a cloud-native security operations platform.
+
+It combines:
+
+- `SIEM` (`Security Information and Event Management`)
+- `SOAR` (`Security Orchestration, Automation, and Response`)
+
+Its role is to collect security data, detect threats, investigate incidents, and help automate responses.
+
+<Aside type="note">
+If `Defender for Cloud` focuses on improving security posture and workload protection, `Microsoft Sentinel` focuses on security operations and incident response.
+</Aside>
+
+### *What Sentinel Does*
+
+<CardGrid>
+  <Card title="Data Collection" icon="document">
+    Ingest security-related logs and events from Azure, Microsoft services, on-premises systems, and other platforms.
+  </Card>
+
+  <Card title="Threat Detection" icon="warning">
+    Detect suspicious patterns and generate alerts based on analytics rules and threat intelligence.
+  </Card>
+
+  <Card title="Investigation" icon="database">
+    Correlate events into incidents and help analysts investigate what happened.
+  </Card>
+
+  <Card title="Automation" icon="setting">
+    Trigger workflows and automated response steps using playbooks.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+<Steps>
+1. Connect data sources to `Microsoft Sentinel`.
+2. Logs are ingested into the monitoring and analytics platform.
+3. Analytics rules detect suspicious behavior.
+4. Related alerts are grouped into incidents.
+5. Security teams investigate and optionally trigger automated responses.
+</Steps>
+
+### *Common Data Sources*
+
+Sentinel can ingest data from many sources, such as:
+
+- Azure resources
+- Microsoft 365
+- Microsoft Entra ID
+- firewalls and appliances
+- on-premises servers
+- third-party security tools
+
+This makes it a central point for security monitoring across environments.
+
+### *Key Capabilities*
+
+| Capability | Purpose |
+| --- | --- |
+| Analytics Rules | Detect suspicious patterns and generate alerts |
+| Incidents | Group related alerts into one investigation case |
+| Workbooks | Visualize security data and trends |
+| Hunting Queries | Search for suspicious activity using `KQL` |
+| Playbooks | Automate response actions |
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Security Monitoring" icon="document">
+    Centralize logs and watch for threats across cloud and hybrid environments.
+  </Card>
+
+  <Card title="Threat Investigation" icon="database">
+    Investigate incidents by correlating events from many systems.
+  </Card>
+
+  <Card title="Automated Response" icon="setting">
+    Use playbooks to notify teams or trigger remediation workflows.
+  </Card>
+</CardGrid>
+
+### *Sentinel Vs. Defender For Cloud*
+
+| Service | Best For |
+| --- | --- |
+| `Microsoft Defender for Cloud` | Security posture management and workload protection |
+| `Microsoft Sentinel` | Security operations, incident detection, and response |
+
+They work well together:
+
+- `Defender for Cloud` improves security posture and detects workload threats
+- `Sentinel` collects and correlates security signals across the wider environment
+
+### *Summary*
+
+- `Microsoft Sentinel` is Azure's cloud-native `SIEM` and `SOAR` platform
+- It collects, analyzes, and correlates security data
+- It helps detect, investigate, and respond to incidents
+- It supports automation through playbooks
+- It complements `Defender for Cloud` in the Azure security stack

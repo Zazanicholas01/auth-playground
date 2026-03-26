@@ -1,0 +1,116 @@
+---
+title: Microsoft Fabric
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Microsoft Fabric`, the unified analytics platform that brings together data engineering, data integration, analytics, and business intelligence in one environment.
+
+### *Microsoft Fabric*
+
+`Microsoft Fabric` is an end-to-end data and analytics platform from Microsoft.
+
+It is designed to unify multiple analytics workloads into one SaaS-style environment.
+
+Instead of stitching together many separate tools, Fabric brings them into one platform for:
+
+- data integration
+- data engineering
+- data warehousing
+- real-time analytics
+- business intelligence
+
+<Aside type="note">
+`Microsoft Fabric` is focused on simplifying analytics architecture by combining many capabilities into one managed experience.
+</Aside>
+
+### *Why Fabric Matters*
+
+Traditional analytics platforms often require many separate services and handoffs.
+
+Fabric aims to reduce that complexity by offering a more unified model.
+
+It is especially useful when teams want:
+
+- fewer disconnected tools
+- tighter analytics collaboration
+- simpler end-to-end data workflows
+- strong integration with Power BI and Microsoft analytics services
+
+### *Main Workload Areas*
+
+<CardGrid>
+  <Card title="Data Engineering" icon="document">
+    Build and prepare large-scale data pipelines and transformation workflows.
+  </Card>
+
+  <Card title="Data Warehousing" icon="database">
+    Store and query analytical data for reporting and decision-making.
+  </Card>
+
+  <Card title="Real-Time Analytics" icon="setting">
+    Work with streaming or continuously arriving data.
+  </Card>
+
+  <Card title="Business Intelligence" icon="warning">
+    Connect analytics outputs directly to reporting and visualization experiences.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+Fabric is designed as a unified analytics environment.
+
+The idea is that data can move through one shared platform instead of being constantly copied across disconnected systems.
+
+### *Typical Flow*
+
+<Steps>
+1. Data is ingested from operational systems or external sources.
+2. Data engineering processes prepare and transform the data.
+3. Analytical storage or warehouse layers organize it for use.
+4. Real-time or batch analytics run on top of the prepared data.
+5. Reports and insights are delivered to users through connected BI tools.
+</Steps>
+
+### *Fabric Vs. Synapse*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Synapse Analytics` | Azure-native integrated analytics across warehousing and pipelines |
+| `Microsoft Fabric` | Unified SaaS-style analytics experience with deep BI integration |
+
+There is overlap between the two.
+
+A simple way to think about it is:
+
+- `Synapse` is more Azure-platform oriented
+- `Fabric` is more unified analytics-product oriented
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Unified Analytics" icon="document">
+    Bring data engineering, warehousing, and reporting into one managed platform.
+  </Card>
+
+  <Card title="Business Reporting" icon="database">
+    Connect analytical outputs directly to decision-making and dashboard tools.
+  </Card>
+
+  <Card title="Simplified Architecture" icon="setting">
+    Reduce the operational complexity of combining many separate analytics services.
+  </Card>
+</CardGrid>
+
+### *Summary*
+
+- `Microsoft Fabric` is a unified analytics platform
+- It combines engineering, warehousing, real-time analytics, and BI
+- It aims to simplify end-to-end data architecture
+- It overlaps with some Azure analytics services but emphasizes a more integrated SaaS experience
+- It is especially useful for organizations that want one analytics platform across multiple data workloads

@@ -1,0 +1,118 @@
+---
+title: Route Tables And User Defined Routes
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Route Tables` and `User Defined Routes`, the Azure tools used to control how traffic moves inside and outside a virtual network.
+
+### *Route Tables And UDRs*
+
+Azure automatically creates system routes so resources in a `Virtual Network` know how to reach local networks, the internet, and connected services.
+
+When the default path is not enough, you can override it with a `User Defined Route (UDR)`.
+
+A `Route Table` is the container that holds one or more custom routes.
+
+These route tables are usually associated with subnets.
+
+<Aside type="note">
+`UDRs` are commonly used to force traffic through security appliances such as `Azure Firewall`, virtual appliances, or custom network inspection paths.
+</Aside>
+
+### *Why Use User Defined Routes*
+
+<CardGrid>
+  <Card title="Traffic Control" icon="document">
+    Override the default Azure routing path and decide where traffic should go.
+  </Card>
+
+  <Card title="Security Inspection" icon="warning">
+    Force traffic through a firewall or network virtual appliance before it reaches its destination.
+  </Card>
+
+  <Card title="Custom Architecture" icon="setting">
+    Support designs such as `Hub and Spoke`, hybrid connectivity, or controlled egress paths.
+  </Card>
+</CardGrid>
+
+### *How A Route Works*
+
+Each route usually contains:
+
+- address prefix
+- next hop type
+- optional next hop IP address
+
+Example idea:
+
+- destination: `0.0.0.0/0`
+- next hop: firewall private IP
+
+This means all outbound traffic is sent to the firewall first.
+
+### *Common Next Hop Types*
+
+| Next Hop Type | Purpose |
+| --- | --- |
+| Virtual Appliance | Send traffic to a firewall or network virtual appliance |
+| Virtual Network Gateway | Send traffic to VPN or ExpressRoute connectivity |
+| Internet | Send traffic directly to the internet |
+| None | Blackhole the traffic and drop it |
+
+### *Typical Flow*
+
+<Steps>
+1. Create a `Route Table`.
+2. Add one or more `UDRs` to it.
+3. Associate the route table with a subnet.
+4. Azure checks the route table when a resource sends traffic.
+5. The packet is forwarded to the configured next hop.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Azure Firewall Routing" icon="warning">
+    Force all outbound traffic from spoke VNets through a central firewall in the hub.
+  </Card>
+
+  <Card title="Hybrid Connectivity" icon="document">
+    Route on-premises traffic through `VPN Gateway` or `ExpressRoute`.
+  </Card>
+
+  <Card title="Custom Egress Path" icon="setting">
+    Control how workloads reach external services or inspection appliances.
+  </Card>
+</CardGrid>
+
+### *Route Tables In Hub And Spoke*
+
+In a `Hub and Spoke` design, route tables are often used to make sure spoke traffic does not go directly to the internet.
+
+Instead, the traffic is redirected to:
+
+- `Azure Firewall`
+- a network virtual appliance
+- a hybrid gateway
+
+This helps centralize security and monitoring.
+
+### *System Routes Vs. UDRs*
+
+| Route Type | Managed By | Purpose |
+| --- | --- | --- |
+| System Routes | Azure | Default connectivity inside Azure |
+| User Defined Routes | Customer | Custom routing for architecture and security needs |
+
+### *Summary*
+
+- `Route Tables` store custom routes in Azure
+- `UDRs` override the default Azure path
+- They are commonly attached to subnets
+- They are useful for firewalls, hybrid connectivity, and hub-and-spoke routing
+- They help control the path traffic takes through the network

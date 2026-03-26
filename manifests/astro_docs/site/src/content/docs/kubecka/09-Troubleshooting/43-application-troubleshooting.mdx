@@ -1,0 +1,61 @@
+---
+title: Application Troubleshooting
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Il troubleshooting in Kubernetes richiede un approccio progressivo: stato, eventi, log, shell e rete.
+
+### *Workflow base*
+
+<Steps>
+1. Controlla lo stato con `kubectl get pods`.
+2. Analizza eventi e dettagli con `kubectl describe`.
+3. Leggi i log con `kubectl logs`.
+4. Entra nel Pod con `kubectl exec`.
+5. Verifica `Service`, `Endpoints` e `Ingress`.
+</Steps>
+
+### *Comandi principali*
+
+<CardGrid>
+  <Card title="kubectl get" icon="list-format">
+    Mostra lo stato generale dei Pod e delle risorse.
+  </Card>
+
+  <Card title="kubectl describe" icon="document">
+    Mostra dettagli ed eventi utili al debugging.
+  </Card>
+
+  <Card title="kubectl logs" icon="information">
+    Mostra i log del container.
+  </Card>
+
+  <Card title="kubectl exec" icon="setting">
+    Permette di entrare nel Pod e testare dall'interno.
+  </Card>
+</CardGrid>
+
+### *Problemi comuni*
+
+| Stato / Errore | Causa probabile | Azione |
+| --- | --- | --- |
+| `Pending` | Risorse insufficienti o vincoli di scheduling | Controlla `describe pod` e i nodi |
+| `ImagePullBackOff` | Immagine errata o credenziali mancanti | Verifica immagine e `imagePullSecrets` |
+| `CrashLoopBackOff` | L'app parte e poi crasha | Controlla i log |
+| `OOMKilled` | Superato il limite di memoria | Aumenta i `limits` |
+| `Evicted` | Nodo senza RAM o disco sufficiente | Libera risorse o ridimensiona il nodo |
+
+### *Troubleshooting del networking*
+
+- verifica `kubectl get endpoints <service>`
+- controlla `port` e `targetPort`
+- verifica l'`Ingress` e il suo `Address`
+
+<Aside type="note">
+Se gli `Endpoints` sono vuoti, spesso il problema è nei `labels` o nei `selectors`.
+</Aside>

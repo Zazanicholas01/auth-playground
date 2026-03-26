@@ -1,0 +1,60 @@
+---
+title: Network Policies
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Di default, i Pod possono comunicare liberamente. Le `NetworkPolicy` limitano il traffico tra Pod e verso l'esterno.
+
+### *Come funzionano*
+
+<CardGrid>
+  <Card title="Namespace-scoped" icon="document">
+    Le policy valgono all'interno di un namespace.
+  </Card>
+
+  <Card title="Ingress" icon="down-arrow">
+    Controlla il traffico in entrata verso i Pod selezionati.
+  </Card>
+
+  <Card title="Egress" icon="up-arrow">
+    Controlla il traffico in uscita dai Pod selezionati.
+  </Card>
+
+  <Card title="CNI support" icon="warning">
+    Servono plugin CNI compatibili come `Calico`, `Cilium` o `Weave`.
+  </Card>
+</CardGrid>
+
+### *Default Deny*
+
+<Steps>
+1. Una `NetworkPolicy` seleziona uno o piu` Pod.
+2. I Pod selezionati diventano isolati per `Ingress`, `Egress` o entrambi.
+3. Solo il traffico esplicitamente consentito viene permesso.
+4. Tutto il resto viene bloccato.
+</Steps>
+
+<Aside type="caution">
+La best practice è partire da una policy `Default Deny` e aprire solo le connessioni necessarie.
+</Aside>
+
+### *Selettori principali*
+
+| Selettore | Scopo |
+| --- | --- |
+| `podSelector` | Seleziona Pod nello stesso namespace |
+| `namespaceSelector` | Permette traffico da o verso un intero namespace |
+| `ipBlock` | Permette traffico verso o da specifici range IP |
+
+### *Idea chiave*
+
+Le `NetworkPolicy` funzionano come un firewall di livello 3 e 4:
+
+- filtrano per IP
+- filtrano per porte
+- usano label e selettori per definire chi puo` parlare con chi

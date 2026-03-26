@@ -1,0 +1,124 @@
+---
+title: Azure Digital Twins
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Digital Twins`, the Azure service used to model real-world environments and relationships in a digital form.
+
+### *Azure Digital Twins*
+
+`Azure Digital Twins` is a platform for creating digital models of physical environments, assets, and systems.
+
+Instead of only collecting raw telemetry, it helps represent:
+
+- buildings
+- rooms
+- devices
+- machines
+- people
+- relationships between those entities
+
+This allows applications to understand not only device data, but also the context around that data.
+
+<Aside type="note">
+`Azure Digital Twins` is useful when the value is not only in the sensor reading itself, but in how that reading relates to spaces, equipment, and business structures.
+</Aside>
+
+### *What A Digital Twin Represents*
+
+A digital twin is a software model of a real-world entity.
+
+Examples:
+
+- one room in a building
+- one HVAC unit
+- one production line
+- one warehouse area
+
+Each twin can store properties, state, and relationships to other twins.
+
+### *Core Concepts*
+
+<CardGrid>
+  <Card title="Twins" icon="document">
+    Digital representations of real-world entities such as devices, spaces, or assets.
+  </Card>
+
+  <Card title="Models" icon="setting">
+    Definitions that describe the structure and properties of a type of twin.
+  </Card>
+
+  <Card title="Relationships" icon="database">
+    Connections between twins, such as a sensor being located inside a room or a machine belonging to a production line.
+  </Card>
+
+  <Card title="Graph" icon="warning">
+    The overall environment is represented as a connected graph of entities and relationships.
+  </Card>
+</CardGrid>
+
+### *Why Use Azure Digital Twins*
+
+<CardGrid>
+  <Card title="Contextual Data" icon="document">
+    Understand telemetry in the context of the environment where it happens.
+  </Card>
+
+  <Card title="Relationship Modeling" icon="setting">
+    Model how spaces, devices, and assets are connected to each other.
+  </Card>
+
+  <Card title="Operational Insight" icon="warning">
+    Build smarter monitoring, automation, and analytics based on the full environment model.
+  </Card>
+</CardGrid>
+
+### *Typical Flow*
+
+<Steps>
+1. Define models for the types of entities in the environment.
+2. Create twins based on those models.
+3. Create relationships between the twins.
+4. Ingest telemetry or events from connected systems.
+5. Query the graph to understand the state of the environment.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Smart Buildings" icon="document">
+    Model rooms, floors, sensors, HVAC systems, and occupancy relationships.
+  </Card>
+
+  <Card title="Industrial Sites" icon="database">
+    Represent machines, lines, facilities, and equipment relationships in factories.
+  </Card>
+
+  <Card title="Operational Analytics" icon="setting">
+    Combine telemetry with environment structure to improve insight and automation.
+  </Card>
+</CardGrid>
+
+### *Azure Digital Twins Vs. IoT Hub*
+
+| Service | Best For |
+| --- | --- |
+| `Azure IoT Hub` | Device communication and telemetry exchange |
+| `Azure Digital Twins` | Modeling environments, assets, and relationships |
+
+`IoT Hub` focuses on device communication.
+
+`Azure Digital Twins` focuses on contextual modeling and connected entity relationships.
+
+### *Summary*
+
+- `Azure Digital Twins` creates digital models of real-world environments
+- It represents entities, properties, and relationships as a graph
+- It adds context to telemetry and operational data
+- It is useful for smart buildings, industrial systems, and connected environments
+- It complements IoT services by modeling the world around the devices

@@ -1,0 +1,51 @@
+---
+title: Autoscaling
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+
+<CardGrid>
+  <Card title="HPA" icon="rocket">
+    Aumenta o riduce il numero di Pod.
+  </Card>
+
+  <Card title="VPA" icon="setting">
+    Modifica CPU e RAM assegnate al Pod.
+  </Card>
+</CardGrid>
+
+### *Horizontal Pod Autoscaler*
+
+L'`HPA` scala orizzontalmente il workload modificando il numero di repliche.
+
+- Monitora metriche come CPU o RAM.
+- Usa il `Metrics Server`.
+- Se la soglia viene superata, aumenta i Pod.
+- Se il carico scende, puo` ridurre i Pod.
+
+<Aside type="tip">
+Per funzionare correttamente, l'`HPA` richiede `resources requests` definite nei Pod.
+</Aside>
+
+### *Vertical Pod Autoscaler*
+
+Il `VPA` scala verticalmente modificando le risorse del Pod.
+
+- Analizza l'utilizzo reale di CPU e RAM.
+- Suggerisce o applica nuove `requests` e `limits`.
+- E' utile per workload difficili da distribuire su piu` repliche.
+- In molti casi richiede il riavvio del Pod per applicare le modifiche.
+
+### *Confronto*
+
+| Aspetto | HPA | VPA |
+| --- | --- | --- |
+| Scala | Numero di Pod | CPU e RAM del Pod |
+| Agisce su | Repliche | Risorse |
+| Ideale per | Applicazioni scalabili orizzontalmente | Workload stateful o legacy |
+| Limite principale | Richiede metriche e requests corrette | Spesso richiede restart |

@@ -1,0 +1,125 @@
+---
+title: AKS Networking And Identity
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section explains the networking and identity models behind `Azure Kubernetes Service`.
+
+These are two of the most important design areas in any AKS architecture.
+
+### *AKS Networking Models*
+
+There are two main networking approaches in AKS.
+
+| Model | Description | Tradeoff |
+| --- | --- | --- |
+| `Azure CNI` | Every pod gets an IP from the Azure virtual network | Best integration, but consumes more IP addresses |
+| `Kubenet` | Pods use a private internal IP range | Saves VNet IP space, but adds routing complexity |
+
+### *Azure CNI*
+
+`Azure CNI` gives each pod a real IP address from the Azure virtual network.
+
+Benefits:
+
+- direct Azure network integration
+- strong performance
+- simpler communication between pods and other Azure resources
+
+Tradeoff:
+
+- pod IPs consume subnet space
+- a small subnet can fill up quickly
+
+<Aside type="note">
+Many teams now prefer `Azure CNI Overlay`, which reduces subnet pressure while keeping good Azure network integration.
+</Aside>
+
+### *Kubenet*
+
+`Kubenet` gives pods IPs from a private internal range that Azure does not directly manage.
+
+Benefits:
+
+- saves VNet IP addresses
+- only one VNet IP is consumed per node
+
+Tradeoff:
+
+- relies on user-defined routes
+- adds more complexity and some latency
+
+### *Identity In AKS*
+
+Identity in AKS is split into two layers.
+
+<CardGrid>
+  <Card title="Cluster Access" icon="document">
+    Human users access the cluster through `Microsoft Entra ID` instead of shared admin credentials.
+  </Card>
+
+  <Card title="Workload Identity" icon="setting">
+    Applications inside pods access Azure resources by using federated managed identities instead of secrets.
+  </Card>
+</CardGrid>
+
+### *Cluster Access*
+
+For user access, AKS can be integrated with `Microsoft Entra ID`.
+
+This allows:
+
+- login with corporate accounts
+- MFA enforcement
+- role assignment through Entra groups
+- immediate access removal when an account is disabled
+
+Typical roles include:
+
+- `AKS Cluster Admin`
+- `AKS Cluster User`
+
+### *Workload Identity*
+
+`Workload Identity` allows a pod to access Azure services without storing passwords or connection strings.
+
+This is commonly used when an application in AKS needs access to:
+
+- `Azure Storage`
+- `Key Vault`
+- databases
+- messaging services
+
+### *Security Chain*
+
+To understand workload identity, it helps to see the chain from organizational identity down to pod identity.
+
+| Component | Role |
+| --- | --- |
+| `Tenant` | Microsoft Entra ID instance for the organization |
+| `Subscription` | Billing and quota boundary linked to the tenant |
+| `Managed Identity` | Azure-managed identity linked to a resource |
+| `Service Account` | Kubernetes-native identity used by pods |
+
+### *How Workload Identity Works*
+
+<Steps>
+1. A `User-Assigned Managed Identity` is created in Azure.
+2. A `Service Account` is created inside the AKS cluster.
+3. Azure is configured to trust that service account from that specific AKS cluster.
+4. A pod runs using that service account.
+5. Azure exchanges that trust relationship for a token tied to the managed identity.
+6. The pod uses the token to access Azure services securely.
+</Steps>
+
+### *Summary*
+
+- `Azure CNI` gives pods direct VNet integration
+- `Kubenet` saves IP space but adds routing complexity
+- `Cluster Access` secures human access through Entra ID
+- `Workload Identity` secures application access without secrets

@@ -1,0 +1,31 @@
+---
+title: Container Runtimes
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+
+Kubernetes non esegue direttamente container, ma utilizza un'interfaccia chiamata CRI.
+
+### Container Standards - CRI VS OCI
+
+1.  **CRI (Container Runtime Interface):** Come Kubelet parla con l'API Server (**containerd**).
+2.  **OCI (Open Container Initiative):** Definisce standard sulle immagini in modo che possano essere runnate su qualsiasi Runtime compliant.
+
+<Aside type="note">
+Questo è ciò che ha separato Kubernetes da essere Docker-Native
+</Aside>
+
+---
+
+### Comparison Table
+
+| Feature | CRI | OCI |
+| :--- | :--- | :--- |
+| **Layer** | High-level (Orchestration) | Low-level (Execution) |
+| **Standard** | Kubernetes-specific | Industry-wide |
+| **Examples** | `containerd`, `CRI-O` | `runc`, `Kata` |

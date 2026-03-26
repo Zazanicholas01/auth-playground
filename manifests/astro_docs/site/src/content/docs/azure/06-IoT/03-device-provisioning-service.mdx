@@ -1,0 +1,123 @@
+---
+title: Device Provisioning Service
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure IoT Hub Device Provisioning Service`, the Azure service used to register and assign devices automatically at scale.
+
+### *Device Provisioning Service*
+
+`Device Provisioning Service (DPS)` is used to onboard IoT devices automatically.
+
+Instead of manually registering each device in an `IoT Hub`, DPS allows devices to be securely assigned to the correct IoT Hub when they first connect.
+
+This is especially useful when the number of devices becomes too large for manual provisioning.
+
+<Aside type="note">
+`DPS` is the standard Azure service for zero-touch device onboarding in large IoT environments.
+</Aside>
+
+### *Why Use DPS*
+
+<CardGrid>
+  <Card title="Automatic Enrollment" icon="document">
+    Devices can register themselves automatically without manual creation in each IoT Hub.
+  </Card>
+
+  <Card title="Scale" icon="setting">
+    Designed for large fleets where manual provisioning would be too slow and error-prone.
+  </Card>
+
+  <Card title="Hub Assignment" icon="database">
+    Devices can be assigned to the correct `IoT Hub` based on provisioning policies.
+  </Card>
+
+  <Card title="Zero-Touch Setup" icon="warning">
+    Devices can be shipped directly to customers or field locations and provision themselves at first boot.
+  </Card>
+</CardGrid>
+
+### *How DPS Works*
+
+A device first contacts `DPS`, not the target `IoT Hub`.
+
+DPS then decides:
+
+- whether the device is trusted
+- which IoT Hub it should use
+- what registration information should be applied
+
+### *Typical Flow*
+
+<Steps>
+1. A device is manufactured with identity credentials.
+2. The device contacts `Device Provisioning Service`.
+3. DPS validates the device identity.
+4. DPS assigns the device to the appropriate `IoT Hub`.
+5. The device connects to that hub and starts normal operation.
+</Steps>
+
+### *Enrollment Models*
+
+DPS supports different enrollment approaches.
+
+| Enrollment Type | Best For |
+| --- | --- |
+| Individual Enrollment | Specific control over a single device |
+| Enrollment Group | Provisioning many devices that share a trusted identity model |
+
+This allows both one-off onboarding and large manufacturing-scale registration.
+
+### *Security Model*
+
+Security is central to DPS.
+
+<CardGrid>
+  <Card title="Identity Validation" icon="document">
+    Devices must prove their identity before they are assigned to an IoT Hub.
+  </Card>
+
+  <Card title="Trusted Credentials" icon="setting">
+    Provisioning commonly relies on symmetric keys, `X.509` certificates, or TPM-backed identity.
+  </Card>
+
+  <Card title="Controlled Assignment" icon="warning">
+    Only devices that match trusted enrollment rules are allowed to register.
+  </Card>
+</CardGrid>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Factory Provisioning" icon="document">
+    Prepare devices during manufacturing so they can self-register later.
+  </Card>
+
+  <Card title="Global Device Rollout" icon="database">
+    Onboard large fleets across different regions without manual per-device setup.
+  </Card>
+
+  <Card title="Multi-Hub Design" icon="setting">
+    Assign devices automatically across multiple IoT Hubs for scale or geographic distribution.
+  </Card>
+</CardGrid>
+
+### *DPS Vs. Manual Registration*
+
+| Approach | Best For |
+| --- | --- |
+| Manual Device Registration | Small or simple environments |
+| `Device Provisioning Service` | Large-scale automated onboarding |
+
+### *Summary*
+
+- `DPS` automates device onboarding for Azure IoT environments
+- Devices contact DPS before joining an `IoT Hub`
+- DPS validates identity and assigns the correct hub
+- It supports individual and group enrollment
+- It is essential for large-scale and zero-touch IoT provisioning

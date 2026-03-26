@@ -1,0 +1,54 @@
+---
+title: Storage Classes
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+La `StorageClass` abilita il `Dynamic Provisioning` dello storage.
+
+### *Cosa fa*
+
+<CardGrid>
+  <Card title="Provisioner" icon="setting">
+    Indica quale driver o plugin deve creare il volume.
+  </Card>
+
+  <Card title="Parameters" icon="list-format">
+    Definisce tipo di disco, performance e opzioni tecniche.
+  </Card>
+
+  <Card title="Reclaim Policy" icon="warning">
+    Decide cosa succede al volume quando la `PVC` viene eliminata.
+  </Card>
+</CardGrid>
+
+### *Dynamic Provisioning*
+
+<Steps>
+1. L'admin crea una `StorageClass`.
+2. Lo sviluppatore crea una `PVC` con `storageClassName`.
+3. Kubernetes chiama il `provisioner`.
+4. Viene creato il volume reale.
+5. Kubernetes crea il `PV` e lo collega alla `PVC`.
+</Steps>
+
+### *Volume Binding Mode*
+
+| Modalita` | Comportamento |
+| --- | --- |
+| `Immediate` | Il volume viene creato subito alla creazione della `PVC` |
+| `WaitForFirstConsumer` | Il volume viene creato solo quando esiste un Pod che usa la `PVC` |
+
+<Aside type="note">
+`WaitForFirstConsumer` evita problemi di zona o topology tra volume e nodo.
+</Aside>
+
+### *Idea chiave*
+
+- `PV`: volume disponibile
+- `PVC`: richiesta di storage
+- `StorageClass`: modello per creare automaticamente nuovi volumi

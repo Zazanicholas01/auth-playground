@@ -1,0 +1,108 @@
+---
+title: Shared Responsibility Model
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section explains the `Shared Responsibility Model`, one of the core security concepts in cloud computing.
+
+### *Shared Responsibility Model*
+
+In Azure, security is shared between:
+
+- Microsoft
+- the customer
+
+Microsoft is responsible for securing the cloud platform itself.
+
+The customer is responsible for securing what they deploy and configure inside that platform.
+
+The exact split depends on the service type being used.
+
+<Aside type="note">
+The more managed the service is, the more responsibility stays with Microsoft. The more control you keep, the more security responsibility stays with you.
+</Aside>
+
+### *Why It Matters*
+
+Many cloud security mistakes come from assuming that the cloud provider secures everything automatically.
+
+The real model is more balanced:
+
+- Microsoft secures the infrastructure of Azure
+- the customer secures identities, data, access, and workload configuration
+
+Understanding this boundary is essential for designing secure systems.
+
+### *Responsibility By Service Model*
+
+| Service Model | Microsoft Handles More Of | Customer Handles More Of |
+| --- | --- | --- |
+| SaaS | Application platform, infrastructure, patching | Data, identity, user access |
+| PaaS | Platform, runtime, infrastructure | Data, access, configuration, application logic |
+| IaaS | Physical datacenter and core infrastructure | Operating system, patching, network config, apps, data |
+
+### *How To Think About It*
+
+<CardGrid>
+  <Card title="Microsoft Responsibility" icon="document">
+    Physical datacenters, hardware, host infrastructure, and core Azure platform services.
+  </Card>
+
+  <Card title="Customer Responsibility" icon="warning">
+    Identity, permissions, data protection, workload configuration, and many application security decisions.
+  </Card>
+
+  <Card title="Shared Area" icon="setting">
+    Some areas depend on the service model, such as operating systems, network controls, and runtime configuration.
+  </Card>
+</CardGrid>
+
+### *Examples*
+
+<CardGrid>
+  <Card title="Virtual Machine" icon="document">
+    Microsoft protects the physical host, but the customer is responsible for patching the guest OS and securing the application.
+  </Card>
+
+  <Card title="App Service" icon="database">
+    Microsoft manages the platform and runtime, while the customer secures code, identity, secrets, and application configuration.
+  </Card>
+
+  <Card title="Azure SQL Database" icon="setting">
+    Microsoft manages the database platform and core operations, while the customer manages data classification, access, and query behavior.
+  </Card>
+</CardGrid>
+
+### *Typical Security Flow*
+
+<Steps>
+1. Choose the Azure service model.
+2. Identify which security responsibilities belong to Microsoft.
+3. Identify which responsibilities remain with the customer.
+4. Apply controls such as identity protection, networking, encryption, and monitoring.
+5. Review the design regularly as services and workloads change.
+</Steps>
+
+### *Common Customer Responsibilities*
+
+Even in highly managed services, customers are still usually responsible for:
+
+- identity and access management
+- data classification and protection
+- network exposure decisions
+- secret handling
+- monitoring and alerting
+- secure application design
+
+### *Summary*
+
+- Cloud security is shared between Microsoft and the customer
+- Microsoft secures the Azure platform and infrastructure
+- Customers secure their identities, data, configurations, and workloads
+- The more managed the service, the more Microsoft handles
+- Understanding the responsibility boundary is essential for secure Azure architecture

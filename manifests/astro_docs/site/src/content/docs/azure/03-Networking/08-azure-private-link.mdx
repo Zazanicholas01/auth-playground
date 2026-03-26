@@ -1,0 +1,110 @@
+---
+title: Azure Private Link
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Private Link`, the Azure service used to access platform services and private applications through private network connectivity.
+
+### *Azure Private Link*
+
+`Azure Private Link` allows an Azure service to be accessed through a private IP address inside your `Virtual Network`.
+
+Instead of reaching a service over the public internet, traffic stays on the private Azure network.
+
+This is commonly used to access services such as:
+
+- `Azure Storage`
+- `Azure SQL`
+- `Key Vault`
+- privately exposed custom services
+
+<Aside type="note">
+`Private Link` is one of the main Azure services for reducing public exposure and building zero-trust style network architectures.
+</Aside>
+
+### *Private Endpoint*
+
+The core component of `Private Link` is the `Private Endpoint`.
+
+A `Private Endpoint` is a network interface inside your subnet that gets a private IP address and maps it to a specific Azure service.
+
+<CardGrid>
+  <Card title="Private IP" icon="document">
+    The service becomes reachable through an IP address inside your own VNet.
+  </Card>
+
+  <Card title="Service Mapping" icon="setting">
+    The private endpoint is linked to a specific Azure service resource.
+  </Card>
+
+  <Card title="No Public Exposure" icon="warning">
+    Access can stay entirely on private connectivity without requiring public internet routing.
+  </Card>
+</CardGrid>
+
+### *Why Use Private Link*
+
+| Benefit | Explanation |
+| --- | --- |
+| Private Access | Access services over a private IP instead of a public endpoint |
+| Reduced Exposure | Sensitive services do not need to be reachable from the internet |
+| Compliance | Helps meet security and regulatory requirements |
+| Better Isolation | Limits access paths to approved private networks |
+
+### *Private Link Vs. Service Endpoints*
+
+These services are related but solve different problems.
+
+| Service | Main Idea |
+| --- | --- |
+| `Service Endpoints` | Extend VNet identity to an Azure service while the service still uses a public endpoint |
+| `Private Link` | Gives the service a private IP inside the VNet |
+
+`Private Link` is generally considered the more private and more secure option.
+
+### *DNS And Private Link*
+
+`Private Link` usually works together with `Private DNS`.
+
+Without private DNS integration, applications may still resolve the public name of a service instead of the private endpoint.
+
+This is why Azure commonly creates or links a `Private DNS Zone` when a private endpoint is deployed.
+
+### *Typical Flow*
+
+<Steps>
+1. Create a `Private Endpoint` in a subnet.
+2. Link it to a supported Azure service such as `Key Vault` or `Storage`.
+3. Assign a private IP address inside the VNet.
+4. Configure `Private DNS` so the service name resolves to the private IP.
+5. Access the service privately from resources inside the VNet or connected networks.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Private Storage Access" icon="document">
+    Access storage accounts without exposing them to the public internet.
+  </Card>
+
+  <Card title="Private Database Access" icon="database">
+    Connect privately to services such as `Azure SQL` from internal workloads.
+  </Card>
+
+  <Card title="Secure Platform Services" icon="warning">
+    Reach sensitive Azure services such as `Key Vault` through private networking only.
+  </Card>
+</CardGrid>
+
+### *Summary*
+
+- `Private Link` gives Azure services private connectivity through a `Private Endpoint`
+- The service becomes reachable through a private IP inside the VNet
+- It is commonly used to reduce public exposure and improve security
+- It is often combined with `Private DNS`
+- It is more isolated than using `Service Endpoints`

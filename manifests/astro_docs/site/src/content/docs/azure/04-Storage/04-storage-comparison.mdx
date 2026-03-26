@@ -1,0 +1,69 @@
+---
+title: Storage Services Comparison
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section compares the four main services inside an `Azure Storage Account`.
+
+### *Storage Services Comparison*
+
+An `Azure Storage Account` can host four main storage services:
+
+- `Blob Storage`
+- `Azure Files`
+- `Queue Storage`
+- `Table Storage`
+
+Each one is designed for a different type of data and access pattern.
+
+| Service | Data Type | Best For |
+| --- | --- | --- |
+| `Blob Storage` | Unstructured object data | Images, videos, backups, logs, analytics data |
+| `Azure Files` | Shared file storage | File shares, lift-and-shift apps, shared folders |
+| `Queue Storage` | Messages | Asynchronous processing and decoupled applications |
+| `Table Storage` | Structured NoSQL data | Profiles, telemetry, metadata, non-relational records |
+
+### *When To Use Each One*
+
+<CardGrid>
+  <Card title="Blob Storage" icon="document">
+    Use when you need scalable object storage for files such as media, backups, or datasets.
+  </Card>
+
+  <Card title="Azure Files" icon="database">
+    Use when applications need a shared file system over `SMB` or `NFS`.
+  </Card>
+
+  <Card title="Queue Storage" icon="setting">
+    Use when applications must exchange messages asynchronously.
+  </Card>
+
+  <Card title="Table Storage" icon="warning">
+    Use when you need simple NoSQL storage for structured non-relational data.
+  </Card>
+</CardGrid>
+
+### *Quick Decision Guide*
+
+| If You Need... | Use |
+| --- | --- |
+| Store images, documents, or backup files | `Blob Storage` |
+| Mount a cloud file share on servers or apps | `Azure Files` |
+| Queue work for background processing | `Queue Storage` |
+| Store flexible structured records without SQL | `Table Storage` |
+
+<Aside type="note">
+The key question is not only "Where do I store data?" but also "How will the application access and use that data?"
+</Aside>
+
+### *Summary*
+
+- `Blob Storage` is for object data
+- `Azure Files` is for shared file systems
+- `Queue Storage` is for asynchronous messaging
+- `Table Storage` is for simple NoSQL records
+- All four services can live inside one `Storage Account`

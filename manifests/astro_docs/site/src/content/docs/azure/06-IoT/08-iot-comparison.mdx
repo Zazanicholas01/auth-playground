@@ -1,0 +1,88 @@
+---
+title: IoT Services Comparison
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section compares the main Azure IoT services covered so far.
+
+### *IoT Services Comparison*
+
+Azure provides several IoT-related services, but each one solves a different part of the problem.
+
+The most important question is not only "Which service is IoT?" but "Which part of the IoT architecture am I trying to solve?"
+
+### *Core Comparison*
+
+| Service | Main Role | Best For |
+| --- | --- | --- |
+| `Azure IoT Hub` | Device communication platform | Secure device connectivity and cloud/device messaging |
+| `Azure IoT Central` | Managed IoT application platform | Faster delivery with dashboards and built-in device management |
+| `Device Provisioning Service` | Device onboarding | Zero-touch registration and large-scale provisioning |
+| `Azure IoT Edge` | Edge computing | Running workloads and processing locally on devices |
+| `Azure Sphere` | Device security platform | Securing embedded and connected devices |
+| `Azure Digital Twins` | Environment modeling | Representing assets, spaces, and relationships |
+| `Azure Event Hubs` | Event streaming | High-scale ingestion of telemetry and event streams |
+
+### *How To Think About Them*
+
+<CardGrid>
+  <Card title="Connectivity" icon="document">
+    `IoT Hub` is the core service for secure communication between devices and Azure.
+  </Card>
+
+  <Card title="Operations" icon="setting">
+    `IoT Central` adds dashboards, templates, and an easier managed experience.
+  </Card>
+
+  <Card title="Provisioning" icon="warning">
+    `DPS` automates device registration and hub assignment at scale.
+  </Card>
+
+  <Card title="Edge And Context" icon="database">
+    `IoT Edge`, `Digital Twins`, and `Azure Sphere` extend IoT into local processing, modeling, and security.
+  </Card>
+</CardGrid>
+
+### *Quick Decision Guide*
+
+| If You Need... | Use |
+| --- | --- |
+| Secure communication with devices | `Azure IoT Hub` |
+| Faster IoT solution delivery with dashboards | `Azure IoT Central` |
+| Automatic onboarding of many devices | `Device Provisioning Service` |
+| Local processing on edge hardware | `Azure IoT Edge` |
+| Strong embedded device security | `Azure Sphere` |
+| Modeling buildings, assets, and relationships | `Azure Digital Twins` |
+| Massive telemetry or event ingestion | `Azure Event Hubs` |
+
+### *How They Often Work Together*
+
+These services are often combined rather than used alone.
+
+A common flow looks like this:
+
+- `DPS` provisions the device
+- the device connects through `IoT Hub`
+- `IoT Edge` may process data locally
+- telemetry can flow into `Event Hubs` or analytics systems
+- `Digital Twins` can add environment context
+- `IoT Central` can provide the operational application layer
+- `Azure Sphere` can secure the device platform itself
+
+<Aside type="note">
+In Azure IoT architecture, the services are complementary. Each one handles a different layer such as security, communication, onboarding, edge processing, modeling, or streaming.
+</Aside>
+
+### *Summary*
+
+- `IoT Hub` is the core communication service
+- `IoT Central` is the higher-level managed IoT platform
+- `DPS` handles device onboarding
+- `IoT Edge` handles local edge workloads
+- `Azure Sphere` focuses on device security
+- `Digital Twins` models the real-world environment
+- `Event Hubs` handles high-scale event streaming

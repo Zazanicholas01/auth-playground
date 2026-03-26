@@ -1,0 +1,39 @@
+---
+title: Kubelet & Kube-Proxy
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+## Nodo Worker
+
+<CardGrid>
+  <Card title="Kubelet" icon="setting">
+    Gestisce Pod, probe e stato del nodo e comunica con l'API Server.
+  </Card>
+
+  <Card title="Kube Proxy" icon="rocket">
+    Gestisce rete, Service e traffico verso i Pod.
+  </Card>
+</CardGrid>
+
+## *Kubelet*
+
+<Steps>
+1. Riceve il `PodSpec` dall'`API Server`.
+2. Chiede al `Container Runtime` di avviare i container.
+3. Esegue probe e controlli di stato.
+4. Invia aggiornamenti all'`API Server`.
+</Steps>
+
+## *Kube Proxy*
+
+<Steps>
+1. Osserva `Service` ed `Endpoints`.
+2. Configura regole `iptables` o `IPVS`.
+3. Intercetta il traffico verso il `Service`.
+4. Lo reindirizza verso uno dei Pod disponibili.
+</Steps>

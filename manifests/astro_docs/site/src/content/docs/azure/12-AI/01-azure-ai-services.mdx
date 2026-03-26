@@ -1,0 +1,108 @@
+---
+title: Azure AI Services
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure AI Services`, the group of managed Azure services used to add AI capabilities to applications.
+
+### *Azure AI Services*
+
+`Azure AI Services` is the umbrella category for managed AI capabilities in Azure.
+
+These services let developers add intelligence to applications without building and training every model from scratch.
+
+Typical capabilities include:
+
+- vision
+- speech
+- language understanding
+- document processing
+- generative AI
+- search and retrieval support
+
+<Aside type="note">
+Azure AI Services focuses on using ready-to-consume AI capabilities through managed cloud services, rather than starting from raw machine learning infrastructure.
+</Aside>
+
+### *Why Use Azure AI Services*
+
+<CardGrid>
+  <Card title="Managed AI" icon="document">
+    Use AI capabilities through APIs and managed services instead of building every model yourself.
+  </Card>
+
+  <Card title="Faster Delivery" icon="setting">
+    Add common AI functions to applications with less custom model engineering effort.
+  </Card>
+
+  <Card title="Platform Integration" icon="database">
+    Connect AI services with Azure data, apps, and security controls.
+  </Card>
+
+  <Card title="Scalable Consumption" icon="warning">
+    Consume AI capabilities at cloud scale without managing the full training platform.
+  </Card>
+</CardGrid>
+
+### *Typical AI Capability Areas*
+
+Azure AI services often fall into areas such as:
+
+- language
+- speech
+- computer vision
+- document intelligence
+- search
+- generative AI
+
+These services are used to enrich applications with intelligent features rather than to replace the whole application architecture.
+
+### *Typical Flow*
+
+<Steps>
+1. An application sends data such as text, images, audio, or documents to an Azure AI service.
+2. The service processes that input using managed AI capabilities.
+3. The service returns predictions, extracted information, generated output, or insights.
+4. The application uses the result in a business workflow or user experience.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Language And Text" icon="document">
+    Analyze text, summarize content, classify meaning, or generate language-based outputs.
+  </Card>
+
+  <Card title="Vision And Documents" icon="database">
+    Process images, scan forms, or extract information from documents.
+  </Card>
+
+  <Card title="Speech And Audio" icon="setting">
+    Convert speech to text, text to speech, or analyze spoken interactions.
+  </Card>
+</CardGrid>
+
+### *Azure AI Services Vs. Azure Machine Learning*
+
+| Service | Best For |
+| --- | --- |
+| `Azure AI Services` | Managed prebuilt AI capabilities and APIs |
+| `Azure Machine Learning` | Building, training, and operationalizing custom machine learning models |
+
+A useful way to think about it is:
+
+- `Azure AI Services` is for consuming AI capabilities
+- `Azure Machine Learning` is for building and managing custom ML workflows
+
+### *Summary*
+
+- `Azure AI Services` is the umbrella category for managed AI capabilities in Azure
+- It includes language, vision, speech, document, and generative AI scenarios
+- It helps applications use AI without building every model from scratch
+- It is best for faster AI adoption through managed services
+- It complements more custom platforms such as `Azure Machine Learning`

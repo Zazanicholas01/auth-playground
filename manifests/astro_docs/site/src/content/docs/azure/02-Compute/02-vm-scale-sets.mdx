@@ -1,0 +1,96 @@
+---
+title: Virtual Machine Scale Sets
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section explains `Azure Virtual Machine Scale Sets`, the main Azure service for building highly available and auto-scaling VM fleets.
+
+### *Virtual Machine Scale Sets*
+
+A standard `Virtual Machine` is a single server.
+
+A `Scale Set` is a group of identical, load-balanced VMs designed to be managed as a pool instead of as individual machines.
+
+<Aside type="note">
+`VMSS` is commonly used for stateless application tiers that must scale automatically as traffic changes.
+</Aside>
+
+### *Key Features*
+
+<CardGrid>
+  <Card title="Auto-Scaling" icon="setting">
+    Automatically increases or decreases the number of VM instances based on CPU, memory, or time-based schedules.
+  </Card>
+
+  <Card title="Load Balancing" icon="document">
+    Integrates with `Azure Load Balancer` or `Application Gateway` to distribute traffic across instances.
+  </Card>
+
+  <Card title="High Availability" icon="warning">
+    Spreads instances across fault domains or availability zones to reduce downtime during failures.
+  </Card>
+
+  <Card title="Uniform Configuration" icon="database">
+    New VMs are created from the same base image and configuration so scale-out instances remain consistent.
+  </Card>
+</CardGrid>
+
+### *Orchestration Modes*
+
+In `2026`, Azure provides two orchestration models for a scale set.
+
+| Mode | Description | Best For |
+| --- | --- | --- |
+| Uniform | Uses one template model and keeps all instances identical | Large stateless workloads such as web tiers |
+| Flexible | Allows different VM sizes and more individual control | Stateful workloads or mixed Spot and on-demand usage |
+
+### *Scaling Mechanics*
+
+Scaling defines how the VM fleet grows or shrinks.
+
+<Steps>
+1. `Scale Out`: more VMs are added when demand increases.
+2. `Scale In`: VMs are removed when traffic drops.
+3. `Overprovisioning`: Azure may create extra instances temporarily so failed startup attempts do not prevent reaching the target capacity.
+</Steps>
+
+### *Upgrade Policies*
+
+When the scale set image is updated, Azure can roll out the change in different ways.
+
+<CardGrid>
+  <Card title="Manual" icon="document">
+    Updates are applied only when the administrator chooses each instance.
+  </Card>
+
+  <Card title="Automatic" icon="setting">
+    Azure updates instances in controlled batches while keeping part of the fleet online.
+  </Card>
+
+  <Card title="Rolling" icon="warning">
+    Azure updates instances progressively in waves and checks health between each wave.
+  </Card>
+</CardGrid>
+
+### *Why Use VMSS Instead Of Individual VMs*
+
+| Benefit | Explanation |
+| --- | --- |
+| Management At Scale | Updating or scaling a large fleet is handled from one central definition |
+| Cost Efficiency | You only pay for the instances currently running |
+| Redundancy | If one VM fails, the scale set can automatically replace it |
+
+### *Typical Flow*
+
+<Steps>
+1. Define the base image and VM configuration.
+2. Attach the scale set to a load balancer or application gateway.
+3. Configure scaling rules based on demand.
+4. Azure adds or removes VM instances automatically.
+5. Failed instances are replaced to maintain capacity.
+</Steps>

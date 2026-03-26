@@ -1,0 +1,124 @@
+---
+title: Azure Cosmos DB
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Cosmos DB`, the globally distributed NoSQL database service in Azure.
+
+### *Azure Cosmos DB*
+
+`Azure Cosmos DB` is a fully managed NoSQL database platform designed for globally distributed, high-scale, and low-latency applications.
+
+It is commonly used when applications need:
+
+- flexible schemas
+- rapid global reads and writes
+- predictable low latency
+- automatic scaling
+- multi-region distribution
+
+<Aside type="note">
+`Cosmos DB` is often chosen when relational databases are too rigid or when an application must scale globally with very fast response times.
+</Aside>
+
+### *Why Use Cosmos DB*
+
+<CardGrid>
+  <Card title="Global Distribution" icon="document">
+    Replicate data across multiple Azure regions for low latency and high availability.
+  </Card>
+
+  <Card title="NoSQL Flexibility" icon="database">
+    Store semi-structured or schema-flexible data without requiring traditional relational tables.
+  </Card>
+
+  <Card title="Elastic Scale" icon="setting">
+    Scale throughput and storage for high-volume workloads.
+  </Card>
+</CardGrid>
+
+### *Common APIs*
+
+Azure Cosmos DB supports multiple APIs so applications can use familiar models.
+
+| API | Best For |
+| --- | --- |
+| SQL API | Document-based applications using JSON-style data |
+| MongoDB API | Apps that want MongoDB-compatible access |
+| Cassandra API | Distributed wide-column workloads |
+| Table API | NoSQL key-value style access |
+| Gremlin API | Graph workloads |
+
+### *Data Model*
+
+In the most common model, data is stored as JSON-like documents.
+
+The basic structure is:
+
+<Steps>
+1. Create a `Cosmos DB Account`
+2. Create a `Database`
+3. Create a `Container`
+4. Store `Items` inside the container
+</Steps>
+
+A key design decision is the `Partition Key`, which determines how data is distributed and scaled.
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Global Apps" icon="document">
+    Support applications used by customers in multiple geographic regions.
+  </Card>
+
+  <Card title="High-Scale APIs" icon="setting">
+    Handle large numbers of reads and writes with predictable performance.
+  </Card>
+
+  <Card title="Flexible Data" icon="warning">
+    Store application data that does not fit well into a rigid relational schema.
+  </Card>
+</CardGrid>
+
+### *Cosmos DB Vs. Azure SQL Database*
+
+| Service | Best For |
+| --- | --- |
+| `Azure SQL Database` | Structured relational data and SQL relationships |
+| `Azure Cosmos DB` | Flexible NoSQL data and global low-latency scale |
+
+### *How It Works*
+
+<Steps>
+1. Create a Cosmos DB account.
+2. Choose the API model.
+3. Design the database and container structure.
+4. Select a good partition key.
+5. Store and query data from the application.
+</Steps>
+
+### *Important Design Concept: Partition Key*
+
+The `Partition Key` is one of the most important decisions in Cosmos DB.
+
+It affects:
+
+- scalability
+- performance
+- cost
+- query efficiency
+
+A poor partition key can create uneven distribution and reduce performance.
+
+### *Summary*
+
+- `Azure Cosmos DB` is a globally distributed NoSQL database service
+- It supports multiple APIs and flexible data models
+- It is designed for high scale and low latency
+- The partition key is a critical design choice
+- It is a strong option when relational databases are not the best fit

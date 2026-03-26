@@ -1,0 +1,112 @@
+---
+title: Network Security Groups
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Network Security Groups`, the main Azure service used to filter traffic inside a virtual network.
+
+### *Network Security Groups*
+
+A `Network Security Group (NSG)` is a basic stateful firewall that filters traffic at the network and transport layers, corresponding to `OSI Layer 3` and `Layer 4`.
+
+It is the main tool used to enforce micro-segmentation inside a `Virtual Network`.
+
+You can think of an `NSG` as a list of access control rules that decide which packets are allowed and which are blocked.
+
+<Aside type="note">
+`NSGs` are commonly used to control east-west traffic inside a VNet and to protect workloads from unnecessary exposure.
+</Aside>
+
+### *Where To Associate An NSG*
+
+An `NSG` can be attached in two places.
+
+<CardGrid>
+  <Card title="Subnet Level" icon="document">
+    Recommended in most cases. One NSG protects all resources inside the subnet and is easier to manage consistently.
+  </Card>
+
+  <Card title="NIC Level" icon="warning">
+    Attached directly to a specific virtual machine network interface. Usually used only when one VM needs special rules.
+  </Card>
+</CardGrid>
+
+### *How NSG Rules Work*
+
+Each NSG rule is defined by a `5-tuple`.
+
+- source
+- destination
+- source port
+- destination port
+- protocol
+
+Rules are processed by priority, from `100` to `4096`.
+
+Lower numbers have higher priority.
+
+As soon as traffic matches a rule, Azure stops evaluating the rest and applies that action.
+
+<Aside type="note">
+It is a good practice to leave gaps between rule priorities, such as `100`, `110`, and `120`, so new rules can be added later without renumbering everything.
+</Aside>
+
+### *Default Rules*
+
+Every NSG includes some default rules.
+
+| Rule | Purpose |
+| --- | --- |
+| `AllowVNetInBound` | Allows communication between resources in the same VNet |
+| `AllowAzureLoadBalancerInBound` | Allows Azure load balancer health probes |
+| `DenyAllInBound` | Blocks inbound traffic that does not match any earlier rule |
+
+### *Service Tags And ASGs*
+
+Managing individual IP addresses at scale is difficult, so Azure provides abstractions to simplify rule definitions.
+
+<CardGrid>
+  <Card title="Service Tags" icon="setting">
+    Use predefined Azure service names such as `AzureKeyVault` instead of maintaining IP address ranges manually.
+  </Card>
+
+  <Card title="Application Security Groups" icon="database">
+    Group VMs by function instead of by IP address, such as `Web-Servers` or `App-Servers`.
+  </Card>
+</CardGrid>
+
+### *Example With ASGs*
+
+Instead of writing rules for ten separate VM IP addresses, you can place all web servers into an `ASG` named `Web-Servers`.
+
+The NSG rule can then say:
+
+- allow traffic from the internet
+- to `Web-Servers`
+- on port `80`
+
+This makes the rules easier to read and easier to maintain.
+
+
+### *Typical Evaluation Flow*
+
+<Steps>
+1. Traffic reaches a subnet or network interface protected by an `NSG`.
+2. Azure evaluates rules from the lowest priority number to the highest.
+3. The first matching rule is applied.
+4. If no custom rule matches, Azure continues to the default rules.
+5. If nothing allows the traffic, it is denied.
+</Steps>
+
+### *Summary*
+
+- `NSG` is a stateful Layer 3 and Layer 4 firewall
+- It can be attached to a subnet or directly to a NIC
+- Rules are processed by priority and stop at the first match
+- `Service Tags` simplify Azure service targeting
+- `ASGs` simplify rules by grouping workloads by role instead of IP

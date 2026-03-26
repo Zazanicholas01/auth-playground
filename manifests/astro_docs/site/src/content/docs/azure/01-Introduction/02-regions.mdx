@@ -1,0 +1,76 @@
+---
+title: Regions
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+An `Azure Region` is a geographical area that contains one or more datacenters, often multiple, that are physically separate but connected through a dedicated low-latency network.
+
+As of `2026`, Azure operates `70+ regions` globally, more than any other cloud provider.
+
+<Aside type="note">
+A region is the main physical location where Azure resources are deployed.
+</Aside>
+
+---
+
+### *Key Concepts & Hierarchy*
+
+To understand regions, it helps to see where they fit in the Azure physical hierarchy.
+
+<CardGrid>
+  <Card title="Geography" icon="document">
+    A geopolitical boundary such as `United States`, `Europe`, or `India`. A geography contains two or more regions and helps define data residency and compliance boundaries.
+  </Card>
+
+  <Card title="Region" icon="information">
+    A specific location inside a geography, such as `East US` or `West Europe`. This is where Azure resources are deployed.
+  </Card>
+
+  <Card title="Availability Zones" icon="laptop">
+    Physically separate datacenters inside one region. Each zone has independent power, cooling, and networking. Most modern Azure regions support at least `3` zones.
+  </Card>
+</CardGrid>
+
+### *Region Pairs*
+
+Most Azure regions are paired with another region in the same geography, usually at least `300 miles` apart.
+
+<CardGrid>
+  <Card title="Disaster Recovery" icon="warning">
+    If a major regional outage happens, one region in the pair is prioritized for recovery.
+  </Card>
+
+  <Card title="Sequential Updates" icon="setting">
+    Azure rolls out platform updates to one region in the pair at a time to reduce the risk of simultaneous downtime.
+  </Card>
+
+  <Card title="Data Replication" icon="download">
+    Services such as `Azure Storage` can use region pairs for `Geo-Redundant Storage (GRS)`.
+  </Card>
+</CardGrid>
+
+<Aside type="note">
+Some newer regions, such as `West US 3`, are non-paired and rely mainly on `Availability Zones` for high availability.
+</Aside>
+
+### *Region Selection Criteria*
+
+When choosing a region for a project, consider these four pillars:
+
+| Factor | Description |
+| --- | --- |
+| Compliance | Keep data within a required country or legal boundary |
+| Latency | Choose the region closest to end users |
+| Service Availability | Check whether the required services are offered in that region |
+| Pricing | Compare regional cost differences |
+
+### *Summary*
+
+- `Geographies` define compliance and residency boundaries
+- `Regions` are the locations where resources are deployed
+- `Availability Zones` protect workloads inside a region
+- `Region Pairs` support disaster recovery and replication

@@ -1,0 +1,69 @@
+---
+title: Node/OS Updates
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+<Aside type="tip">
+Per aggiornare un nodo senza interrompere il cluster si usa il flusso `cordon` -> `drain` -> manutenzione -> `uncordon`.
+</Aside>
+
+### *Flusso principale*
+
+<Steps>
+1. Esegui `kubectl cordon <node-name>` per rendere il nodo non schedulabile.
+2. Esegui `kubectl drain <node-name> --ignore-daemonsets` per svuotare il nodo.
+3. Applica patch, aggiornamenti o `reboot`.
+4. Esegui `kubectl uncordon <node-name>` per rimettere il nodo in servizio.
+</Steps>
+
+### *Comandi chiave*
+
+<CardGrid>
+  <Card title="Cordon" icon="warning">
+    Blocca nuovi Pod sul nodo, ma lascia attivi quelli esistenti.
+  </Card>
+
+  <Card title="Drain" icon="close">
+    Termina i Pod in modo controllato e li fa ripianificare altrove.
+  </Card>
+
+  <Card title="Uncordon" icon="approve-check">
+    Rende di nuovo il nodo disponibile per nuovi Pod.
+  </Card>
+</CardGrid>
+
+### *Cordon*
+
+- Comando: `kubectl cordon <node-name>`
+- Il nodo viene marcato come `SchedulingDisabled`.
+- I Pod gia` in esecuzione restano sul nodo.
+
+### *Drain*
+
+- Comando: `kubectl drain <node-name> --ignore-daemonsets`
+- I Pod vengono terminati in modo graduale.
+- I controller ricreano i Pod su altri nodi sani.
+
+<Aside type="note">
+`--ignore-daemonsets` è necessario perchè i Pod gestiti da `DaemonSet` devono restare presenti su tutti i nodi.
+</Aside>
+
+### *Patching e Reboot*
+
+Dopo il drain il nodo puo` essere aggiornato in sicurezza.
+
+- aggiornamento del sistema operativo
+- aggiornamento del kernel
+- aggiornamento del container runtime
+- `reboot`
+
+### *Uncordon*
+
+- Comando: `kubectl uncordon <node-name>`
+- Il nodo torna schedulabile.
+- I Pod spostati non tornano automaticamente sul nodo.

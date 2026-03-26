@@ -1,0 +1,41 @@
+---
+title: Componenti Primitivi
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Sono gli oggetti logici con cui definisci e gestisci le applicazioni nel cluster.
+
+### *Pods*
+
+Il Pod è l'unita` minima di esecuzione in Kubernetes.
+
+- Contiene uno o piu` container.
+- I container condividono IP, `localhost` e volumi.
+- I Pod sono ephemeral: se falliscono, vengono sostituiti.
+
+### *ReplicaSet e Deployment*
+
+Gestiscono repliche e aggiornamenti dei Pod.
+
+- ReplicaSet mantiene attivo il numero desiderato di Pod.
+- Deployment gestisce i ReplicaSet e permette rolling update e rollback.
+
+### *Services*
+
+Un Service fornisce un punto di accesso stabile ai Pod.
+
+- Assegna un IP stabile e un nome DNS.
+- Seleziona i Pod tramite labels.
+- Distribuisce il traffico tra i Pod sani.
+
+### *Namespaces*
+
+Un Namespace separa logicamente le risorse nello stesso cluster.
+
+- Isola ambienti o team diversi.
+- Permette di avere oggetti con lo stesso nome in spazi diversi.

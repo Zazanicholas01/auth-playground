@@ -1,0 +1,91 @@
+---
+title: Subscription
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+
+This section defines the `Azure Subscription`, which acts as the main logical container for provisioning resources, controlling costs, and setting administrative boundaries.
+
+### *The Azure Subscription*
+
+A `Subscription` is a grouping of Azure resource categories linked to an Azure account.
+
+It has two main roles:
+
+- billing boundary
+- access control boundary
+
+### *The Two Primary Roles Of A Subscription*
+
+<CardGrid>
+  <Card title="Billing Boundary" icon="document">
+    Azure usage is measured and charged at the subscription level. Each subscription generates its own billing reports and invoices.
+  </Card>
+
+  <Card title="Access Control Boundary" icon="setting">
+    `RBAC` is often assigned at the subscription level, and permissions inherited here apply to all resource groups and resources inside that subscription.
+  </Card>
+</CardGrid>
+
+<Aside type="note">
+Organizations often use multiple subscriptions to separate costs, teams, environments, or governance models.
+</Aside>
+
+### *Common Subscription Types*
+
+| Type | Description |
+| --- | --- |
+| Free Account | Small credit for `30` days and a limited set of free services |
+| Pay-As-You-Go | Monthly billing based on actual resource consumption |
+| Enterprise Agreement | Long-term enterprise contract with committed spend and discounted pricing |
+| Microsoft Customer Agreement | Modern Microsoft commerce model with streamlined billing |
+| Student / Visual Studio | Monthly credits for learning and development |
+
+### *Subscription Limits*
+
+Each subscription has limits and quotas to avoid accidental overspending or resource exhaustion.
+
+<CardGrid>
+  <Card title="Default Limits" icon="warning">
+    Azure applies default quotas, such as limits on the number of VMs or vCPUs that can be used in a region.
+  </Card>
+
+  <Card title="Soft Limits" icon="document">
+    Many quotas are not fixed forever and can be increased if the workload requires it.
+  </Card>
+
+  <Card title="Quota Increase" icon="setting">
+    If a limit is reached, a support request can be opened in the Azure Portal to request a higher quota.
+  </Card>
+</CardGrid>
+
+### *Subscription Management Strategies*
+
+When designing a large-scale environment, subscriptions are often distributed by purpose.
+
+| Strategy | Logic | Benefit |
+| --- | --- | --- |
+| Workload-based | Separate `Production`, `Dev`, and `Test` | Reduces blast radius between environments |
+| Department-based | Separate subscriptions for `HR`, `Finance`, `IT` | Simplifies chargeback and accounting |
+| Geographic-based | Separate subscriptions for `Europe`, `North America` | Helps with data residency and local compliance |
+
+### *Moving And Transferring Subscriptions*
+
+There are different ways to move ownership or scope in Azure.
+
+<Steps>
+1. `Resource Move`: resources can be moved between subscriptions if they are in the same tenant.
+2. `Transfer of Ownership`: billing responsibility is transferred from one account to another.
+3. `Tenant Change`: a subscription can move to another `Entra ID` tenant, but this is more complex and may break existing `RBAC` assignments.
+</Steps>
+
+### *Summary*
+
+- A `Subscription` is both a billing and access boundary
+- `RBAC` assigned at this level affects everything below it
+- Quotas apply per subscription and are often soft limits
+- Multiple subscriptions improve governance, cost control, and isolation

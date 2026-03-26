@@ -1,0 +1,134 @@
+---
+title: Zero Trust In Azure
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section explains the `Zero Trust` security model in the context of Azure.
+
+### *Zero Trust In Azure*
+
+`Zero Trust` is a security approach based on one core principle:
+
+- never trust automatically
+- always verify explicitly
+
+In Azure, this means security decisions should not rely only on network location or assumed trust.
+
+Instead, access should be evaluated continuously based on:
+
+- identity
+- device state
+- workload context
+- risk signals
+- least privilege
+
+<Aside type="note">
+Zero Trust is not one Azure product. It is a design approach that uses multiple Azure services together.
+</Aside>
+
+### *Core Principles*
+
+<CardGrid>
+  <Card title="Verify Explicitly" icon="document">
+    Authenticate and authorize every request using strong identity, device, and context signals.
+  </Card>
+
+  <Card title="Least Privilege" icon="warning">
+    Give users, applications, and services only the minimum access they need.
+  </Card>
+
+  <Card title="Assume Breach" icon="setting">
+    Design systems as if an attacker may already be inside part of the environment.
+  </Card>
+</CardGrid>
+
+### *How Azure Supports Zero Trust*
+
+Azure implements Zero Trust through multiple services and controls.
+
+| Zero Trust Area | Azure Examples |
+| --- | --- |
+| Identity | `Microsoft Entra ID`, `MFA`, `Conditional Access`, `PIM` |
+| Devices | Device compliance and health controls |
+| Network | `NSG`, `Azure Firewall`, `Private Link`, segmentation |
+| Data | `Key Vault`, encryption, classification, access control |
+| Workloads | `Defender for Cloud`, secure configuration, managed identities |
+| Monitoring | `Azure Monitor`, `Sentinel`, alerts, investigation |
+
+### *Identity First*
+
+In Azure, identity is one of the most important Zero Trust control points.
+
+This means:
+
+- enforce `MFA`
+- use `Conditional Access`
+- apply `Privileged Identity Management`
+- remove standing admin access where possible
+- prefer managed identities over stored credentials
+
+### *Network Segmentation*
+
+Zero Trust in networking means avoiding flat trusted networks.
+
+Common Azure approaches include:
+
+- subnet segmentation
+- `NSG` rules
+- `Azure Firewall`
+- `Private Endpoints`
+- removing unnecessary public exposure
+
+The goal is to reduce lateral movement and narrow access paths.
+
+### *Workload And Data Protection*
+
+Zero Trust also applies to applications and data.
+
+<CardGrid>
+  <Card title="Managed Identity" icon="document">
+    Let workloads authenticate without storing passwords in code.
+  </Card>
+
+  <Card title="Key Vault" icon="database">
+    Protect secrets, certificates, and keys in a centralized secure service.
+  </Card>
+
+  <Card title="Defender For Cloud" icon="warning">
+    Assess and harden workloads continuously to reduce exposure.
+  </Card>
+</CardGrid>
+
+### *Typical Zero Trust Flow*
+
+<Steps>
+1. A user or workload requests access.
+2. Azure verifies identity and evaluates security conditions.
+3. Access is granted only if policy requirements are met.
+4. The request is limited to the minimum required scope.
+5. Monitoring and security systems continue observing activity for anomalies.
+</Steps>
+
+### *Why It Matters*
+
+Zero Trust is especially important in cloud environments because:
+
+- workloads are distributed
+- identities are central
+- resources may be internet-connected
+- attackers often target credentials and misconfiguration
+
+A Zero Trust model reduces the assumption that anything inside the environment is automatically safe.
+
+### *Summary*
+
+- `Zero Trust` means never trust automatically and always verify
+- In Azure, identity is a central control point
+- Least privilege and segmentation are key design principles
+- Services such as `Entra ID`, `Conditional Access`, `Key Vault`, and `Defender for Cloud` help implement the model
+- Zero Trust is an architecture approach, not a single Azure service

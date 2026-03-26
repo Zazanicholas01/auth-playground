@@ -1,0 +1,27 @@
+---
+title: Controller Manager
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Il **`Controller Manager`** si occupa di supervisionare il cluster per assicurarsi
+che lo stato attuale corrisponda allo stato desiderato.
+
+### Node Controller
+
+Controlla la salute dei nodi tramite gli `heartbeat` inviati dal `Kubelet`.
+
+- Se un nodo non risponde, viene segnato come `Unreachable`.
+- Se resta non disponibile troppo a lungo, i Pod vengono riprogrammati su nodi sani.
+
+### Replication / Deployment Controller
+
+Mantiene il numero corretto di repliche dei Pod.
+
+- Se i Pod sono troppi, ne rimuove.
+- Se i Pod sono troppo pochi, ne crea di nuovi.
+- Supporta l'`auto-healing` quando un Pod o un nodo fallisce.

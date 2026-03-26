@@ -1,0 +1,97 @@
+---
+title: Azure NAT Gateway
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure NAT Gateway`, the Azure service used to provide controlled and scalable outbound internet access for resources in a virtual network.
+
+### *Azure NAT Gateway*
+
+`Azure NAT Gateway` is used when private resources inside a `VNet` need outbound internet access without exposing themselves to inbound public access.
+
+It provides outbound-only connectivity.
+
+This means resources such as virtual machines or containers can reach the internet, but the internet cannot directly initiate inbound connections back to them through the NAT gateway.
+
+<Aside type="note">
+`NAT Gateway` is commonly used when workloads in private subnets must access external services such as package repositories, APIs, or update servers.
+</Aside>
+
+### *Why Use NAT Gateway*
+
+<CardGrid>
+  <Card title="Outbound Only" icon="document">
+    Enables internet access for private resources without giving them public IP addresses.
+  </Card>
+
+  <Card title="Stable Public IP" icon="setting">
+    Outbound traffic uses one or more defined public IP addresses, making egress identity predictable.
+  </Card>
+
+  <Card title="Scalable SNAT" icon="warning">
+    Provides more scalable source network address translation than relying on default outbound access.
+  </Card>
+</CardGrid>
+
+### *How NAT Gateway Works*
+
+A `NAT Gateway` is associated with one or more subnets.
+
+Resources in those subnets use the NAT gateway for outbound internet traffic.
+
+The service translates private source IP addresses into the public IP address of the NAT gateway.
+
+This lets multiple internal resources share controlled outbound connectivity.
+
+### *Typical Flow*
+
+<Steps>
+1. Create a `NAT Gateway`.
+2. Assign one or more public IP addresses or a public IP prefix.
+3. Associate the NAT gateway with a subnet.
+4. Deploy private resources into that subnet.
+5. Outbound internet traffic uses the NAT gateway public IP for egress.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Private VMs" icon="document">
+    Allow virtual machines in private subnets to reach update services or external APIs.
+  </Card>
+
+  <Card title="Container Workloads" icon="database">
+    Give containers outbound access without assigning public IPs to each workload.
+  </Card>
+
+  <Card title="Controlled Egress" icon="setting">
+    Ensure outbound traffic leaves Azure through known public IP addresses for allowlisting.
+  </Card>
+</CardGrid>
+
+### *NAT Gateway Vs. Public IP*
+
+| Option | Main Purpose |
+| --- | --- |
+| Public IP on a VM | Direct internet exposure for that individual resource |
+| `NAT Gateway` | Shared and controlled outbound-only connectivity for private subnet resources |
+
+### *NAT Gateway Vs. Azure Firewall*
+
+| Service | Best For |
+| --- | --- |
+| `NAT Gateway` | Simple outbound internet access with predictable egress IP |
+| `Azure Firewall` | Centralized inspection, filtering, and policy-based traffic control |
+
+### *Summary*
+
+- `NAT Gateway` provides outbound-only internet access
+- It is attached to a subnet, not to individual resources
+- Private workloads can reach the internet without public IPs
+- It provides stable and predictable egress IP addresses
+- It is ideal for controlled outbound connectivity from private subnets

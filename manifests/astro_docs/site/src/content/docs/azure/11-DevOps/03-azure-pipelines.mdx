@@ -1,0 +1,111 @@
+---
+title: Azure Pipelines
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Pipelines`, the CI/CD service inside Azure DevOps.
+
+### *Azure Pipelines*
+
+`Azure Pipelines` is the Azure DevOps service used to automate:
+
+- builds
+- tests
+- package creation
+- application deployment
+
+It supports both `Continuous Integration (CI)` and `Continuous Delivery / Deployment (CD)` workflows.
+
+This helps teams move from manual software delivery to repeatable and automated pipelines.
+
+<Aside type="note">
+`Azure Pipelines` is one of the most important DevOps services because it connects code changes to validated builds and controlled deployments.
+</Aside>
+
+### *Why Use Azure Pipelines*
+
+<CardGrid>
+  <Card title="Continuous Integration" icon="document">
+    Automatically build and test code whenever changes are pushed to the repository.
+  </Card>
+
+  <Card title="Continuous Delivery" icon="setting">
+    Prepare artifacts and deploy them across environments in a controlled way.
+  </Card>
+
+  <Card title="Automation" icon="warning">
+    Replace manual release processes with repeatable pipeline stages and validation steps.
+  </Card>
+
+  <Card title="Traceability" icon="database">
+    Link source code changes, builds, and deployments in one DevOps workflow.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+A pipeline usually starts when code changes are pushed or when a manual or scheduled trigger occurs.
+
+The pipeline then executes a sequence of automated steps.
+
+### *Typical Flow*
+
+<Steps>
+1. A developer pushes code to `Azure Repos` or another connected repository.
+2. A pipeline trigger starts the build.
+3. The pipeline restores dependencies and builds the application.
+4. Automated tests run.
+5. Build artifacts are published.
+6. Deployment stages release the application to target environments.
+</Steps>
+
+### *YAML Pipelines*
+
+Modern Azure Pipelines are often defined as code using `YAML`.
+
+This means the build and deployment process is version-controlled together with the application.
+
+Benefits include:
+
+- repeatability
+- version history
+- easier review
+- infrastructure-like automation for delivery workflows
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Build Automation" icon="document">
+    Compile and package applications automatically after each code change.
+  </Card>
+
+  <Card title="Test Execution" icon="setting">
+    Run unit tests, integration tests, or validation jobs during delivery.
+  </Card>
+
+  <Card title="Multi-Stage Deployment" icon="warning">
+    Promote artifacts across environments such as `Dev`, `Test`, and `Production`.
+  </Card>
+</CardGrid>
+
+### *Azure Pipelines Vs. GitHub Actions*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Pipelines` | Enterprise CI/CD inside Azure DevOps |
+| `GitHub Actions` | Workflow automation closely integrated with GitHub repositories |
+
+Both can support CI/CD, but Azure Pipelines is especially strong in Azure DevOps-centered delivery environments.
+
+### *Summary*
+
+- `Azure Pipelines` provides CI/CD automation in Azure DevOps
+- It automates builds, tests, artifacts, and deployments
+- Pipelines are often defined in `YAML`
+- It supports multi-stage delivery across environments
+- It is a core part of modern DevOps automation

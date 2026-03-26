@@ -1,0 +1,117 @@
+---
+title: Entra ID
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Microsoft Entra ID`, formerly `Azure Active Directory`, which is the identity and access management backbone of the Azure ecosystem.
+
+### *Microsoft Entra ID: Identity & Access Management*
+
+`Microsoft Entra ID` is a cloud-based identity service.
+
+Unlike traditional `Active Directory`, which focuses on servers and on-premises infrastructure, Entra ID is designed to manage users, applications, and access across the internet and cloud.
+
+<Aside type="note">
+In Entra ID, everything is represented as an object and managed through identity-based access controls.
+</Aside>
+
+---
+
+### *Core Identity Types*
+
+<CardGrid>
+  <Card title="Users" icon="document">
+    Human accounts such as cloud-only users, synced on-prem users, or guest `B2B` users.
+  </Card>
+
+  <Card title="Groups" icon="document">
+    Collections of users used to assign permissions at scale, such as security groups or `Microsoft 365` groups.
+  </Card>
+
+  <Card title="Service Principals / Managed Identities" icon="setting">
+    Identities for applications and Azure resources so they can authenticate securely without storing passwords in code.
+  </Card>
+</CardGrid>
+
+### *Security Gatekeepers*
+
+These features are central to an Azure security strategy.
+
+<CardGrid>
+  <Card title="Conditional Access" icon="warning">
+    The decision engine of Entra ID. It evaluates user, location, device state, and app access conditions in real time before granting access.
+  </Card>
+
+  <Card title="Privileged Identity Management" icon="key">
+    Applies least privilege by giving users eligible admin roles that must be activated only when needed.
+  </Card>
+</CardGrid>
+
+### *Conditional Access*
+
+`Conditional Access` works as an if-then engine.
+
+It evaluates signals such as:
+
+- who the user is
+- where the user is connecting from
+- whether the device is healthy
+- which application is being accessed
+
+Based on those signals, Azure can:
+
+- block access
+- allow access
+- require `MFA`
+
+Example:
+
+- require `MFA` only for the `Azure Portal`
+
+### *Privileged Identity Management*
+
+`Privileged Identity Management (PIM)` follows the principle of least privilege.
+
+Instead of assigning permanent admin access, users receive `eligible` roles.
+
+Main concepts:
+
+- `Just-In-Time (JIT)` access: users activate the role only for a limited time
+- `Approval flow`: activation can require justification or approval by another administrator
+
+### *Entra ID Vs. On-Premises Active Directory*
+
+| Feature | Active Directory (AD DS) | Microsoft Entra ID |
+| --- | --- | --- |
+| Primary Use | Local network, desktops, file shares | Cloud apps, SSO, web-based authentication |
+| Protocols | Kerberos, NTLM, LDAP | SAML, OAuth 2.0, OpenID Connect |
+| Structure | Hierarchical: OUs, domains, forests | Flat: users, groups, tenants |
+| Device Management | Group Policy (`GPO`) | `Microsoft Intune` and MDM |
+
+### *Hybrid Identity: Entra Connect*
+
+Most organizations do not move fully to the cloud immediately.
+
+They often use `Microsoft Entra Connect` to synchronize local identities with Azure.
+
+<CardGrid>
+  <Card title="Password Hash Sync" icon="document">
+    A password hash fingerprint from the on-prem environment is synchronized to Azure.
+  </Card>
+
+  <Card title="Pass-through Authentication" icon="setting">
+    Azure sends the authentication request back to the on-prem server for real-time validation.
+  </Card>
+
+  <Card title="Federation (ADFS)" icon="warning">
+    A separate federation service handles authentication. This is usually considered a more legacy and complex model.
+  </Card>
+</CardGrid>
+
+<Aside type="note">
+As of `2026`, Microsoft is strongly pushing `passwordless` authentication, such as `FIDO2` keys and `Microsoft Authenticator`, while many legacy basic authentication methods have been deprecated.
+</Aside>

@@ -1,0 +1,63 @@
+---
+title: Admission Controllers
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Gli `Admission Controllers` controllano una richiesta dopo `authentication` e `authorization`, ma prima che venga salvata in `etcd`.
+
+### *Fasi principali*
+
+<CardGrid>
+  <Card title="Mutating" icon="setting">
+    Possono modificare la richiesta prima del salvataggio.
+  </Card>
+
+  <Card title="Validating" icon="warning">
+    Possono solo accettare o rifiutare la richiesta.
+  </Card>
+</CardGrid>
+
+### *Flusso*
+
+<Steps>
+1. Il client invia una richiesta all'`API Server`.
+2. La richiesta passa `authentication` e `authorization`.
+3. I controller `mutating` possono modificarla.
+4. I controller `validating` la approvano o la rifiutano.
+5. Se valida, la richiesta viene salvata in `etcd`.
+</Steps>
+
+### *Controller comuni*
+
+<CardGrid>
+  <Card title="AlwaysPullImages" icon="warning">
+    Forza il download dell'immagine a ogni avvio.
+  </Card>
+
+  <Card title="NamespaceLifecycle" icon="list-format">
+    Blocca oggetti in namespace in eliminazione.
+  </Card>
+
+  <Card title="LimitRanger" icon="information">
+    Applica valori di default per CPU e RAM.
+  </Card>
+
+  <Card title="NodeRestriction" icon="close">
+    Limita cosa può modificare il `Kubelet`.
+  </Card>
+</CardGrid>
+
+### *Admission Webhooks*
+
+<Aside type="note">
+Gli `Admission Webhooks` permettono di delegare il controllo a un servizio esterno.
+</Aside>
+
+- Kubernetes invia la richiesta a un servizio HTTP esterno.
+- Il servizio puo` modificarla o rifiutarla.
+- Esempio: bloccare Pod senza label `owner`.

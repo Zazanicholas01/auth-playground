@@ -1,0 +1,75 @@
+---
+title: Security Primitives
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+
+### *Livelli principali*
+
+<CardGrid>
+  <Card title="Hosts" icon="laptop">
+    Proteggi sistema operativo e accesso ai nodi.
+  </Card>
+
+  <Card title="API Server" icon="warning">
+    Difendi il punto di ingresso del cluster.
+  </Card>
+
+  <Card title="AuthN / AuthZ" icon="close">
+    Controlla identita` e permessi.
+  </Card>
+
+  <Card title="TLS" icon="setting">
+    Cifra le comunicazioni tra componenti.
+  </Card>
+
+  <Card title="Network Policies" icon="random">
+    Isola il traffico tra i Pod.
+  </Card>
+</CardGrid>
+
+### *Securing Hosts*
+
+- Usa sistemi operativi minimali
+- Limita o disabilita l'accesso `SSH`
+
+### *Securing the API Server*
+
+- Non esporre l'`API Server` su Internet
+
+### *Authentication e Authorization*
+
+| Livello | Scopo | Esempi |
+| --- | --- | --- |
+| Authentication | Identificare chi fa la richiesta | `X.509`, `OIDC`, `ServiceAccount` |
+| Authorization | Stabilire cosa puo` fare | `RBAC`, `Role`, `ClusterRole`, `RoleBinding` |
+
+<Aside type="note">
+Segui sempre il principio del `Least Privilege` e `Zero Trust`: concedi solo i permessi minimi necessari.
+</Aside>
+
+### *TLS Certificates*
+
+<Steps>
+1. Kubernetes usa una CA interna.
+2. I componenti comunicano tramite `TLS`.
+3. `API Server`, `etcd`, `Scheduler` e `Kubelet` usano certificati.
+4. Per le applicazioni, puoi usare `cert-manager`.
+</Steps>
+
+### *Network Policies*
+
+Le `Network Policies` limitano il traffico tra Pod.
+
+- controllano `Ingress`
+- controllano `Egress`
+- permettono isolamento tra namespace e workload
+
+<Aside type="caution">
+La best practice è applicare una policy `Default Deny` e aprire solo il traffico necessario.
+</Aside>

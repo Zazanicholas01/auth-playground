@@ -1,0 +1,101 @@
+---
+title: Azure Front Door
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Front Door`, the global entry service used to route, accelerate, and protect web applications at the edge.
+
+### *Azure Front Door*
+
+`Azure Front Door` is a global Layer 7 service.
+
+It sits at the Microsoft edge and routes user traffic to the best backend based on performance, health, and routing rules.
+
+Unlike `Application Gateway`, which usually protects and routes traffic within one region or one application environment, `Front Door` works at the global level.
+
+<Aside type="note">
+`Azure Front Door` is often used when an application must serve users from multiple regions with low latency and high global availability.
+</Aside>
+
+### *What Front Door Does*
+
+<CardGrid>
+  <Card title="Global Routing" icon="document">
+    Routes users to the closest or healthiest backend endpoint across regions.
+  </Card>
+
+  <Card title="Acceleration" icon="setting">
+    Improves performance by using Microsoft's global edge network to bring traffic onto the backbone quickly.
+  </Card>
+
+  <Card title="Security" icon="warning">
+    Can protect public applications with web application firewall features and centralized edge policies.
+  </Card>
+</CardGrid>
+
+### *Key Features*
+
+| Feature | Purpose |
+| --- | --- |
+| Global Load Balancing | Direct traffic across multiple regions or backend services |
+| Health Probes | Detect unhealthy backends and stop sending traffic to them |
+| SSL Offload | Terminate TLS at the edge |
+| URL Routing | Route requests based on path or domain |
+| Web Application Firewall | Protect against common web attacks |
+
+### *How It Works*
+
+`Azure Front Door` acts as the first global entry point for users.
+
+It can route traffic to:
+
+- `App Service`
+- `Application Gateway`
+- public endpoints
+- multi-region web applications
+
+### *Traffic Flow*
+
+<Steps>
+1. A user connects to the global `Front Door` endpoint.
+2. Front Door evaluates routing rules, health, and backend priority.
+3. Traffic is sent across Microsoft's global edge network.
+4. The request reaches the selected backend in the best available region.
+5. If one backend becomes unhealthy, traffic is redirected automatically.
+</Steps>
+
+### *Front Door Vs. Application Gateway*
+
+| Service | Scope | Best For |
+| --- | --- | --- |
+| `Application Gateway` | Regional | Web traffic routing and `WAF` inside one region or environment |
+| `Azure Front Door` | Global | Multi-region applications, global failover, edge acceleration |
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Multi-Region Apps" icon="document">
+    Direct users to the nearest or healthiest deployment across multiple Azure regions.
+  </Card>
+
+  <Card title="Global Failover" icon="warning">
+    Redirect traffic automatically when one region becomes unavailable.
+  </Card>
+
+  <Card title="Edge Security" icon="setting">
+    Apply centralized `WAF` policies and TLS handling before traffic reaches backend applications.
+  </Card>
+</CardGrid>
+
+### *Summary*
+
+- `Azure Front Door` is a global Layer 7 routing service
+- It improves performance by routing traffic through Microsoft's edge network
+- It supports global failover and multi-region application design
+- It can provide `WAF` and TLS handling at the edge
+- It complements regional services such as `Application Gateway`

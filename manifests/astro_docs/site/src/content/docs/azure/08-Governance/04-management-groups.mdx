@@ -1,0 +1,112 @@
+---
+title: Management Groups
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Management Groups`, the Azure governance layer used to organize and control multiple subscriptions together.
+
+### *Management Groups*
+
+`Management Groups` sit above the subscription level in the Azure hierarchy.
+
+They allow organizations to apply governance, policy, and access control across many subscriptions at once.
+
+This is useful in environments where one subscription is not enough and Azure must be organized at enterprise scale.
+
+<Aside type="note">
+If subscriptions are the billing and workload boundary, management groups are the governance boundary above them.
+</Aside>
+
+### *Why Use Management Groups*
+
+<CardGrid>
+  <Card title="Central Governance" icon="document">
+    Apply policies and governance rules to many subscriptions at the same time.
+  </Card>
+
+  <Card title="Hierarchy" icon="setting">
+    Organize Azure subscriptions into a structure that reflects departments, environments, or business units.
+  </Card>
+
+  <Card title="Inheritance" icon="warning">
+    Policies and role assignments applied at a higher level flow down to child management groups and subscriptions.
+  </Card>
+</CardGrid>
+
+### *Hierarchy Structure*
+
+Azure governance follows a parent-child model.
+
+A simplified hierarchy is:
+
+<Steps>
+1. `Management Group`
+2. `Subscription`
+3. `Resource Group`
+4. `Resource`
+</Steps>
+
+A management group can contain:
+
+- subscriptions
+- other management groups
+
+This allows a multi-level governance structure.
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Department Structure" icon="document">
+    Group subscriptions by departments such as `Finance`, `HR`, or `Engineering`.
+  </Card>
+
+  <Card title="Environment Separation" icon="database">
+    Separate `Production`, `Development`, and `Testing` subscriptions under different governance branches.
+  </Card>
+
+  <Card title="Enterprise Policy" icon="warning">
+    Apply organization-wide restrictions such as approved regions, required tags, or security baselines.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+<Steps>
+1. Create one or more `Management Groups`.
+2. Place subscriptions into the correct group structure.
+3. Assign `Azure Policy` or `RBAC` roles at the management group level.
+4. Azure applies inheritance down to child scopes.
+5. Subscriptions and resources follow the governance rules defined above them.
+</Steps>
+
+### *Management Groups And Governance Tools*
+
+| Tool | Role At Management Group Scope |
+| --- | --- |
+| `Azure Policy` | Enforce standards across many subscriptions |
+| `Azure RBAC` | Assign access to teams at a higher governance level |
+| `Tags` | Support organizational metadata when combined with policy and reporting |
+
+### *Management Groups Vs. Subscriptions*
+
+| Scope | Best For |
+| --- | --- |
+| `Management Group` | Governance across many subscriptions |
+| `Subscription` | Billing, quotas, and workload separation |
+
+A subscription controls a workload boundary.
+
+A management group controls governance across many subscriptions.
+
+### *Summary*
+
+- `Management Groups` sit above subscriptions in Azure
+- They are used to organize and govern multiple subscriptions together
+- Policies and access assignments can be inherited downward
+- They are useful for enterprise-scale Azure environments
+- They help centralize governance without removing workload separation

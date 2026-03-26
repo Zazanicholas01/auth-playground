@@ -1,0 +1,121 @@
+---
+title: Azure DNS
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure DNS`, the Azure service used to host and manage domain name resolution.
+
+### *Azure DNS*
+
+`DNS` translates human-readable names such as `www.example.com` into IP addresses that computers can use.
+
+`Azure DNS` is the Microsoft-managed service used to host DNS zones and records in Azure.
+
+It is highly available, globally distributed, and integrated with the Azure platform.
+
+<Aside type="note">
+`Azure DNS` does not replace the DNS protocol. It provides managed hosting for your DNS zones and records.
+</Aside>
+
+### *DNS Zones*
+
+A `DNS Zone` is the container for DNS records for a specific domain.
+
+Examples:
+
+- `example.com`
+- `internal.corp.local`
+- `myapp.contoso.com`
+
+Inside the zone, you define the records that tell clients where services are located.
+
+### *Common Record Types*
+
+<CardGrid>
+  <Card title="A Record" icon="document">
+    Maps a name to an IPv4 address.
+  </Card>
+
+  <Card title="CNAME Record" icon="setting">
+    Maps one name to another DNS name.
+  </Card>
+
+  <Card title="MX Record" icon="warning">
+    Defines the mail server responsible for a domain.
+  </Card>
+
+  <Card title="TXT Record" icon="database">
+    Stores text-based values often used for verification, SPF, or configuration.
+  </Card>
+</CardGrid>
+
+### *Public And Private DNS*
+
+Azure supports both public and private DNS scenarios.
+
+| Type | Use Case |
+| --- | --- |
+| Public DNS Zone | Resolve names from the public internet |
+| Private DNS Zone | Resolve names only inside Azure VNets or connected private networks |
+
+`Private DNS` is commonly used for internal applications, private endpoints, and hybrid networking.
+
+### *How Azure DNS Works*
+
+<Steps>
+1. Create a DNS zone in Azure.
+2. Add records such as `A`, `CNAME`, or `MX`.
+3. If the zone is public, update the domain registrar to use the Azure name servers.
+4. DNS clients query the zone.
+5. Azure returns the matching record response.
+</Steps>
+
+### *Private DNS Zones*
+
+`Private DNS Zones` are designed for internal name resolution.
+
+They are useful when resources should be reachable by name without exposing them publicly.
+
+Common examples include:
+
+- internal applications in a `VNet`
+- private database endpoints
+- `Private Link` integrations
+
+A private DNS zone can be linked to one or more VNets so resources in those networks can resolve the internal names.
+
+### *Typical Use Cases*
+
+<CardGrid>
+  <Card title="Public Websites" icon="document">
+    Host DNS records for websites, APIs, and public-facing applications.
+  </Card>
+
+  <Card title="Private Applications" icon="database">
+    Resolve internal service names inside VNets and private environments.
+  </Card>
+
+  <Card title="Service Integration" icon="setting">
+    Support Azure services such as `Private Endpoint` with private DNS resolution.
+  </Card>
+</CardGrid>
+
+### *Azure DNS Vs. Private DNS*
+
+| Service | Scope | Best For |
+| --- | --- | --- |
+| `Azure DNS` | Public internet | Public domains and internet-facing applications |
+| `Azure Private DNS` | Internal networks | Private applications and internal service discovery |
+
+### *Summary*
+
+- `Azure DNS` hosts and manages DNS zones and records
+- A `DNS Zone` contains records for a domain
+- Azure supports both public and private DNS
+- `Private DNS` is used for internal name resolution
+- Azure DNS is commonly used with websites, APIs, and private endpoints

@@ -1,0 +1,121 @@
+---
+title: Azure IoT Hub
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure IoT Hub`, the core Azure service used to securely connect, manage, and communicate with IoT devices at scale.
+
+### *Azure IoT Hub*
+
+`Azure IoT Hub` is a managed cloud gateway for internet-connected devices.
+
+It allows devices and backend systems to exchange data securely and reliably.
+
+It is designed for large-scale IoT scenarios where you need to:
+
+- ingest telemetry from devices
+- send commands to devices
+- manage device identities
+- monitor device connectivity
+- control communication securely
+
+<Aside type="note">
+`IoT Hub` is usually the foundation of an Azure IoT architecture because it acts as the central communication point between devices and cloud services.
+</Aside>
+
+### *Main Capabilities*
+
+<CardGrid>
+  <Card title="Device Telemetry" icon="document">
+    Devices send sensor readings, status updates, and operational data to the cloud.
+  </Card>
+
+  <Card title="Cloud-To-Device Commands" icon="setting">
+    Backend systems can send instructions, configuration changes, or actions back to devices.
+  </Card>
+
+  <Card title="Device Identity" icon="database">
+    Each device has its own identity and authentication model for secure communication.
+  </Card>
+
+  <Card title="Fleet Management" icon="warning">
+    Manage large numbers of devices, track status, and coordinate updates across a fleet.
+  </Card>
+</CardGrid>
+
+### *Communication Model*
+
+IoT Hub supports bidirectional communication.
+
+That means:
+
+- `device-to-cloud` for telemetry and events
+- `cloud-to-device` for commands and control
+
+This makes it suitable for both monitoring and remote management scenarios.
+
+### *How IoT Hub Works*
+
+<Steps>
+1. A device is registered with an identity in `IoT Hub`.
+2. The device authenticates securely with the service.
+3. The device sends telemetry or status data to the cloud.
+4. Backend services consume that data for storage, analytics, or automation.
+5. The cloud can send commands or updates back to the device.
+</Steps>
+
+### *Security Model*
+
+Security is one of the most important parts of IoT Hub.
+
+<CardGrid>
+  <Card title="Per-Device Identity" icon="document">
+    Each device has its own identity, which allows precise access control and revocation.
+  </Card>
+
+  <Card title="Authentication" icon="setting">
+    Devices can authenticate using secure credentials such as symmetric keys or certificates.
+  </Card>
+
+  <Card title="Secure Messaging" icon="warning">
+    Communication is encrypted and controlled through the IoT Hub security model.
+  </Card>
+</CardGrid>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Industrial Monitoring" icon="document">
+    Collect data from sensors and machines in factories or industrial systems.
+  </Card>
+
+  <Card title="Remote Device Control" icon="setting">
+    Send configuration changes or commands to connected devices in the field.
+  </Card>
+
+  <Card title="Telemetry Pipelines" icon="database">
+    Stream device data into analytics, storage, or event-processing systems.
+  </Card>
+</CardGrid>
+
+### *IoT Hub Vs. Event Hubs*
+
+| Service | Best For |
+| --- | --- |
+| `Azure IoT Hub` | Secure device communication and management |
+| `Azure Event Hubs` | High-scale event ingestion without device identity management |
+
+`IoT Hub` is device-aware, while `Event Hubs` is more general-purpose event streaming.
+
+### *Summary*
+
+- `Azure IoT Hub` is the core Azure service for device communication
+- It supports both `device-to-cloud` and `cloud-to-device` messaging
+- Each device has its own identity and security context
+- It is designed for large-scale IoT fleets
+- It is often the foundation of a full Azure IoT solution

@@ -1,0 +1,219 @@
+---
+title: PostgreSQL Flexible Server
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section dives deeper into `Azure Database for PostgreSQL - Flexible Server`, the main Azure deployment model for managed PostgreSQL workloads.
+
+### *What Is Flexible Server*
+
+`Flexible Server` is the modern deployment model for `Azure Database for PostgreSQL`.
+
+It gives more operational control than older managed models while still keeping the platform fully managed by Azure.
+
+It is designed for workloads that need:
+
+- PostgreSQL compatibility
+- managed backups
+- high availability
+- private networking options
+- tuning flexibility
+- controlled maintenance windows
+
+<Aside type="note">
+`Flexible Server` is the default choice for most new PostgreSQL deployments in Azure because it balances platform management with practical operational control.
+</Aside>
+
+### *Why It Is Called Flexible*
+
+The word `Flexible` comes from the fact that this model gives more control over key operational settings.
+
+<CardGrid>
+  <Card title="Compute Choice" icon="document">
+    You choose the compute size and scale it based on workload needs.
+  </Card>
+
+  <Card title="Maintenance Control" icon="setting">
+    You can define a preferred maintenance window instead of accepting only a fully platform-driven schedule.
+  </Card>
+
+  <Card title="Networking Options" icon="database">
+    It supports public access, private access, and VNet-integrated architectures.
+  </Card>
+
+  <Card title="Availability Options" icon="warning">
+    You can choose between standard deployment and high availability modes depending on resilience requirements.
+  </Card>
+</CardGrid>
+
+### *Core Building Blocks*
+
+A `Flexible Server` deployment usually includes these decisions:
+
+| Area | What You Choose |
+| --- | --- |
+| Compute | vCPU and memory size |
+| Storage | Capacity and performance profile |
+| High Availability | Whether to use zone-redundant or resilient deployment options |
+| Networking | Public endpoint or private access |
+| Backup | Retention settings and restore capability |
+| Maintenance | Preferred time window for updates |
+
+### *Compute And Scaling*
+
+Flexible Server lets you choose a compute size that matches the workload.
+
+Typical factors include:
+
+- number of vCPUs
+- amount of memory
+- expected concurrent connections
+- transaction volume
+
+The goal is to avoid both:
+
+- overprovisioning and paying too much
+- underprovisioning and creating bottlenecks
+
+### *Storage*
+
+Storage sizing affects both capacity and performance.
+
+You should plan for:
+
+- database size
+- growth over time
+- backup storage needs
+- transaction intensity
+
+For relational workloads, storage is not only about space. It also affects latency and throughput.
+
+### *High Availability*
+
+Flexible Server supports high availability options for production workloads.
+
+The purpose is to reduce downtime during infrastructure failure or maintenance events.
+
+<CardGrid>
+  <Card title="Single Zone" icon="document">
+    Simpler and lower-cost deployment for non-critical workloads.
+  </Card>
+
+  <Card title="Zone-Redundant HA" icon="warning">
+    Places standby capacity in another availability zone to improve resilience.
+  </Card>
+
+  <Card title="Failover" icon="setting">
+    If the primary instance fails, Azure can switch service to the standby node.
+  </Card>
+</CardGrid>
+
+<Aside type="note">
+High availability improves resilience, but it also increases cost, so it is usually chosen for production workloads rather than small development environments.
+</Aside>
+
+### *Networking Modes*
+
+Flexible Server can be deployed with different connectivity models.
+
+| Mode | Best For |
+| --- | --- |
+| Public Access | Simpler development or controlled internet-reachable access |
+| Private Access | Production architectures using VNet integration and private networking |
+
+Private access is often preferred for enterprise environments because it reduces exposure and works well with:
+
+- `Private DNS`
+- `Private networking`
+- `Hub and Spoke` designs
+- `VPN` or `ExpressRoute`
+
+### *Backups And Restore*
+
+Backups are managed by Azure.
+
+This gives you built-in recovery options without needing to manually script full backup infrastructure.
+
+Typical backup-related capabilities include:
+
+- automated backups
+- retention policies
+- point-in-time restore
+- recovery to a new server instance
+
+### *Maintenance Window*
+
+One of the useful features of Flexible Server is maintenance control.
+
+Instead of fully unpredictable update timing, you can define a preferred maintenance window.
+
+This is especially useful when:
+
+- applications have sensitive peak hours
+- teams want maintenance during quieter periods
+- production systems need controlled change timing
+
+### *Security Considerations*
+
+A production-ready Flexible Server design usually includes:
+
+<CardGrid>
+  <Card title="Identity" icon="document">
+    Control access through database users and Azure-integrated security practices.
+  </Card>
+
+  <Card title="Networking" icon="warning">
+    Limit exposure with firewall rules or private access.
+  </Card>
+
+  <Card title="Secrets" icon="setting">
+    Store connection strings and credentials in `Azure Key Vault` instead of hardcoding them.
+  </Card>
+
+  <Card title="Least Privilege" icon="database">
+    Grant only the database permissions required by each application or administrator.
+  </Card>
+</CardGrid>
+
+### *Typical Deployment Flow*
+
+<Steps>
+1. Create a `PostgreSQL Flexible Server`.
+2. Choose compute, storage, and availability settings.
+3. Decide whether access will be public or private.
+4. Configure database firewall or private network integration.
+5. Create databases, users, and application roles.
+6. Connect the application using standard PostgreSQL drivers.
+7. Monitor performance, backups, and scaling needs over time.
+</Steps>
+
+### *When To Use Flexible Server*
+
+Use `Flexible Server` when:
+
+- the application already uses PostgreSQL
+- a managed relational database is preferred
+- networking control matters
+- maintenance timing matters
+- production workloads need a better balance of control and simplicity
+
+### *Flexible Server Vs. Other Azure Database Options*
+
+| Service | Best For |
+| --- | --- |
+| `Azure SQL Database` | SQL Server-based managed relational workloads |
+| `Azure Cosmos DB` | Globally distributed NoSQL workloads |
+| `PostgreSQL Flexible Server` | Managed PostgreSQL workloads with more operational control |
+
+### *Summary*
+
+- `Flexible Server` is the main Azure model for managed PostgreSQL
+- It offers more control over compute, networking, maintenance, and availability
+- It supports both development and production workloads
+- Private access and HA are especially important for enterprise deployments
+- It is the best fit when you want PostgreSQL with managed Azure operations

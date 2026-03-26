@@ -1,0 +1,65 @@
+---
+title: ETCD
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+##### Database chiave-valore distribuito e altamente disponibile. Mantiene in memoria lo stato del cluster
+
+#
+## Leader Election
+
+**ETCD** usa `Raft` per mantenere coerente lo stato del cluster.
+
+- Un nodo viene eletto `Leader`.
+- Gli altri nodi diventano `Follower`.
+- Se il `Leader` cade, parte una nuova elezione.
+- Per scrivere, serve la maggioranza dei nodi: `(n/2 + 1)`.
+- Questa maggioranza è il `Quorum`.
+
+
+## Alta Affidabilità
+
+Per avere un cluster in alta affidabilità, ETCD deve essere distribuito.
+
+- Si usano sempre `numeri dispari` (3, 5, 7) di nodi per garantire la miglior **Fault Tolerance** con meno risorse possibili
+
+:::danger
+Discorso della Witness su Storage distribuito
+:::
+
+## Backup & Restore
+
+In Kubernetes, il backup di ETCD è il **Backup del Cluster**. Si usa l'utility
+`etcdctl` per creare uno **Snapshot**.
+
+```bash frame=none
+ETCDCTL_API=3 etcdctl snapshot save snapshot.db \
+  --endpoints=https://127.0.0.1:2379 \
+  --cacert=<ca-file> --cert=<cert-file> --key=<key-file>
+```
+
+Ha senso uno Snapshot manuale quando:
+- Aggiornamento versione Kubernetes / Nodo sottostante
+- NON con un aggiornamento applicativo in quanto coperto da rollout
+- Aggiornamento Networking
+
+###
+:::tip
+Il ripristino deve essere fatto prima di riavviare API Server
+:::
+
+## Disaster Recovery
+
+Il **Disaster Recovery** entra in gioco quando l'intero cluster ETCD fallisce o i dati sono corrotti.
+- Fermare tutti i componenti del Control Plane
+- Ripristinare lo snapshot su tutti i nodi con lo stesso backup
+- Riavviare i nodi con un nuovo `Initial Cluster Token` per forzare la creazione di un nuovo cluster pulito
+
+:::danger
+Domanda - Best practices aziendali per garantire HA e DR
+:::

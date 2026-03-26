@@ -1,0 +1,119 @@
+---
+title: Alerts And Action Groups
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Alerts` and `Action Groups`, the Azure features used to notify teams and automate responses when monitored conditions are met.
+
+### *Alerts And Action Groups*
+
+Monitoring is useful only if teams can react when something important happens.
+
+`Azure Alerts` detect conditions based on metrics, logs, or platform events.
+
+`Action Groups` define what Azure should do when an alert fires.
+
+Together, they form the operational response layer of Azure monitoring.
+
+<Aside type="note">
+If `Azure Monitor` shows what is happening, alerts and action groups decide when people or systems should respond.
+</Aside>
+
+### *Azure Alerts*
+
+An alert watches for a condition and triggers when that condition is true.
+
+Common alert sources include:
+
+- metrics
+- log queries
+- activity log events
+- application telemetry
+
+Typical alert examples:
+
+- CPU usage above a threshold
+- high failed request rate
+- resource deletion events
+- unusual log query results
+
+### *Action Groups*
+
+An `Action Group` defines the response when an alert is triggered.
+
+<CardGrid>
+  <Card title="Notifications" icon="document">
+    Send messages through email, SMS, push notifications, or voice call.
+  </Card>
+
+  <Card title="Automation" icon="setting">
+    Trigger workflows such as automation runbooks, webhooks, or logic apps.
+  </Card>
+
+  <Card title="Reuse" icon="database">
+    The same action group can be linked to multiple alerts across the environment.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+<Steps>
+1. Azure Monitor collects metrics, logs, and events.
+2. An alert rule evaluates the configured condition.
+3. If the condition is met, the alert is triggered.
+4. The linked `Action Group` runs its configured response.
+5. Teams are notified or automation begins.
+</Steps>
+
+### *Common Alert Types*
+
+| Alert Type | Best For |
+| --- | --- |
+| Metric Alert | Real-time numeric thresholds such as CPU, memory, or request count |
+| Log Alert | Conditions discovered through `KQL` queries in log data |
+| Activity Log Alert | Subscription or control-plane events such as resource changes |
+| Application Alert | Application-specific failures, response times, or request issues |
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Infrastructure Failures" icon="warning">
+    Detect unhealthy virtual machines, high resource utilization, or network issues.
+  </Card>
+
+  <Card title="Application Problems" icon="document">
+    Alert when request latency, exception rate, or dependency failures increase.
+  </Card>
+
+  <Card title="Operational Automation" icon="setting">
+    Trigger automated actions such as ticket creation, runbooks, or incident workflows.
+  </Card>
+</CardGrid>
+
+### *Good Alerting Practice*
+
+A useful alert strategy should be:
+
+- actionable
+- relevant
+- not too noisy
+- tied to clear operational response
+
+Too many low-value alerts create fatigue and reduce trust in the monitoring system.
+
+<Aside type="caution">
+The goal is not to alert on everything. The goal is to alert on the conditions that actually require attention or action.
+</Aside>
+
+### *Summary*
+
+- `Azure Alerts` detect important operational conditions
+- `Action Groups` define what happens when an alert fires
+- Alerts can be based on metrics, logs, activity events, or applications
+- Action groups can notify people or trigger automation
+- Good alerting improves response without creating unnecessary noise

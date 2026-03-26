@@ -1,0 +1,121 @@
+---
+title: Azure AI Search
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure AI Search`, the Azure service used to index, search, and retrieve information from large collections of content.
+
+### *Azure AI Search*
+
+`Azure AI Search` is a managed search platform used to build rich search experiences over structured and unstructured content.
+
+It is commonly used for:
+
+- document search
+- website search
+- enterprise knowledge search
+- semantic retrieval
+- retrieval for AI applications
+
+It helps applications find the most relevant information quickly and at scale.
+
+<Aside type="note">
+`Azure AI Search` is often one of the key building blocks for AI applications because it helps retrieve the right content before a model generates an answer.
+</Aside>
+
+### *Why Use Azure AI Search*
+
+<CardGrid>
+  <Card title="Indexing" icon="document">
+    Organize content into searchable indexes for fast and relevant retrieval.
+  </Card>
+
+  <Card title="Relevance" icon="setting">
+    Improve the quality of search results with ranking, filters, and semantic capabilities.
+  </Card>
+
+  <Card title="Enterprise Search" icon="database">
+    Search across internal documents, records, and knowledge sources.
+  </Card>
+
+  <Card title="AI Integration" icon="warning">
+    Combine retrieval with generative AI applications such as chat and copilots.
+  </Card>
+</CardGrid>
+
+### *Core Concepts*
+
+A typical Azure AI Search design includes:
+
+- a data source
+- an index
+- optional enrichment or transformation
+- search queries from applications
+
+The service turns raw content into a searchable structure.
+
+### *Typical Flow*
+
+<Steps>
+1. Content is loaded from a source such as storage, databases, or documents.
+2. Azure AI Search builds an index over that content.
+3. Applications send search queries to the service.
+4. The service returns ranked and filtered results.
+5. Applications use those results directly or pass them to AI workflows.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Website Search" icon="document">
+    Add fast and relevant search to websites, portals, and internal knowledge bases.
+  </Card>
+
+  <Card title="Enterprise Knowledge" icon="database">
+    Search across documents, manuals, policies, and organizational content.
+  </Card>
+
+  <Card title="RAG Architecture" icon="setting">
+    Retrieve relevant context for generative AI applications before calling language models.
+  </Card>
+</CardGrid>
+
+### *AI Search And Azure OpenAI*
+
+One of the most common modern patterns combines:
+
+- `Azure AI Search`
+- `Azure OpenAI Service`
+- enterprise content
+
+This pattern allows applications to:
+
+- search for relevant information
+- retrieve the best content
+- ground the AI response in actual data
+
+This is often called a retrieval-based or grounded AI architecture.
+
+### *Azure AI Search Vs. Database Querying*
+
+| Service | Best For |
+| --- | --- |
+| `Azure AI Search` | Fast retrieval, relevance ranking, and search experiences |
+| Traditional database queries | Exact data lookup and transactional application logic |
+
+Search is optimized for discovery and relevance.
+
+Databases are optimized for storage, transactions, and exact record access.
+
+### *Summary*
+
+- `Azure AI Search` is a managed search and retrieval platform
+- It indexes content and returns relevant results quickly
+- It is useful for enterprise search and AI retrieval patterns
+- It is commonly paired with `Azure OpenAI Service`
+- It helps AI systems use grounded and relevant information

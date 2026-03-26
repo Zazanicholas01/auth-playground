@@ -1,0 +1,59 @@
+---
+title: Kustomization
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+`Kustomize` personalizza manifest Kubernetes senza usare template, lavorando per strati.
+
+### *Base e Overlays*
+
+<CardGrid>
+  <Card title="Base" icon="document">
+    Contiene i manifest comuni dell'applicazione.
+  </Card>
+
+  <Card title="Overlay" icon="list-format">
+    Applica modifiche specifiche per ambiente.
+  </Card>
+</CardGrid>
+
+### *kustomization.yaml*
+
+Il file `kustomization.yaml` descrive come assemblare e modificare i manifest.
+
+- `resources`: file o directory da includere
+- `patches`: modifiche da applicare
+- `configMapGenerator`: genera `ConfigMap`
+- `images`: cambia nome o tag delle immagini
+
+### *Flusso tipico*
+
+<Steps>
+1. Definisci una `base` con i manifest comuni.
+2. Crea un `overlay` per ogni ambiente.
+3. Applica patch solo ai campi necessari.
+4. Usa `kubectl apply -k` per distribuire la configurazione finale.
+</Steps>
+
+### *Esempio concettuale*
+
+- `base/`: Deployment e Service comuni
+- `overlays/prod/`: patch per repliche, immagini o configurazioni di produzione
+
+### *Confronto con Helm*
+
+| Caratteristica | Kustomize | Helm |
+| --- | --- | --- |
+| Metodo | Overlay e patch | Template e valori |
+| Sintassi | YAML puro | Go templates + YAML |
+| Integrazione | Nativo in `kubectl` | Richiede client `helm` |
+| Uso tipico | GitOps e ambienti interni | Distribuzione di chart riutilizzabili |
+
+<Aside type="note">
+`Kustomize` e` molto adatto quando vuoi mantenere i manifest leggibili e vicini allo YAML originale.
+</Aside>

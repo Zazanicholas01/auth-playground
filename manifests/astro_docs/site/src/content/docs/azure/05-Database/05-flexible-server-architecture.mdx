@@ -1,0 +1,207 @@
+---
+title: Flexible Server Architecture
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section explains the architecture and best practices behind `Azure Database for PostgreSQL - Flexible Server`.
+
+### *Flexible Server Architecture*
+
+A `Flexible Server` deployment is not only a database engine.
+
+It is a managed platform made of several design layers working together:
+
+- compute
+- storage
+- networking
+- availability
+- backups
+- security
+- maintenance
+
+Understanding these layers helps design a PostgreSQL environment that is reliable, secure, and cost-aware.
+
+### *Core Architecture Layers*
+
+<CardGrid>
+  <Card title="Compute" icon="document">
+    Defines vCPU and memory resources used by the PostgreSQL engine.
+  </Card>
+
+  <Card title="Storage" icon="database">
+    Holds database files, transaction data, and performance-sensitive I/O.
+  </Card>
+
+  <Card title="Networking" icon="setting">
+    Controls whether the database is exposed through public access or private VNet integration.
+  </Card>
+
+  <Card title="Availability" icon="warning">
+    Determines how resilient the service is during failures or planned maintenance.
+  </Card>
+</CardGrid>
+
+### *Compute Design*
+
+Compute sizing affects:
+
+- query performance
+- concurrent sessions
+- workload throughput
+- response time under load
+
+A server sized too small may struggle under traffic spikes.
+
+A server sized too large wastes cost.
+
+A good design starts by estimating:
+
+- expected users
+- transaction rate
+- application concurrency
+- reporting or analytics load
+
+### *Storage Design*
+
+Storage is responsible for both capacity and database performance.
+
+Important considerations include:
+
+- current database size
+- expected growth
+- write intensity
+- read latency sensitivity
+- backup retention impact
+
+Relational systems are often limited as much by storage performance as by CPU.
+
+### *Networking Design*
+
+Flexible Server supports different connectivity models.
+
+| Mode | Best For |
+| --- | --- |
+| Public Access | Simpler deployments, controlled by firewall rules |
+| Private Access | Enterprise environments, VNet-based access, lower exposure |
+
+For production systems, private access is usually the stronger design because it works well with:
+
+- private subnets
+- `Private DNS`
+- `Hub and Spoke`
+- `VPN` and `ExpressRoute`
+
+### *High Availability Design*
+
+High availability is one of the most important production decisions.
+
+<CardGrid>
+  <Card title="Primary Instance" icon="document">
+    Handles active database traffic from the application.
+  </Card>
+
+  <Card title="Standby" icon="database">
+    Maintains a synchronized copy for failover scenarios.
+  </Card>
+
+  <Card title="Zone Redundancy" icon="warning">
+    Places standby resources in another availability zone to protect against zone failure.
+  </Card>
+</CardGrid>
+
+If the primary node fails, Azure can fail over to the standby node.
+
+This improves resilience for critical production workloads.
+
+### *Backup And Recovery Design*
+
+Azure manages the backup platform for Flexible Server.
+
+This supports:
+
+- automatic backups
+- retention configuration
+- point-in-time restore
+- recovery to a new server
+
+A strong design always asks:
+
+- how much data loss is acceptable
+- how fast recovery must happen
+- how long backups need to be retained
+
+### *Maintenance Design*
+
+Flexible Server allows you to define a preferred maintenance window.
+
+This is important when:
+
+- production traffic has peak business hours
+- change control requires predictable updates
+- teams want maintenance outside working hours
+
+This gives more operational control than purely platform-driven maintenance timing.
+
+### *Security Design*
+
+A secure Flexible Server deployment usually includes multiple layers.
+
+<CardGrid>
+  <Card title="Network Security" icon="warning">
+    Restrict access with firewall rules or private networking.
+  </Card>
+
+  <Card title="Secrets Management" icon="setting">
+    Store credentials and connection strings in `Azure Key Vault`.
+  </Card>
+
+  <Card title="Least Privilege" icon="document">
+    Limit user and application permissions to only what is required.
+  </Card>
+
+  <Card title="Identity Separation" icon="database">
+    Separate admin access from application access for better control and auditing.
+  </Card>
+</CardGrid>
+
+### *Operational Best Practices*
+
+<Steps>
+1. Choose compute based on workload profile, not guesswork.
+2. Plan storage for both growth and performance.
+3. Prefer private access for production databases.
+4. Use high availability for critical systems.
+5. Protect credentials with `Key Vault`.
+6. Define a maintenance window that matches business needs.
+7. Review performance and scaling over time.
+</Steps>
+
+### *Production Mindset*
+
+A production PostgreSQL server should be treated as part of a broader application architecture.
+
+That means thinking about:
+
+- application traffic patterns
+- network exposure
+- failover expectations
+- backup strategy
+- operational cost
+- long-term growth
+
+<Aside type="note">
+The best Flexible Server design is not the biggest one. It is the one that balances resilience, security, performance, and cost for the actual workload.
+</Aside>
+
+### *Summary*
+
+- `Flexible Server` is built from multiple architecture layers, not just a database engine
+- Compute, storage, networking, and HA are the main design pillars
+- Private access and backup strategy are especially important for production
+- Maintenance and security settings are part of the architecture, not afterthoughts
+- Good design balances performance, resilience, and cost

@@ -1,0 +1,73 @@
+---
+title: High Availability Design
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Un cluster in `High Availability` deve eliminare i `Single Point of Failure`.
+
+### *Pilastri principali*
+
+<CardGrid>
+  <Card title="etcd Quorum" icon="warning">
+    Usa 3 o 5 nodi per mantenere consenso e disponibilita`.
+  </Card>
+
+  <Card title="Control Plane HA" icon="setting">
+    Più nodi control plane evitano un singolo punto di guasto.
+  </Card>
+
+  <Card title="Load Balancer / VIP" icon="random">
+    Espone un endpoint unico verso più API Server.
+  </Card>
+
+  <Card title="Multi-Zone" icon="rocket">
+    Distribuisce nodi e workload su zone o rack diversi.
+  </Card>
+</CardGrid>
+
+### *Quorum di etcd*
+
+- `etcd` usa il quorum per prendere decisioni
+- la maggioranza è `N/2 + 1`
+- con 3 nodi puoi tollerare il guasto di 1 nodo
+- con 5 nodi puoi tollerare il guasto di 2 nodi
+
+<Aside type="note">
+Un numero dispari di nodi evita problemi di `split-brain` e rende il quorum piu` chiaro.
+</Aside>
+
+### *Control Plane HA*
+
+| Modello | Caratteristica |
+| --- | --- |
+| `Stacked etcd` | `etcd` gira sugli stessi nodi del control plane |
+| `External etcd` | `etcd` gira su nodi dedicati separati |
+
+### *Bilanciamento dell'API Server*
+
+<Steps>
+1. Più istanze di `API Server` vengono eseguite su nodi diversi.
+2. Un `Load Balancer` o un `VIP` espone un endpoint unico.
+3. Worker node e utenti parlano sempre con quell'endpoint.
+4. Se un master cade, il traffico continua verso gli altri.
+</Steps>
+
+### *Distribuzione fisica*
+
+- distribuisci i control plane su più `Availability Zone`
+- usa `anti-affinity` per evitare concentrazione dei Pod
+- evita che tutte le repliche stiano nello stesso nodo o rack
+
+### *Sintesi*
+
+| Componente | Strategia HA | Obiettivo |
+| --- | --- | --- |
+| `etcd` | 3 o 5 nodi | Consenso e persistenza |
+| `API Server` | Più istanze + LB | Disponibilita` dell'entry point |
+| `Scheduler` | Leader election | Evitare decisioni duplicate |
+| `Worker Nodes` | Multi-zone | Resilienza a guasti fisici |

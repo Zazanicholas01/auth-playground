@@ -1,0 +1,129 @@
+---
+title: Virtual Machine
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+
+This section covers `Azure Virtual Machines`, the core `Infrastructure as a Service (IaaS)` offering for running scalable compute resources in the cloud.
+
+### *Azure Virtual Machines*
+
+An Azure `VM` gives you the flexibility of virtualization without owning the physical hardware.
+
+You are responsible for:
+
+- configuring the operating system
+- patching the system
+- maintaining installed software
+
+### *VM Size Families*
+
+Azure groups VMs into `families`, also called `series`, optimized for different workloads.
+
+Choosing the right series is one of the most important decisions for balancing performance and cost.
+
+| Family | Series Examples | Best Use Case |
+| --- | --- | --- |
+| General Purpose | `B`, `D-Series` | Testing, small databases, balanced web servers |
+| Compute Optimized | `F-Series` | High-traffic web servers, batch processing, game servers |
+| Memory Optimized | `E`, `M-Series` | SQL, Oracle, SAP HANA, in-memory analytics |
+| Storage Optimized | `L-Series` | NoSQL databases and data warehousing |
+| GPU / Accelerated | `N-Series` | AI training, rendering, video processing |
+| High Performance Compute | `H-Series` | Scientific workloads such as weather modeling |
+
+<Aside type="note">
+As of `2026`, newer processors such as `Cobalt 100` and `Intel Xeon 6` are widely available in `D` and `E` series, improving price-to-performance compared to older generations.
+</Aside>
+
+### *Storage And Disks*
+
+Every VM includes at least:
+
+- an `OS Disk`
+- a `Temporary Disk`
+
+The temporary disk is usually exposed as `D:` and its data is lost when the VM is deallocated.
+
+For persistent application data, additional `Data Disks` must be attached.
+
+<CardGrid>
+  <Card title="Standard HDD" icon="document">
+    Best for backup, archives, and infrequent access workloads.
+  </Card>
+
+  <Card title="Standard SSD" icon="setting">
+    Good for light workloads that need more consistency than HDD.
+  </Card>
+
+  <Card title="Premium SSD" icon="warning">
+    High-performance low-latency storage and required for the `99.9%` single-instance SLA.
+  </Card>
+
+  <Card title="Ultra Disk" icon="rocket">
+    Designed for extremely demanding databases that require very high IOPS and very low latency.
+  </Card>
+</CardGrid>
+
+### *Availability Options*
+
+Azure provides different placement strategies to reduce downtime.
+
+| Option | Purpose | SLA |
+| --- | --- | --- |
+| Single VM | No redundancy | `99.9%` with Premium SSD |
+| Availability Sets | Protect against hardware failure in one datacenter | `99.95%` |
+| Availability Zones | Protect against full datacenter failure | `99.99%` |
+| VM Scale Sets | Automatically deploy and scale identical VMs | Depends on design |
+
+### *Virtual Machine Scale Sets*
+
+`Virtual Machine Scale Sets (VMSS)` automatically create and manage a group of identical VMs.
+
+They are useful when an application must:
+
+- scale out automatically
+- distribute traffic
+- maintain consistent configuration across many instances
+
+### *Lifecycle And Cost Management*
+
+VM billing depends on the runtime state.
+
+<Steps>
+1. A VM in the `Running` state is billed by the second.
+2. If the VM is shut down only from inside the operating system, it may remain in the `Stopped` state and still incur charges.
+3. To stop billing for compute, the VM must reach the `Deallocated` state.
+4. This is usually done by stopping the VM from the Azure Portal, CLI, or automation.
+</Steps>
+
+### *Spot Instances*
+
+`Spot Instances` use unused Azure capacity at a large discount.
+
+They can save up to `90%`, but Azure may evict the VM with short notice if capacity is needed elsewhere.
+
+They are best suited for:
+
+- batch jobs
+- CI/CD agents
+- interruptible workloads
+
+### *Management Best Practices*
+
+<CardGrid>
+  <Card title="Azure Bastion" icon="warning">
+    Avoid exposing `RDP` or `SSH` directly to the public internet. Use `Azure Bastion` for secure browser-based access.
+  </Card>
+
+  <Card title="Auto-Shutdown" icon="setting">
+    For `Dev/Test` environments, enable scheduled shutdown to reduce unnecessary compute costs.
+  </Card>
+
+  <Card title="Extensions" icon="document">
+    Use VM Extensions to automatically install monitoring agents, antivirus, or configuration tools during deployment.
+  </Card>
+</CardGrid>

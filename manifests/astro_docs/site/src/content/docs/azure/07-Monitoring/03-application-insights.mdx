@@ -1,0 +1,123 @@
+---
+title: Application Insights
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Application Insights`, the Azure service used for application performance monitoring.
+
+### *Application Insights*
+
+`Application Insights` is the Azure service used to monitor the behavior and performance of applications.
+
+While `Azure Monitor` gives broad observability across Azure resources, `Application Insights` focuses specifically on the application layer.
+
+It helps you understand:
+
+- request performance
+- failures and exceptions
+- dependency calls
+- user behavior
+- application availability
+
+<Aside type="note">
+`Application Insights` is one of the most useful tools for understanding not just whether an application is running, but how well it is actually behaving for users.
+</Aside>
+
+### *What It Monitors*
+
+<CardGrid>
+  <Card title="Requests" icon="document">
+    Track how long application requests take and whether they succeed or fail.
+  </Card>
+
+  <Card title="Dependencies" icon="database">
+    Monitor calls from the application to services such as databases, APIs, or storage.
+  </Card>
+
+  <Card title="Exceptions" icon="warning">
+    Capture errors and stack traces to support troubleshooting.
+  </Card>
+
+  <Card title="Availability" icon="setting">
+    Test whether the application is reachable and healthy from an external perspective.
+  </Card>
+</CardGrid>
+
+### *Why Use Application Insights*
+
+<CardGrid>
+  <Card title="Performance Visibility" icon="document">
+    Understand latency, slow endpoints, and application bottlenecks.
+  </Card>
+
+  <Card title="Failure Detection" icon="warning">
+    Identify failing requests, broken dependencies, and application exceptions.
+  </Card>
+
+  <Card title="User Insight" icon="setting">
+    Understand how users interact with the application and where problems occur.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+<Steps>
+1. Instrument the application with the `Application Insights` SDK or Azure integration.
+2. The application sends telemetry to Azure.
+3. Azure stores and correlates requests, dependencies, exceptions, and traces.
+4. Teams analyze the data through dashboards, investigations, and queries.
+5. Alerts and reports can be built on top of the telemetry.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Web Applications" icon="document">
+    Monitor request latency, failure rates, and backend dependencies for websites and APIs.
+  </Card>
+
+  <Card title="Distributed Systems" icon="database">
+    Trace calls across multiple services and understand end-to-end request behavior.
+  </Card>
+
+  <Card title="Availability Testing" icon="setting">
+    Check whether the application is reachable from outside and how reliably it responds.
+  </Card>
+</CardGrid>
+
+### *Application Insights Vs. Log Analytics*
+
+| Service | Best For |
+| --- | --- |
+| `Application Insights` | Application behavior, performance, and request tracing |
+| `Log Analytics` | Broader operational and infrastructure log analysis |
+
+`Application Insights` is application-focused.
+
+`Log Analytics` is broader and often used across many Azure services.
+
+### *End-To-End Monitoring*
+
+Application Insights is especially valuable because it can correlate different parts of one user request.
+
+For example, it can help track:
+
+- the incoming web request
+- the API call
+- the SQL dependency
+- the error or timeout that happened later
+
+This makes troubleshooting much easier in modern distributed systems.
+
+### *Summary*
+
+- `Application Insights` is Azure's application performance monitoring service
+- It tracks requests, dependencies, exceptions, and availability
+- It helps identify slow performance and application failures
+- It is especially useful for web apps, APIs, and distributed systems
+- It complements `Azure Monitor` and `Log Analytics` in the broader monitoring stack

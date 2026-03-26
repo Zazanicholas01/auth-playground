@@ -1,0 +1,182 @@
+---
+title: Cosmos DB Architecture
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section explains the architecture and design principles behind `Azure Cosmos DB`.
+
+### *Cosmos DB Architecture*
+
+`Azure Cosmos DB` is a managed NoSQL database platform built for global distribution, low latency, and elastic scale.
+
+Unlike traditional relational systems, Cosmos DB architecture is centered on:
+
+- partitioning
+- distributed throughput
+- regional replication
+- consistency tradeoffs
+- flexible data models
+
+To design Cosmos DB well, you must think less like a traditional SQL database architect and more like a distributed systems architect.
+
+<Aside type="note">
+The most important architecture decisions in Cosmos DB are usually the `partition key`, the throughput model, and the multi-region design.
+</Aside>
+
+### *Core Architecture Layers*
+
+<CardGrid>
+  <Card title="Account" icon="document">
+    The top-level Cosmos DB resource that defines the global service boundary and API type.
+  </Card>
+
+  <Card title="Database" icon="database">
+    A logical grouping of containers inside the account.
+  </Card>
+
+  <Card title="Container" icon="setting">
+    The main scalable storage boundary where throughput and partitioning are defined.
+  </Card>
+
+  <Card title="Item" icon="warning">
+    The individual document or record stored inside the container.
+  </Card>
+</CardGrid>
+
+### *Partitioning*
+
+Partitioning is one of the most critical concepts in Cosmos DB.
+
+A `Partition Key` determines how data is distributed across physical storage and compute partitions.
+
+A good partition key should:
+
+- spread data evenly
+- avoid hotspots
+- support efficient queries
+- scale with growth
+
+A poor partition key can create:
+
+- uneven load distribution
+- expensive queries
+- limited scalability
+- higher cost
+
+### *Throughput Model*
+
+Cosmos DB uses `Request Units` (`RU/s`) to measure and allocate throughput.
+
+Every operation consumes request units depending on:
+
+- item size
+- query complexity
+- indexing behavior
+- read or write pattern
+
+This means architecture decisions directly affect cost.
+
+<CardGrid>
+  <Card title="Provisioned Throughput" icon="document">
+    Reserve a fixed level of `RU/s` for predictable workloads.
+  </Card>
+
+  <Card title="Autoscale" icon="setting">
+    Let Cosmos DB adjust throughput automatically within a configured range.
+  </Card>
+
+  <Card title="Serverless" icon="warning">
+    Pay based on actual consumption for smaller or bursty workloads.
+  </Card>
+</CardGrid>
+
+### *Consistency Levels*
+
+Cosmos DB lets you choose the balance between consistency and performance.
+
+| Consistency Level | Main Idea |
+| --- | --- |
+| Strong | Highest consistency, lower flexibility across regions |
+| Bounded Staleness | Controlled lag between reads and writes |
+| Session | Default for many workloads, balanced consistency |
+| Consistent Prefix | Reads never see out-of-order writes |
+| Eventual | Highest performance, weakest consistency |
+
+Choosing the right consistency level depends on the application requirements.
+
+### *Multi-Region Architecture*
+
+One of the biggest strengths of Cosmos DB is global replication.
+
+You can distribute the database across multiple Azure regions to support:
+
+- low-latency access near users
+- higher availability
+- disaster resilience
+- globally distributed applications
+
+This is especially useful for applications with users spread across multiple geographies.
+
+### *Indexing And Query Design*
+
+Cosmos DB automatically indexes data by default, which simplifies early development.
+
+However, indexing strategy affects:
+
+- query performance
+- write cost
+- storage overhead
+
+For high-scale workloads, indexing should be treated as a design choice, not just a default feature.
+
+### *Common Architecture Patterns*
+
+<CardGrid>
+  <Card title="Global App Backend" icon="document">
+    Multi-region customer-facing applications that need low latency worldwide.
+  </Card>
+
+  <Card title="Event Data Store" icon="database">
+    Large-scale ingestion of flexible event or telemetry data.
+  </Card>
+
+  <Card title="Schema-Flexible Apps" icon="setting">
+    Applications where the structure of data changes often over time.
+  </Card>
+</CardGrid>
+
+### *Typical Design Flow*
+
+<Steps>
+1. Choose the `Cosmos DB API` model.
+2. Create the account and decide which regions to use.
+3. Design the database and container structure.
+4. Pick a strong `Partition Key`.
+5. Choose the throughput model and consistency level.
+6. Tune indexing and query patterns as the workload grows.
+</Steps>
+
+### *Common Design Mistakes*
+
+- choosing a bad partition key
+- underestimating `RU/s` cost
+- using relational modeling patterns directly
+- writing expensive cross-partition queries
+- ignoring consistency requirements
+
+<Aside type="caution">
+In Cosmos DB, the wrong partition key can become a structural problem later. It is one of the most important early design decisions.
+</Aside>
+
+### *Summary*
+
+- `Cosmos DB` is built for distributed NoSQL architecture
+- The main design pillars are partitioning, throughput, replication, and consistency
+- `Partition Key` selection is critical
+- `RU/s` directly affects both performance and cost
+- Cosmos DB is strongest when applications need global scale and low-latency NoSQL access

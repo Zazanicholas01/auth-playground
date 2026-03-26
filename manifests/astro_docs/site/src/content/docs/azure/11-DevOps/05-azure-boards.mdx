@@ -1,0 +1,86 @@
+---
+title: Azure Boards
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Boards`, the Azure DevOps service used for planning, tracking, and managing software work.
+
+### *Azure Boards*
+
+`Azure Boards` is the work management service inside Azure DevOps.
+
+It helps teams organize and track software delivery through items such as:
+
+- epics
+- features
+- user stories
+- tasks
+- bugs
+
+It supports agile and iterative development workflows by linking planning directly to code and delivery pipelines.
+
+<Aside type="note">
+`Azure Boards` is useful when teams want traceability from business work all the way to code changes and deployments.
+</Aside>
+
+### *Why Use Azure Boards*
+
+<CardGrid>
+  <Card title="Work Tracking" icon="document">
+    Manage requirements, tasks, bugs, and delivery progress in one place.
+  </Card>
+
+  <Card title="Agile Planning" icon="setting">
+    Support backlogs, sprint planning, boards, and team workflows.
+  </Card>
+
+  <Card title="Traceability" icon="warning">
+    Link work items to commits, pull requests, builds, and releases.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+<Steps>
+1. Teams create work items such as user stories or bugs.
+2. Items are organized into backlogs or boards.
+3. Developers link code changes and pull requests to the work items.
+4. Pipelines build and deploy the related code.
+5. Teams track progress from planning through delivery.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Sprint Planning" icon="document">
+    Organize work into iterations and track delivery through agile boards.
+  </Card>
+
+  <Card title="Bug Tracking" icon="database">
+    Record and manage issues found during development or production support.
+  </Card>
+
+  <Card title="Delivery Traceability" icon="setting">
+    Connect planning items to technical execution in repositories and pipelines.
+  </Card>
+</CardGrid>
+
+### *Azure Boards Vs. Simpler Task Tools*
+
+| Tool | Best For |
+| --- | --- |
+| `Azure Boards` | DevOps-integrated agile planning and traceable delivery workflows |
+| Basic task trackers | Simpler standalone work organization |
+
+### *Summary*
+
+- `Azure Boards` is the planning and work tracking service in Azure DevOps
+- It supports agile planning, backlog management, and bug tracking
+- It links work items with code, builds, and releases
+- It improves visibility across the software delivery lifecycle
+- It is especially useful for teams that want end-to-end DevOps traceability

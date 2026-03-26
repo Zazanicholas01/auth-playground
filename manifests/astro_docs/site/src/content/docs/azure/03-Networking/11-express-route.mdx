@@ -1,0 +1,102 @@
+---
+title: Azure ExpressRoute
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure ExpressRoute`, the Azure service used to create dedicated private connectivity between on-premises infrastructure and Azure.
+
+### *Azure ExpressRoute*
+
+`Azure ExpressRoute` provides a private, dedicated connection between your datacenter or network provider and Azure.
+
+Unlike `VPN Gateway`, ExpressRoute does not use the public internet for traffic transport.
+
+This makes it suitable for environments that need:
+
+- lower latency
+- more predictable performance
+- higher bandwidth
+- stronger network isolation
+
+<Aside type="note">
+`ExpressRoute` is commonly used by large enterprises that require private hybrid connectivity with more consistency than internet-based VPN connections.
+</Aside>
+
+### *Why Use ExpressRoute*
+
+<CardGrid>
+  <Card title="Private Connectivity" icon="document">
+    Traffic does not traverse the public internet and stays on private network paths.
+  </Card>
+
+  <Card title="Predictable Performance" icon="setting">
+    Provides more stable bandwidth and lower latency than internet-based connectivity.
+  </Card>
+
+  <Card title="Enterprise Scale" icon="warning">
+    Designed for large organizations with demanding hybrid networking requirements.
+  </Card>
+</CardGrid>
+
+### *Main Characteristics*
+
+`ExpressRoute` is often chosen when hybrid connectivity must support critical production workloads.
+
+Typical goals include:
+
+- private access to Azure services
+- large-scale datacenter integration
+- regulatory or compliance-driven network isolation
+- resilient hybrid architecture
+
+### *How It Works*
+
+<Steps>
+1. Establish a connection with an approved connectivity provider or exchange location.
+2. Create an `ExpressRoute` circuit in Azure.
+3. Link the circuit to one or more virtual networks through an `ExpressRoute Gateway`.
+4. Route private traffic between the on-premises environment and Azure.
+5. Use the connection for hybrid applications, data transfer, and private service access.
+</Steps>
+
+### *ExpressRoute Vs. VPN Gateway*
+
+| Service | Connectivity Type | Best For |
+| --- | --- | --- |
+| `VPN Gateway` | Encrypted tunnel over the public internet | Flexible and lower-cost hybrid connectivity |
+| `ExpressRoute` | Dedicated private connection | Enterprise-grade hybrid networking with predictable performance |
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Datacenter Extension" icon="document">
+    Extend on-premises networks into Azure for hybrid infrastructure designs.
+  </Card>
+
+  <Card title="Critical Workloads" icon="database">
+    Support production applications that need more stable and predictable connectivity.
+  </Card>
+
+  <Card title="Compliance Needs" icon="warning">
+    Use private connectivity to support environments with strict regulatory or security requirements.
+  </Card>
+</CardGrid>
+
+### *ExpressRoute Gateway*
+
+To connect a VNet to an ExpressRoute circuit, Azure uses an `ExpressRoute Gateway`.
+
+This gateway is deployed inside the VNet and allows traffic from Azure workloads to flow through the private circuit.
+
+### *Summary*
+
+- `ExpressRoute` provides private dedicated connectivity to Azure
+- It does not rely on the public internet for traffic transport
+- It is designed for enterprise hybrid networking
+- It offers more predictable performance than `VPN Gateway`
+- It is commonly used for critical workloads, datacenter extension, and compliance-sensitive environments

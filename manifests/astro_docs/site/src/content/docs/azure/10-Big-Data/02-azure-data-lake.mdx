@@ -1,0 +1,113 @@
+---
+title: Azure Data Lake Storage
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Data Lake Storage`, the Azure storage platform designed for large-scale analytics workloads.
+
+### *Azure Data Lake Storage*
+
+`Azure Data Lake Storage` is a storage service optimized for big data analytics.
+
+It is built on top of Azure storage capabilities, but adds features that make it more suitable for analytical and data engineering scenarios.
+
+It is commonly used for:
+
+- raw data ingestion
+- large analytical datasets
+- machine learning pipelines
+- big data processing
+- long-term analytical storage
+
+<Aside type="note">
+A data lake is not only a storage location. It is a storage design pattern where large volumes of raw and processed data are kept for later analytics use.
+</Aside>
+
+### *Why Use A Data Lake*
+
+<CardGrid>
+  <Card title="Scale" icon="document">
+    Store very large volumes of structured, semi-structured, and unstructured data.
+  </Card>
+
+  <Card title="Analytics Friendly" icon="database">
+    Organize data for processing by analytics engines and big data platforms.
+  </Card>
+
+  <Card title="Flexible Data Formats" icon="setting">
+    Keep data in many formats without forcing it into a rigid relational schema first.
+  </Card>
+
+  <Card title="Central Data Platform" icon="warning">
+    Use the lake as a landing zone for multiple analytics and reporting workloads.
+  </Card>
+</CardGrid>
+
+### *How It Is Used*
+
+A data lake often stores data in different layers such as:
+
+- raw incoming data
+- cleaned or transformed data
+- curated data for analytics
+
+This allows teams to preserve original data while also preparing optimized versions for downstream use.
+
+### *Typical Flow*
+
+<Steps>
+1. Data arrives from applications, databases, devices, or logs.
+2. Raw data is stored in the data lake.
+3. Data engineering processes clean or transform the data.
+4. Processed datasets are used by analytics platforms such as `Synapse` or `Databricks`.
+5. Reports, models, or downstream systems consume the refined data.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Raw Data Landing Zone" icon="document">
+    Store incoming data before it is transformed or modeled.
+  </Card>
+
+  <Card title="Analytics Pipelines" icon="database">
+    Feed large-scale processing and reporting workflows.
+  </Card>
+
+  <Card title="Machine Learning" icon="setting">
+    Provide scalable storage for training data and analytical feature sets.
+  </Card>
+</CardGrid>
+
+### *Data Lake Vs. Traditional Storage*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Blob Storage` | General object storage |
+| `Azure Data Lake Storage` | Big data and analytics-oriented storage design |
+
+In practice, Azure Data Lake Storage is closely related to Blob Storage, but it is used with a stronger focus on analytical structure and large-scale data processing.
+
+### *Why It Matters In Azure Analytics*
+
+A data lake is often the foundation for services such as:
+
+- `Azure Synapse Analytics`
+- `Azure Databricks`
+- machine learning platforms
+- reporting pipelines
+
+This makes it a key building block in modern Azure analytics architecture.
+
+### *Summary*
+
+- `Azure Data Lake Storage` is designed for large-scale analytical storage
+- It stores raw, processed, and curated data for analytics workflows
+- It supports structured and unstructured data at scale
+- It is commonly used with `Synapse`, `Databricks`, and ML workloads
+- It is a foundational service in Azure big data architecture

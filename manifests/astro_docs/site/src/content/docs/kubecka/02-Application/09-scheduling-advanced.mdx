@@ -1,0 +1,70 @@
+---
+title: Scheduling Avanzato
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Strumenti per controllare dove vengono eseguiti i Pod.
+
+## *Strumenti principali*
+
+<CardGrid>
+  <Card title="nodeName" icon="warning">
+    Assegna il Pod direttamente a un nodo specifico.
+  </Card>
+
+  <Card title="Labels e Selectors" icon="list-format">
+    Collegano oggetti Kubernetes tramite label.
+  </Card>
+
+  <Card title="Taints e Tolerations" icon="close">
+    Impediscono o permettono ai Pod di entrare su certi nodi.
+  </Card>
+
+  <Card title="Node Affinity" icon="setting">
+    Attrae i Pod verso nodi con label specifiche.
+  </Card>
+
+  <Card title="Pod Affinity" icon="random">
+    Avvicina Pod che devono stare insieme.
+  </Card>
+
+  <Card title="Pod Anti-Affinity" icon="warning">
+    Separa Pod che non devono stare sullo stesso nodo o zona.
+  </Card>
+</CardGrid>
+
+### *Confronto*
+
+| Aspetto | Node Affinity | Pod Affinity | Pod Anti-Affinity |
+| --- | --- | --- | --- |
+| Si basa su | Label dei nodi | Label di altri Pod | Label di altri Pod |
+| Obiettivo | Scegliere il nodo | Avvicinare Pod | Separare Pod |
+| Uso tipico | SSD, GPU, zona specifica | App vicina a cache o DB | Repliche distribuite |
+| Effetto | Il Pod va su nodi compatibili | Il Pod va vicino ad altri Pod | Il Pod evita nodi con certi Pod |
+
+## *Flusso decisionale*
+
+<Steps>
+1. Se presente, `nodeName` assegna direttamente il nodo.
+2. Lo Scheduler controlla `taints` e `tolerations`.
+3. Verifica `nodeSelector` e `nodeAffinity`.
+4. Valuta `podAffinity` e `podAntiAffinity`.
+5. Seleziona il nodo migliore tra quelli validi.
+</Steps>
+
+<Aside type="tip">
+`requiredDuringScheduling...` è un vincolo rigido. `preferredDuringScheduling...` è una preferenza.
+</Aside>
+
+### *Topology Key*
+
+Definisce cosa significa vicino o lontano.
+
+- `kubernetes.io/hostname`: singolo nodo
+- `topology.kubernetes.io/zone`: zona o datacenter
+

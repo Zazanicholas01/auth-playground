@@ -1,0 +1,40 @@
+---
+title: Resources & Limits
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+
+### *Concetti chiave*
+
+<CardGrid>
+  <Card title="Requests" icon="list-format">
+    Quantità minima usata dallo Scheduler per piazzare il Pod.
+  </Card>
+
+  <Card title="Limits" icon="warning">
+    Quantità massima che il container può consumare.
+  </Card>
+</CardGrid>
+
+### *Come funziona*
+
+<Steps>
+1. Kubernetes legge le `requests` del Pod.
+2. Lo `Scheduler` sceglie un nodo con risorse sufficienti.
+3. Il Pod viene avviato sul nodo selezionato.
+4. Durante l'esecuzione, il kernel applica i `limits`.
+</Steps>
+
+### *Scenari*
+
+| Configurazione | Comportamento | Nota |
+| --- | --- | --- |
+| No Requests / No Limits | Nessuna garanzia e nessun tetto | Puo` consumare tutto il nodo |
+| No Requests / Limits | La `request` diventa uguale al `limit` | Piu` sicuro ma meno flessibile |
+| Requests / Limits | Minimo garantito e tetto massimo | Scenario piu` comune |
+| Requests / No Limits | Minimo garantito senza tetto massimo | Può creare instabilità |

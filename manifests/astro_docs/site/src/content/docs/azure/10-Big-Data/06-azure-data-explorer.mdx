@@ -1,0 +1,120 @@
+---
+title: Azure Data Explorer
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Data Explorer`, the Azure service used for fast analytical querying over large volumes of telemetry, logs, and time-series data.
+
+### *Azure Data Explorer*
+
+`Azure Data Explorer` is a high-performance analytics service optimized for:
+
+- log data
+- telemetry
+- time-series data
+- semi-structured event streams
+- interactive analytical queries at scale
+
+It is designed for scenarios where very large amounts of incoming data must be ingested quickly and queried almost immediately.
+
+<Aside type="note">
+`Azure Data Explorer` is especially strong when the main goal is fast exploration and analysis of high-volume event data rather than transactional storage.
+</Aside>
+
+### *Why Use Azure Data Explorer*
+
+<CardGrid>
+  <Card title="Fast Querying" icon="document">
+    Query large datasets quickly with an engine optimized for analytical exploration.
+  </Card>
+
+  <Card title="High Ingestion" icon="setting">
+    Ingest large volumes of telemetry and event data continuously.
+  </Card>
+
+  <Card title="Time-Series Analysis" icon="database">
+    Analyze trends and patterns across time-based operational data.
+  </Card>
+
+  <Card title="Operational Analytics" icon="warning">
+    Support troubleshooting, monitoring, and large-scale event exploration.
+  </Card>
+</CardGrid>
+
+### *Typical Data Types*
+
+Azure Data Explorer is commonly used for data such as:
+
+- platform logs
+- IoT telemetry
+- clickstream data
+- security events
+- application diagnostics
+- machine-generated operational records
+
+### *How It Works*
+
+A common pattern looks like this:
+
+<Steps>
+1. High-volume data is ingested from sources such as `Event Hubs`, applications, or IoT systems.
+2. Azure Data Explorer stores the data in an analytics-optimized structure.
+3. Engineers and analysts run fast queries over the ingested dataset.
+4. Results are used for dashboards, investigations, analytics, or operational insight.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Telemetry Analytics" icon="document">
+    Analyze large volumes of IoT and application telemetry in near real time.
+  </Card>
+
+  <Card title="Log Exploration" icon="database">
+    Search and investigate platform or workload logs at scale.
+  </Card>
+
+  <Card title="Time-Series Workloads" icon="setting">
+    Query operational trends and patterns across time-based datasets.
+  </Card>
+</CardGrid>
+
+### *Azure Data Explorer Vs. Other Big Data Services*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Data Explorer` | Fast querying of high-volume telemetry, logs, and time-series data |
+| `Azure Stream Analytics` | Real-time stream processing |
+| `Azure Databricks` | Distributed data engineering and Spark processing |
+| `Azure Synapse Analytics` | Broader integrated analytics and warehousing |
+
+A simple way to think about it is:
+
+- `Stream Analytics` processes data in motion
+- `Data Explorer` analyzes large event datasets quickly
+- `Databricks` transforms and engineers large datasets
+- `Synapse` supports broader analytics platform scenarios
+
+### *Why It Fits In Big Data*
+
+Azure Data Explorer belongs in the big data chapter because it focuses on:
+
+- large-scale ingestion
+- analytical query performance
+- event and telemetry analytics
+- scalable operational insight
+
+It is not mainly a transactional database and not mainly an AI platform.
+
+### *Summary*
+
+- `Azure Data Explorer` is built for high-ingestion analytical workloads
+- It is strong for telemetry, logs, and time-series data
+- It supports fast interactive queries at scale
+- It complements streaming and analytics services in Azure
+- It fits best in Azure big data and analytics architecture

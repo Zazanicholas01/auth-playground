@@ -1,0 +1,108 @@
+---
+title: Azure SQL Database
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure SQL Database`, the managed relational database service in Azure.
+
+### *Azure SQL Database*
+
+`Azure SQL Database` is a fully managed `Platform as a Service (PaaS)` relational database built on the Microsoft SQL Server engine.
+
+It is designed for applications that need:
+
+- structured relational data
+- SQL queries
+- managed backups
+- high availability
+- reduced infrastructure management
+
+With Azure SQL Database, Microsoft manages the operating system, patching, backups, and much of the underlying availability platform.
+
+<Aside type="note">
+`Azure SQL Database` is often chosen when teams want SQL Server compatibility without managing a full virtual machine or database server installation.
+</Aside>
+
+### *Why Use Azure SQL Database*
+
+<CardGrid>
+  <Card title="Managed Platform" icon="document">
+    Microsoft handles patching, backups, and much of the operational maintenance.
+  </Card>
+
+  <Card title="Relational Data" icon="database">
+    Supports structured data, relationships, tables, indexes, and SQL queries.
+  </Card>
+
+  <Card title="Built-In Availability" icon="warning">
+    High availability and resilience are built into the managed service model.
+  </Card>
+</CardGrid>
+
+### *Deployment Models*
+
+Azure SQL offers different deployment options depending on scope and isolation needs.
+
+| Model | Best For |
+| --- | --- |
+| Single Database | One isolated application database |
+| Elastic Pool | Multiple databases that share compute resources |
+| Managed Instance | Higher SQL Server compatibility for migration scenarios |
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Application Databases" icon="document">
+    Store transactional data for websites, APIs, and business applications.
+  </Card>
+
+  <Card title="Lift And Shift SQL" icon="setting">
+    Support migrations from on-premises SQL Server with minimal application changes.
+  </Card>
+
+  <Card title="Multi-App Platforms" icon="database">
+    Use elastic pools when several smaller databases need shared performance capacity.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+<Steps>
+1. Create a logical SQL server in Azure.
+2. Create one or more `Azure SQL Databases`.
+3. Configure networking, authentication, and firewall rules.
+4. Connect applications using SQL clients or drivers.
+5. Azure manages backups, updates, and platform availability.
+</Steps>
+
+### *Azure SQL Database Vs. SQL Server On A VM*
+
+| Service | Best For |
+| --- | --- |
+| `Azure SQL Database` | Managed relational database with reduced operations |
+| `SQL Server on Azure VM` | Full operating system and SQL Server control |
+
+`Azure SQL Database` is the better option when you want less operational overhead.
+
+A VM-based SQL Server is more appropriate when you need deep OS-level or instance-level customization.
+
+### *Typical Features*
+
+- automated backups
+- scaling options
+- built-in security features
+- high availability
+- monitoring integration
+
+### *Summary*
+
+- `Azure SQL Database` is a managed relational database service
+- It is based on the SQL Server engine
+- Microsoft manages patching, backups, and availability
+- It supports single databases, elastic pools, and related deployment models
+- It is ideal for structured application data in Azure

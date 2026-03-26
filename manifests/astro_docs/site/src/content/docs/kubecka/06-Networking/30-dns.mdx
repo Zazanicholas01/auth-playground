@@ -1,0 +1,67 @@
+---
+title: DNS
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+In Kubernetes il `DNS` permette a Pod e Service di trovarsi senza usare indirizzi IP diretti.
+
+### *CoreDNS*
+
+<CardGrid>
+  <Card title="CoreDNS" icon="setting">
+    Server DNS del cluster, di solito eseguito in `kube-system`.
+  </Card>
+
+  <Card title="kube-dns Service" icon="document">
+    Espone CoreDNS con un IP stabile interno al cluster.
+  </Card>
+
+  <Card title="resolv.conf" icon="list-format">
+    Ogni Pod riceve configurazione DNS dal `Kubelet`.
+  </Card>
+</CardGrid>
+
+### *Come funziona*
+
+<Steps>
+1. Il `Kubelet` avvia il Pod.
+2. Configura `/etc/resolv.conf`.
+3. Il Pod usa CoreDNS come `nameserver`.
+4. CoreDNS risolve nomi interni ed esterni.
+</Steps>
+
+### *Record DNS*
+
+| Risorsa | Formato |
+| --- | --- |
+| `Service` | `<nome-servizio>.<nome-namespace>.svc.cluster.local` |
+| `Pod` | `<ip-del-pod>.<nome-namespace>.pod.cluster.local` |
+
+<Aside type="note">
+Per i `Service`, se il client e` nello stesso namespace, spesso basta il nome breve del servizio.
+</Aside>
+
+### *Search domains*
+
+CoreDNS usa i `search domains` presenti in `/etc/resolv.conf`.
+
+- `my-db.default.svc.cluster.local`
+- `my-db.svc.cluster.local`
+- `my-db.cluster.local`
+
+### *Headless Service*
+
+Un `Headless Service` usa `clusterIP: None`.
+
+- non restituisce un IP virtuale unico
+- restituisce gli IP dei Pod associati
+- e` utile per applicazioni stateful
+
+### *Risoluzione esterna*
+
+Se il nome non appartiene al cluster, CoreDNS inoltra la richiesta ai DNS esterni configurati sui nodi.

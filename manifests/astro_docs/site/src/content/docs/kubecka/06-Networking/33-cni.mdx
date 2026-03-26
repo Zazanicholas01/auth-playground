@@ -1,0 +1,53 @@
+---
+title: Container Network Interfaces
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Il `CNI` e` lo standard che permette a Kubernetes di collegare i Pod alla rete del cluster.
+
+### *Perchè esiste*
+
+<CardGrid>
+  <Card title="Standard" icon="document">
+    Separa Kubernetes dall'implementazione concreta della rete.
+  </Card>
+
+  <Card title="Flessibilita`" icon="rocket">
+    Permette di cambiare plugin di rete senza cambiare Kubernetes.
+  </Card>
+
+  <Card title="Contratto" icon="list-format">
+    Kubernetes chiede al plugin di creare la rete e riceve l'IP del Pod.
+  </Card>
+</CardGrid>
+
+
+### *Responsabilita` principali*
+
+- `IPAM`: assegna un IP unico al Pod
+- crea le interfacce virtuali
+- aggiorna routing e connettivita` tra nodi
+
+### *Plugin comuni*
+
+| Plugin | Caratteristica principale | Nota |
+| --- | --- | --- |
+| `Flannel` | Overlay semplice con `VXLAN` | Buono per lab e cluster piccoli |
+| `Calico` | Routing efficiente e `Network Policies` | Molto usato in produzione |
+| `Cilium` | Networking con `eBPF` | Sicurezza e osservabilita` avanzate |
+| `Weave Net` | Rete mesh semplice da configurare | Supporta anche crittografia |
+
+### *Flusso di un pacchetto*
+
+<Steps>
+1. Il pacchetto esce dal Pod tramite `eth0`.
+2. Raggiunge il bridge o l'interfaccia del nodo.
+3. Il `CNI` decide come instradarlo verso il nodo corretto.
+4. Il pacchetto attraversa la rete tra i nodi.
+5. Il nodo di destinazione lo consegna al Pod corretto.
+</Steps>

@@ -1,0 +1,104 @@
+---
+title: Cost Management
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+
+This section explains how to monitor, control, and optimize cloud spending with `Microsoft Cost Management + Billing`.
+
+In Azure, costs can scale as quickly as infrastructure, so financial guardrails are as important as technical architecture.
+
+### *Microsoft Cost Management + Billing*
+
+This toolset helps teams move from a reactive billing mindset to a more proactive `FinOps` approach.
+
+### *Cost Analysis*
+
+`Cost Analysis` is the main tool for exploring spending patterns and understanding where money is going.
+
+<CardGrid>
+  <Card title="Granularity" icon="document">
+    View costs by subscription, resource group, service name, or region.
+  </Card>
+
+  <Card title="Tagging" icon="setting">
+    Use tags such as `CostCenter: Marketing` or `Project: Alpha` to attribute spend to business units or workloads.
+  </Card>
+
+  <Card title="Forecasting" icon="warning">
+    Azure uses historical data to estimate spend for the next `30` to `90` days.
+  </Card>
+</CardGrid>
+
+### *Budgets And Alerts*
+
+Budgets help detect cost spikes before the end of the month.
+
+<CardGrid>
+  <Card title="Threshold Alerts" icon="document">
+    Send notifications when spending reaches defined levels such as `50%`, `80%`, or `100%` of budget.
+  </Card>
+
+  <Card title="Anomaly Detection" icon="warning">
+    Azure can flag unusual spending spikes, such as automation mistakes or unexpected usage growth.
+  </Card>
+
+  <Card title="Action Groups" icon="setting">
+    Budget events can trigger automation, such as shutting down a `Dev/Test` environment when limits are exceeded.
+  </Card>
+</CardGrid>
+
+### *Optimization Strategies*
+
+Azure provides multiple ways to reduce cost without reducing value.
+
+| Strategy | How It Works | Potential Savings |
+| --- | --- | --- |
+| Azure Advisor | Detects idle VMs, orphaned disks, and right-sizing opportunities | `15% - 25%` |
+| Reservations | Commit to `1` or `3` years for specific resources | Up to `72%` |
+| Savings Plans | Commit to a fixed hourly spend across compute services | Up to `65%` |
+| Spot Instances | Use excess Azure capacity for interruptible workloads | Up to `90%` |
+| Hybrid Benefit | Reuse existing Windows or SQL Server licenses | Up to `40%` |
+
+### *Billing Vs. Cost Management*
+
+Although they are related, they serve different roles.
+
+| Area | Focus | Typical User |
+| --- | --- | --- |
+| Billing | Payment methods, invoices, tax documents | Finance teams |
+| Cost Management | Usage tracking, optimization, daily cost control | Engineers and architects |
+
+### *2026 Focus: FinOps For AI*
+
+With the growth of `Azure OpenAI` and `Microsoft Fabric`, cost management now also requires close monitoring of AI-related usage.
+
+Examples include:
+
+- token consumption
+- model usage
+- AI capacity units
+
+<Aside type="note">
+High-cost AI services should be isolated into dedicated resource groups so their usage can be monitored more clearly.
+</Aside>
+
+### *Practical Cost Review Flow*
+
+<Steps>
+1. Use `Cost Analysis` to identify where spending is increasing.
+2. Apply tags to improve attribution by project, team, or environment.
+3. Set budgets and alerts before overspending happens.
+4. Review optimization recommendations such as reservations or idle resource cleanup.
+5. Isolate expensive workloads, especially AI services, for easier monitoring.
+</Steps>
+
+### *Key Rule*
+
+<Aside type="caution">
+Always delete orphaned disks. If a VM is deleted but its disk is kept, Azure continues charging for the disk.
+</Aside>

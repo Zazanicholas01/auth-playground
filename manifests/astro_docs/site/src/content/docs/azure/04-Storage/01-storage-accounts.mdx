@@ -1,0 +1,82 @@
+---
+title: Storage Accounts
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Storage Accounts`, the main Azure service used to store data in the cloud.
+
+### *Storage Accounts*
+
+An `Azure Storage Account` is a managed service that provides a unique namespace for storing data in Azure.
+
+It is the starting point for many storage scenarios, including:
+
+- website images
+- backups
+- virtual machine disks
+- logs
+- queues
+- application data
+
+A storage account acts as the container for multiple storage services.
+
+<Aside type="note">
+A single `Storage Account` can host several different Azure storage services under one managed namespace.
+</Aside>
+
+### *Main Storage Services*
+
+Azure Storage is divided into four main services.
+
+<CardGrid>
+  <Card title="Azure Blobs" icon="document">
+    Object storage for unstructured data such as images, videos, backups, and analytics datasets.
+  </Card>
+
+  <Card title="Azure Files" icon="database">
+    Managed file shares using `SMB` or `NFS`, useful for file servers and lift-and-shift workloads.
+  </Card>
+
+  <Card title="Azure Queues" icon="setting">
+    Asynchronous messaging storage used to decouple application components.
+  </Card>
+
+  <Card title="Azure Tables" icon="warning">
+    NoSQL key-attribute storage for structured but non-relational data such as profiles or IoT telemetry.
+  </Card>
+</CardGrid>
+
+### *Redundancy Options*
+
+Azure automatically stores multiple copies of your data.
+
+You choose the level of redundancy depending on cost and resilience needs.
+
+| Redundancy Type | Description | Protection Level |
+| --- | --- | --- |
+| `LRS` | `3` copies inside one datacenter | Protects against local disk or rack failure |
+| `ZRS` | `3` copies across availability zones in one region | Protects against datacenter failure |
+| `GRS` | `LRS` in one region plus replication to a secondary region | Protects against regional disaster |
+| `GZRS` | `ZRS` in the primary region plus replication to a secondary region | Highest resilience across zones and regions |
+
+### *Performance Tiers*
+
+Storage accounts can use different performance models.
+
+| Tier | Description | Best For |
+| --- | --- | --- |
+| Standard | Lower-cost general storage | Bulk data where cost matters more than latency |
+| Premium | SSD-backed high-performance storage | High transaction workloads and low-latency scenarios |
+
+### *Summary*
+
+- A `Storage Account` is the main Azure container for storage services
+- It can host blobs, files, queues, and tables
+- Redundancy options define how resilient the data is
+- `Standard` and `Premium` define the performance model
+- Blob access tiers help optimize cost based on how often data is accessed

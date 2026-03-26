@@ -1,0 +1,128 @@
+---
+title: Azure Application Gateway
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Application Gateway`, the Azure service used to route and protect web traffic at the application layer.
+
+### *Azure Application Gateway*
+
+`Azure Application Gateway` is a Layer 7 load balancer.
+
+Unlike `Azure Load Balancer`, which works at the transport layer, `Application Gateway` understands HTTP and HTTPS traffic.
+
+This allows it to make routing decisions based on:
+
+- host name
+- URL path
+- HTTP headers
+- HTTPS configuration
+
+<Aside type="note">
+`Application Gateway` is the preferred Azure service when you need advanced web traffic handling such as TLS termination, path-based routing, or web application firewall protection.
+</Aside>
+
+### *Key Features*
+
+<CardGrid>
+  <Card title="Layer 7 Routing" icon="document">
+    Routes web traffic based on host names and URL paths instead of only IP addresses and ports.
+  </Card>
+
+  <Card title="TLS Termination" icon="setting">
+    Can handle HTTPS encryption at the gateway so backend applications do not need to manage the same TLS workload themselves.
+  </Card>
+
+  <Card title="Web Application Firewall" icon="warning">
+    Optional `WAF` protection helps block common web attacks such as SQL injection and cross-site scripting.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+An `Application Gateway` sits between clients and backend web applications.
+
+Its main components include:
+
+<CardGrid>
+  <Card title="Frontend Listener" icon="document">
+    Accepts incoming HTTP or HTTPS traffic on a public or private IP.
+  </Card>
+
+  <Card title="Routing Rules" icon="setting">
+    Decides where traffic should go based on host names, paths, or listener settings.
+  </Card>
+
+  <Card title="Backend Pool" icon="database">
+    Contains the target web servers, virtual machines, scale sets, or app services.
+  </Card>
+</CardGrid>
+
+### *Routing Capabilities*
+
+`Application Gateway` supports more advanced routing than a Layer 4 load balancer.
+
+| Feature | Purpose |
+| --- | --- |
+| Host-based routing | Send traffic to different backends based on the requested domain |
+| Path-based routing | Send requests to different backends based on URL paths such as `/api` or `/images` |
+| TLS termination | Decrypt HTTPS traffic at the gateway |
+| End-to-end TLS | Re-encrypt traffic from the gateway to the backend if needed |
+
+### *Web Application Firewall*
+
+The optional `WAF` tier adds protection for web applications.
+
+It helps detect and block common application attacks such as:
+
+- SQL injection
+- cross-site scripting
+- malicious HTTP patterns
+
+This makes it useful for internet-facing applications that must be protected at the HTTP layer.
+
+### *Typical Flow*
+
+<Steps>
+1. A client sends an HTTP or HTTPS request to the gateway.
+2. The listener accepts the request on the configured frontend IP and port.
+3. Routing rules inspect the request.
+4. The request is forwarded to the correct backend pool.
+5. If `WAF` is enabled, the request is also inspected for malicious patterns.
+</Steps>
+
+### *Application Gateway Vs. Load Balancer*
+
+| Service | Layer | Best For |
+| --- | --- | --- |
+| `Azure Load Balancer` | Layer 4 | Fast `TCP` and `UDP` traffic distribution |
+| `Application Gateway` | Layer 7 | Web apps needing advanced routing and optional `WAF` |
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Web Applications" icon="document">
+    Route browser traffic to one or more backend web applications.
+  </Card>
+
+  <Card title="Microservices" icon="setting">
+    Send traffic to different services based on host names or URL paths.
+  </Card>
+
+  <Card title="Secure Internet Entry" icon="warning">
+    Protect public-facing applications with `WAF` and central TLS handling.
+  </Card>
+</CardGrid>
+
+### *Summary*
+
+- `Application Gateway` is a Layer 7 web traffic load balancer
+- It understands HTTP and HTTPS traffic
+- It supports host-based and path-based routing
+- It can terminate TLS and optionally inspect traffic with `WAF`
+- It is commonly used as the secure entry point for web applications

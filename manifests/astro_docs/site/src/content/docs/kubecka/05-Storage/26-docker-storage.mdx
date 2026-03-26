@@ -1,0 +1,74 @@
+---
+title: Docker Storage
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Nei container, lo storage e` spesso effimero. Per la persistenza servono mount o volumi.
+
+### *Meccanismi principali*
+
+<CardGrid>
+  <Card title="Writable Layer" icon="warning">
+    Strato temporaneo del container, perso alla rimozione.
+  </Card>
+
+  <Card title="Bind Mount" icon="list-format">
+    Collega una cartella dell'host a una cartella del container.
+  </Card>
+
+  <Card title="Volume" icon="document">
+    Storage persistente gestito da Docker.
+  </Card>
+
+  <Card title="tmpfs" icon="rocket">
+    Storage in RAM, mai scritto su disco.
+  </Card>
+</CardGrid>
+
+### *Writable Layer*
+
+- Ogni container ha uno strato di scrittura temporaneo
+- Usa `copy-on-write`
+- Viene eliminato quando il container viene rimosso
+- E' più lento rispetto allo storage persistente
+
+### *Bind Mount*
+
+- Mappa una directory dell'host dentro il container
+- E' utile in sviluppo locale
+- Dipende dalla struttura del filesystem host
+
+### *Docker Volumes*
+
+- Sono gestiti da Docker
+- Vivono in un'area dedicata dell'host
+- Sono il metodo preferito per la persistenza
+- Ricordano il concetto di `PersistentVolume` in Kubernetes
+
+### *tmpfs Mount*
+
+- Usa memoria RAM invece del disco
+- I dati spariscono al riavvio o alla rimozione
+- Utile per cache veloci o dati temporanei sensibili
+
+### *Confronto*
+
+| Tipo | Dove sta il dato | Persistenza | Uso tipico |
+| --- | --- | --- | --- |
+| Writable Layer | Dentro il container | No | File temporanei |
+| Bind Mount | Cartella dell'host | Si` | Sviluppo locale |
+| Volume | Area gestita da Docker | Si` | Database, dati applicativi |
+| tmpfs | RAM dell'host | No | Secret temporanei, cache |
+
+### *Idea chiave*
+
+<Steps>
+1. Il container parte con uno storage effimero.
+2. Se serve persistenza, si usa un mount o un volume.
+3. Se serve velocità o dati temporanei, si può usare `tmpfs`.
+</Steps>

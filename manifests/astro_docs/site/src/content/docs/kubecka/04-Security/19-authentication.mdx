@@ -1,0 +1,60 @@
+---
+title: Authentication
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+
+### *Tipi di identità*
+
+<CardGrid>
+  <Card title="Users" icon="information">
+    Utenti esterni che accedono al cluster, ad esempio tramite `kubectl`.
+  </Card>
+
+  <Card title="Service Accounts" icon="setting">
+    Identità usate dalle applicazioni che girano nei Pod.
+  </Card>
+</CardGrid>
+
+### *Users*
+
+Kubernetes non gestisce internamente gli utenti umani.
+
+- Si affida a sistemi esterni
+- Accetta identita` presentate tramite certificati o token
+
+### *Metodi comuni*
+
+| Metodo | Descrizione |
+| --- | --- |
+| `X.509` | Il `Common Name` del certificato rappresenta lo username |
+| `Static Token File` | File CSV con token e utenti, sconsigliato in produzione |
+| `OIDC` | Integrazione con provider esterni come `Okta`, `Keycloak`, `Azure AD` |
+
+### *OIDC*
+
+`OIDC` è la best practice per gli utenti umani.
+
+<Steps>
+1. L'utente si autentica presso l'Identity Provider.
+2. L'IdP restituisce un `ID Token`.
+3. Il token viene inviato all'`API Server`.
+4. L'`API Server` verifica firma, identita` e gruppi.
+</Steps>
+
+### *Service Accounts*
+
+I `Service Accounts` sono risorse Kubernetes usate dai Pod per parlare con l'`API Server`.
+
+- sono gestiti direttamente dal cluster
+- identificano processi applicativi
+- usano token JWT
+
+<Aside type="note">
+Il token di un `Service Account` può essere montato nel Pod, spesso in `/var/run/secrets/kubernetes.io/serviceaccount/token`.
+</Aside>

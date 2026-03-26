@@ -1,0 +1,123 @@
+---
+title: Azure IoT Edge
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure IoT Edge`, the Azure service used to run cloud-managed workloads directly on edge devices.
+
+### *Azure IoT Edge*
+
+`Azure IoT Edge` extends Azure IoT capabilities from the cloud down to local devices and edge gateways.
+
+Instead of sending every operation to the cloud, IoT Edge allows workloads to run directly near the data source.
+
+This is useful when you need:
+
+- local processing
+- reduced latency
+- offline or intermittent connectivity support
+- cloud-managed workloads at the edge
+
+<Aside type="note">
+`IoT Edge` is especially useful when devices must continue operating even when cloud connectivity is limited or when data should be filtered before being sent to Azure.
+</Aside>
+
+### *How It Works*
+
+IoT Edge runs containerized modules on an edge device.
+
+These modules can perform:
+
+- local data processing
+- filtering
+- transformation
+- AI inference
+- protocol translation
+
+The device is still connected to Azure for management and monitoring through the IoT platform.
+
+### *Core Components*
+
+<CardGrid>
+  <Card title="Edge Device" icon="document">
+    The physical or virtual machine running the IoT Edge runtime.
+  </Card>
+
+  <Card title="Modules" icon="setting">
+    Containerized workloads deployed to the edge device to perform specific tasks.
+  </Card>
+
+  <Card title="Cloud Management" icon="database">
+    Azure services manage deployment, updates, and monitoring of edge workloads.
+  </Card>
+
+  <Card title="Local Processing" icon="warning">
+    Data can be processed locally before only the required results are sent to the cloud.
+  </Card>
+</CardGrid>
+
+### *Typical Flow*
+
+<Steps>
+1. Register the edge device with Azure IoT.
+2. Install the IoT Edge runtime on the device.
+3. Deploy one or more modules from Azure.
+4. The modules process data locally on the device.
+5. The edge device sends selected telemetry or results back to the cloud.
+</Steps>
+
+### *Why Use IoT Edge*
+
+<CardGrid>
+  <Card title="Low Latency" icon="document">
+    Process data close to the source without waiting for cloud round trips.
+  </Card>
+
+  <Card title="Bandwidth Savings" icon="setting">
+    Send only filtered or aggregated data to Azure instead of all raw input.
+  </Card>
+
+  <Card title="Offline Resilience" icon="warning">
+    Continue running local workloads even during network interruptions.
+  </Card>
+</CardGrid>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Industrial Sites" icon="document">
+    Run local analytics or control logic in factories and remote facilities.
+  </Card>
+
+  <Card title="AI At The Edge" icon="database">
+    Execute machine learning or inference workloads directly on local devices.
+  </Card>
+
+  <Card title="Protocol Translation" icon="setting">
+    Bridge older industrial protocols into cloud-compatible formats.
+  </Card>
+</CardGrid>
+
+### *IoT Edge Vs. IoT Hub*
+
+| Service | Best For |
+| --- | --- |
+| `Azure IoT Hub` | Secure communication and management of devices from the cloud |
+| `Azure IoT Edge` | Running workloads and intelligence directly on edge devices |
+
+`IoT Hub` manages communication.
+
+`IoT Edge` extends cloud logic and application modules to local environments.
+
+### *Summary*
+
+- `Azure IoT Edge` runs Azure-managed workloads on edge devices
+- It supports local processing, filtering, and AI inference
+- It is useful when latency, bandwidth, or offline operation matter
+- It works through containerized modules on edge devices
+- It complements `IoT Hub` by extending IoT architecture beyond the cloud

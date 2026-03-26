@@ -1,0 +1,102 @@
+---
+title: Azure Kubernetes Service
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section introduces `Azure Kubernetes Service (AKS)`, the most powerful and flexible Azure platform for running containers at scale.
+
+### *Azure Kubernetes Service*
+
+If `ACA` is a managed apartment, `AKS` is a custom-built skyscraper.
+
+`AKS` is Azure's managed Kubernetes offering. Microsoft manages the Kubernetes control plane, while you manage the worker nodes where applications run.
+
+<Aside type="note">
+`AKS` gives full Kubernetes capabilities, but also requires more design, operations, and governance effort than `ACI` or `ACA`.
+</Aside>
+
+### *Core Architecture*
+
+<CardGrid>
+  <Card title="Control Plane" icon="document">
+    Managed by Azure and includes the API server, scheduler, and `etcd`. It is free unless the uptime SLA tier is enabled.
+  </Card>
+
+  <Card title="Worker Nodes" icon="database">
+    Azure virtual machines where your workloads run. You choose the VM size, node count, and scaling model.
+  </Card>
+</CardGrid>
+
+### *Node Pools*
+
+Instead of managing one flat list of VMs, `AKS` organizes nodes into `node pools`.
+
+<CardGrid>
+  <Card title="System Pools" icon="setting">
+    Reserved for core Kubernetes services such as DNS, networking, and cluster infrastructure components.
+  </Card>
+
+  <Card title="User Pools" icon="warning">
+    Used for application workloads. Multiple pools can be created for different workload types such as GPU nodes or Spot nodes.
+  </Card>
+</CardGrid>
+
+### *Pods, Not Containers*
+
+In Kubernetes, workloads are deployed as `Pods`, not as standalone containers.
+
+A pod is a wrapper around one or more containers that share:
+
+- network
+- storage
+- lifecycle context
+
+### *Why Choose AKS*
+
+The main reason to choose `AKS` over `ACA` is control.
+
+<CardGrid>
+  <Card title="Full Kubernetes API" icon="document">
+    Standard Kubernetes tools such as `Helm`, `Prometheus`, and `Istio` work on AKS.
+  </Card>
+
+  <Card title="Advanced Networking" icon="setting">
+    You can choose between `Kubenet` and `Azure CNI`, depending on IP management and network integration needs.
+  </Card>
+
+  <Card title="Hybrid Cloud" icon="warning">
+    With `Azure Arc`, Kubernetes clusters running on-premises or in other clouds can be managed from Azure.
+  </Card>
+</CardGrid>
+
+### *Scaling In AKS*
+
+AKS supports scaling at multiple levels.
+
+| Scaling Layer | Purpose |
+| --- | --- |
+| `HPA` | Adds more pods when demand increases |
+| `VPA` | Adjusts pod CPU and memory requests |
+| `Cluster Autoscaler` | Adds more nodes when the cluster runs out of capacity |
+
+### *AKS Workflow*
+
+<Steps>
+1. Azure creates and manages the Kubernetes control plane.
+2. You define one or more node pools for workloads.
+3. Applications are deployed as pods.
+4. Kubernetes schedules pods onto available nodes.
+5. AKS can scale pods and nodes as demand changes.
+</Steps>
+
+### *Summary*
+
+- `AKS` is Azure's managed Kubernetes platform
+- Azure manages the control plane, while you manage worker nodes
+- `Node Pools` separate system workloads from application workloads
+- AKS is chosen when full Kubernetes control is required

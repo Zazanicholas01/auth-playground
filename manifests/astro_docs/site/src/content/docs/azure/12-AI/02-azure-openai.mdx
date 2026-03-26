@@ -1,0 +1,128 @@
+---
+title: Azure OpenAI Service
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure OpenAI Service`, the Azure service used to access powerful generative AI models through Azure-managed infrastructure.
+
+### *Azure OpenAI Service*
+
+`Azure OpenAI Service` provides access to advanced AI models for tasks such as:
+
+- text generation
+- summarization
+- question answering
+- code assistance
+- embeddings
+- multimodal scenarios
+
+It combines model access with Azure security, governance, and enterprise integration.
+
+<Aside type="note">
+`Azure OpenAI Service` is often used when organizations want generative AI capabilities while keeping deployment inside the Azure ecosystem for security, identity, and compliance integration.
+</Aside>
+
+### *Why Use Azure OpenAI Service*
+
+<CardGrid>
+  <Card title="Generative AI" icon="document">
+    Build applications that generate, transform, and reason over text and other inputs.
+  </Card>
+
+  <Card title="Azure Integration" icon="setting">
+    Combine model usage with Azure identity, networking, monitoring, and governance controls.
+  </Card>
+
+  <Card title="Enterprise Readiness" icon="database">
+    Use generative AI in architectures that require stronger operational and security alignment.
+  </Card>
+
+  <Card title="Flexible Scenarios" icon="warning">
+    Support chat, copilots, search augmentation, summarization, and intelligent automation.
+  </Card>
+</CardGrid>
+
+### *Common Model Capabilities*
+
+Azure OpenAI is often used for capabilities such as:
+
+- chat and conversational interfaces
+- content generation
+- summarization
+- classification
+- embeddings for semantic search
+- reasoning over enterprise knowledge
+
+### *Typical Flow*
+
+<Steps>
+1. An application sends a prompt, message, or input to `Azure OpenAI Service`.
+2. The service routes the request to the deployed model.
+3. The model generates a response such as text, structured output, or embeddings.
+4. The application uses that result in a workflow, UI, or automation process.
+5. Monitoring, governance, and security controls are applied through Azure services.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Chat Applications" icon="document">
+    Build assistants, copilots, and conversational business interfaces.
+  </Card>
+
+  <Card title="Knowledge Retrieval" icon="database">
+    Combine embeddings and search to answer questions over private enterprise content.
+  </Card>
+
+  <Card title="Automation" icon="setting">
+    Summarize documents, classify content, and generate drafts or structured outputs.
+  </Card>
+</CardGrid>
+
+### *Azure OpenAI And Search*
+
+A common enterprise pattern combines:
+
+- `Azure OpenAI Service`
+- `Azure AI Search`
+- enterprise documents or private data
+
+This allows the application to retrieve relevant information first and then use the model to generate a grounded answer.
+
+### *Azure OpenAI Vs. Azure Machine Learning*
+
+| Service | Best For |
+| --- | --- |
+| `Azure OpenAI Service` | Consuming managed generative AI models |
+| `Azure Machine Learning` | Building, training, and managing custom ML models |
+
+`Azure OpenAI Service` is focused on using powerful managed foundation models.
+
+`Azure Machine Learning` is focused on broader custom ML lifecycle management.
+
+### *Architecture Considerations*
+
+A production design usually thinks about:
+
+- prompt design
+- grounding with enterprise data
+- identity and access control
+- content filtering and safety
+- monitoring and cost management
+
+<Aside type="warning">
+Generative AI architecture should not focus only on the model. It should also consider data quality, security, observability, and responsible AI controls.
+</Aside>
+
+### *Summary*
+
+- `Azure OpenAI Service` provides managed access to generative AI models in Azure
+- It supports chat, generation, summarization, embeddings, and related AI scenarios
+- It fits well with Azure security, governance, and enterprise architecture
+- It is commonly combined with search and private data patterns
+- It is one of the central Azure services for modern AI applications

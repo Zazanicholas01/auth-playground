@@ -1,0 +1,76 @@
+---
+title: Backup & Restore
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+<Aside type="tip">
+In Kubernetes il backup riguarda lo stato del cluster e i dati persistenti, non i file interni dei container.
+</Aside>
+
+### *Livelli di backup*
+
+<CardGrid>
+  <Card title="etcd" icon="warning">
+    Salva lo stato del cluster: configurazioni, secret e stato delle risorse.
+  </Card>
+
+  <Card title="Velero" icon="document">
+    Salva oggetti Kubernetes e snapshot dei volumi.
+  </Card>
+
+  <Card title="PV / PVC" icon="puzzle">
+    Protegge i dati reali delle applicazioni stateful.
+  </Card>
+
+  <Card title="Backup Application-Aware" icon="rocket">
+    Dump del database.
+  </Card>
+
+  <Card title="Host" icon="laptop">
+    Memorizza dati sull'host sottostante.
+  </Card>
+</CardGrid>
+
+### *Backup di etcd*
+
+`etcd` contiene lo stato del cluster. Se lo perdi, perdi il cluster.
+
+<Steps>
+1. Usa `etcdctl` con i certificati TLS.
+2. Esegui `snapshot save` per creare il backup.
+3. Verifica il file con `snapshot status`.
+</Steps>
+
+<Aside type="note">
+Il backup di `etcd` è il backup più critico per un cluster self-managed.
+</Aside>
+
+### *Restore di etcd*
+
+Il restore e` un'operazione offline.
+
+<Steps>
+1. Ferma l'`API Server`.
+2. Esegui `etcdctl snapshot restore`.
+3. Ripristina una nuova `data-dir`.
+4. Aggiorna la configurazione di `etcd`.
+5. Riavvia i componenti del control plane.
+</Steps>
+
+### *Backup delle risorse con Velero*
+
+`Velero` permette di salvare risorse Kubernetes e volumi.
+
+- esporta oggetti del cluster
+- salva namespace o applicazioni specifiche
+- puo` integrare snapshot dei volumi su object storage
+###
+
+<Aside type="caution">
+Per workload stateful, assicurati che il sistema di storage supporti snapshot o backup dei volumi.
+</Aside>

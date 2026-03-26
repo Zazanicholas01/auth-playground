@@ -1,0 +1,113 @@
+---
+title: Microsoft Defender For Cloud
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Microsoft Defender for Cloud`, the Azure service used to assess, improve, and protect the security posture of cloud resources.
+
+### *Microsoft Defender For Cloud*
+
+`Microsoft Defender for Cloud` is the main Azure security posture management and workload protection service.
+
+It helps organizations:
+
+- identify security weaknesses
+- receive hardening recommendations
+- monitor secure configuration
+- protect workloads against threats
+
+It works across Azure resources and can also extend to hybrid or multicloud environments.
+
+<Aside type="note">
+`Defender for Cloud` is not only about detecting attacks. It is also about improving the security posture before incidents happen.
+</Aside>
+
+### *Main Functions*
+
+<CardGrid>
+  <Card title="Security Posture" icon="document">
+    Evaluate resources against recommended security baselines and identify weak points.
+  </Card>
+
+  <Card title="Recommendations" icon="setting">
+    Suggest actions such as enabling encryption, closing exposure, or improving configuration.
+  </Card>
+
+  <Card title="Threat Protection" icon="warning">
+    Detect suspicious activity and provide protection for workloads and services.
+  </Card>
+
+  <Card title="Compliance Visibility" icon="database">
+    Track how resources align with security standards and regulatory requirements.
+  </Card>
+</CardGrid>
+
+### *Why Use Defender For Cloud*
+
+`Microsoft Defender for Cloud` helps security teams and platform teams move from reactive security to continuous security improvement.
+
+It is useful for:
+
+- secure-by-default environments
+- continuous assessment
+- vulnerability reduction
+- cloud workload protection
+
+### *How It Works*
+
+<Steps>
+1. Azure resources are onboarded into the Defender for Cloud view.
+2. The service assesses security posture and configuration.
+3. Recommendations are generated for non-compliant or risky resources.
+4. Threat detection monitors workloads for suspicious behavior.
+5. Teams review findings and improve the environment over time.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Hardening Azure Resources" icon="document">
+    Find weak configurations such as missing encryption, open ports, or weak security settings.
+  </Card>
+
+  <Card title="Security Recommendations" icon="setting">
+    Improve resources using guided recommendations and secure score insights.
+  </Card>
+
+  <Card title="Threat Detection" icon="warning">
+    Detect suspicious activity across servers, databases, containers, and cloud workloads.
+  </Card>
+</CardGrid>
+
+### *Key Concepts*
+
+| Concept | Purpose |
+| --- | --- |
+| Secure Score | Measure and improve the security posture of the environment |
+| Recommendations | Show what should be fixed or hardened |
+| Defender Plans | Add workload-specific threat protection |
+| Regulatory Compliance | Map security posture to standards and frameworks |
+
+### *Defender For Cloud Vs. Azure Policy*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Policy` | Enforcing governance and configuration standards |
+| `Microsoft Defender for Cloud` | Improving security posture and detecting threats |
+
+`Azure Policy` controls compliance and allowed configuration.
+
+`Defender for Cloud` adds security analysis, posture management, and threat visibility.
+
+### *Summary*
+
+- `Microsoft Defender for Cloud` improves and protects Azure security posture
+- It provides recommendations, secure score, compliance insights, and threat detection
+- It helps teams harden workloads before incidents happen
+- It also supports workload protection across different resource types
+- It is one of the core Azure security services

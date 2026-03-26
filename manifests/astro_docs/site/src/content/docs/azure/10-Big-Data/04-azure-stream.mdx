@@ -1,0 +1,107 @@
+---
+title: Azure Stream Analytics
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Stream Analytics`, the Azure service used to process streaming data in near real time.
+
+### *Azure Stream Analytics*
+
+`Azure Stream Analytics` is a real-time event processing service.
+
+It is designed for scenarios where data is continuously arriving and must be analyzed or acted on quickly.
+
+Typical data sources include:
+
+- IoT telemetry
+- application events
+- logs
+- sensor streams
+- event ingestion platforms such as `Event Hubs`
+
+<Aside type="note">
+`Stream Analytics` is focused on live event processing, not on long-term storage or traditional batch analytics.
+</Aside>
+
+### *Why Use Stream Analytics*
+
+<CardGrid>
+  <Card title="Real-Time Processing" icon="document">
+    Process data as it arrives instead of waiting for batch jobs.
+  </Card>
+
+  <Card title="Streaming Queries" icon="setting">
+    Use query logic to filter, transform, and aggregate live event streams.
+  </Card>
+
+  <Card title="Operational Insight" icon="warning">
+    Detect patterns, thresholds, or anomalies while events are still in motion.
+  </Card>
+
+  <Card title="Azure Integration" icon="database">
+    Connect easily with Azure event sources and downstream analytics services.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+A `Stream Analytics` job reads from a streaming input, runs continuous query logic, and writes the results to one or more outputs.
+
+### *Typical Flow*
+
+<Steps>
+1. Events arrive from a streaming source such as `IoT Hub` or `Event Hubs`.
+2. `Azure Stream Analytics` reads the event stream.
+3. Queries filter, aggregate, or transform the incoming data.
+4. Results are written to outputs such as storage, analytics systems, or dashboards.
+5. Downstream systems consume the processed real-time results.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="IoT Telemetry Processing" icon="document">
+    Process sensor data in near real time and detect important operational conditions.
+  </Card>
+
+  <Card title="Real-Time Dashboards" icon="database">
+    Feed live metrics and aggregated values into monitoring or reporting tools.
+  </Card>
+
+  <Card title="Event Filtering" icon="setting">
+    Reduce high-volume raw streams into smaller, more useful outputs.
+  </Card>
+</CardGrid>
+
+### *Stream Analytics Vs. Databricks*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Stream Analytics` | Real-time event processing |
+| `Azure Databricks` | Large-scale batch or distributed data engineering |
+
+`Stream Analytics` is optimized for continuous live streams.
+
+`Databricks` is broader and stronger for heavy transformation and distributed analytical processing.
+
+### *Main Architectural Role*
+
+In a big data architecture, Stream Analytics often sits between:
+
+- event ingestion services
+- downstream storage or analytics platforms
+
+It helps convert raw incoming event streams into filtered, enriched, or aggregated data that can be used immediately.
+
+### *Summary*
+
+- `Azure Stream Analytics` is built for near real-time stream processing
+- It reads from event sources and writes processed results to outputs
+- It is useful for IoT, logs, and operational event pipelines
+- It is query-driven and optimized for streaming scenarios
+- It complements batch and warehouse services in Azure analytics architectures

@@ -1,0 +1,62 @@
+---
+title: Authorization & RBAC
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+L'`Authorization` decide se un'identità autenticata puo` eseguire un'azione su una risorsa.
+
+### *Principio base*
+
+- Kubernetes non concede permessi di default.
+- I permessi vanno assegnati esplicitamente.
+- La best practice è il `Least Privilege`.
+
+### *I quattro pilastri*
+
+<CardGrid>
+  <Card title="Role" icon="document">
+    Definisce permessi validi in un singolo namespace.
+  </Card>
+
+  <Card title="ClusterRole" icon="warning">
+    Definisce permessi validi a livello di cluster.
+  </Card>
+
+  <Card title="RoleBinding" icon="list-format">
+    Collega un ruolo a un soggetto dentro un namespace.
+  </Card>
+
+  <Card title="ClusterRoleBinding" icon="close">
+    Collega un ruolo cluster-wide a un soggetto.
+  </Card>
+</CardGrid>
+
+### *Come funziona*
+
+<Steps>
+1. L'utente o il `ServiceAccount` viene autenticato.
+2. Kubernetes controlla i `Role` o `ClusterRole`.
+3. Verifica i `Binding` associati.
+4. Se una regola lo consente, l'azione viene autorizzata.
+</Steps>
+
+### *Anatomia di una regola*
+
+| Campo | Significato |
+| --- | --- |
+| `apiGroups` | Gruppo API della risorsa |
+| `resources` | Risorse su cui agire |
+| `verbs` | Azioni consentite |
+
+### *Verifica dei permessi*
+
+| Comando | Scopo |
+| --- | --- |
+| `kubectl auth can-i create pods` | Verifica se puoi creare Pod |
+| `kubectl auth can-i get secrets --as luca@example.com` | Verifica i permessi di un utente |
+| `kubectl auth can-i delete svc --as system:serviceaccount:dev:deploy-bot` | Verifica i permessi di un ServiceAccount |

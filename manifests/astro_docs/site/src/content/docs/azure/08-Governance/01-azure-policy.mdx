@@ -1,0 +1,136 @@
+---
+title: Azure Policy
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Policy`, the Azure service used to enforce governance rules across resources and subscriptions.
+
+### *Azure Policy*
+
+`Azure Policy` is the main Azure governance service used to define what is allowed and what is not allowed in an environment.
+
+It helps organizations apply standards consistently across resources, subscriptions, and management groups.
+
+Typical governance goals include:
+
+- restricting allowed regions
+- enforcing required tags
+- controlling resource types
+- requiring secure configuration settings
+- auditing compliance
+
+<Aside type="note">
+`Azure Policy` is about governance and compliance, not user permissions. It defines what resources should look like and whether they meet organizational rules.
+</Aside>
+
+### *Why Use Azure Policy*
+
+<CardGrid>
+  <Card title="Standardization" icon="document">
+    Apply the same rules across many teams, subscriptions, and workloads.
+  </Card>
+
+  <Card title="Compliance" icon="warning">
+    Audit or enforce whether resources follow required organizational or regulatory standards.
+  </Card>
+
+  <Card title="Preventive Control" icon="setting">
+    Stop non-compliant resources from being created or updated.
+  </Card>
+
+  <Card title="Visibility" icon="database">
+    Track which resources are compliant and which ones violate governance rules.
+  </Card>
+</CardGrid>
+
+### *How Azure Policy Works*
+
+Azure Policy evaluates resources against policy definitions.
+
+A policy can then:
+
+- allow the resource
+- deny the resource
+- audit the resource
+- modify the resource
+- deploy missing configuration automatically
+
+### *Key Building Blocks*
+
+<CardGrid>
+  <Card title="Policy Definition" icon="document">
+    The rule itself, such as "Only allow resources in North Europe."
+  </Card>
+
+  <Card title="Initiative" icon="setting">
+    A collection of related policies grouped together as one governance package.
+  </Card>
+
+  <Card title="Assignment" icon="database">
+    The act of applying a policy or initiative to a scope such as a subscription or management group.
+  </Card>
+
+  <Card title="Compliance View" icon="warning">
+    A report of which resources meet or violate the policy rules.
+  </Card>
+</CardGrid>
+
+### *Common Policy Effects*
+
+| Effect | Purpose |
+| --- | --- |
+| `Deny` | Block non-compliant resources from being created or changed |
+| `Audit` | Flag resources that do not meet the rule |
+| `Append` | Add extra information to a resource request |
+| `Modify` | Change resource properties during deployment |
+| `DeployIfNotExists` | Automatically deploy missing required configuration |
+
+### *Typical Flow*
+
+<Steps>
+1. Define a policy or choose a built-in one.
+2. Assign the policy to a scope such as a management group, subscription, or resource group.
+3. Azure evaluates resources against the rule.
+4. Non-compliant resources are denied, audited, or modified depending on the effect.
+5. Compliance results are reviewed over time.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Allowed Regions" icon="document">
+    Restrict resource deployment to approved geographic regions.
+  </Card>
+
+  <Card title="Required Tags" icon="setting">
+    Enforce metadata such as cost center, owner, or environment tags.
+  </Card>
+
+  <Card title="Security Standards" icon="warning">
+    Require secure settings such as encryption, approved SKUs, or logging configuration.
+  </Card>
+</CardGrid>
+
+### *Azure Policy Vs. RBAC*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Policy` | Governing what resources are allowed and how they must be configured |
+| `Azure RBAC` | Governing who can perform actions on resources |
+
+`RBAC` controls permissions.
+
+`Azure Policy` controls compliance and configuration standards.
+
+### *Summary*
+
+- `Azure Policy` enforces governance rules in Azure
+- It can deny, audit, modify, or automatically remediate resources
+- Policies can be grouped into initiatives
+- Policies are assigned at scopes such as management groups or subscriptions
+- It helps organizations standardize and enforce compliance across Azure

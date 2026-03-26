@@ -1,0 +1,152 @@
+---
+title: Azure Data Explorer Architecture
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section explains the architecture and design principles behind `Azure Data Explorer`.
+
+### *Azure Data Explorer Architecture*
+
+`Azure Data Explorer (ADX)` is designed for one main job:
+
+- ingest large volumes of event data quickly
+- store it efficiently
+- make it queryable with very low analytical latency
+
+Its architecture is optimized for telemetry, logs, and time-series workloads where fast ingestion and fast investigation are both critical.
+
+<Aside type="note">
+`ADX` is not mainly a transactional system. It is an analytical engine built for high-ingestion operational and telemetry data.
+</Aside>
+
+### *Core Architecture Layers*
+
+<CardGrid>
+  <Card title="Ingestion" icon="document">
+    Accepts high-volume data from sources such as `Event Hubs`, applications, logs, and IoT systems.
+  </Card>
+
+  <Card title="Storage" icon="database">
+    Stores incoming data in a compressed analytical format optimized for query performance.
+  </Card>
+
+  <Card title="Query Engine" icon="setting">
+    Executes fast interactive analytical queries over large datasets.
+  </Card>
+
+  <Card title="Visualization And Use" icon="caution">
+    Feeds dashboards, investigations, operational analytics, and downstream data workflows.
+  </Card>
+</CardGrid>
+
+### *How Data Flows In ADX*
+
+A typical Azure Data Explorer architecture looks like this:
+
+<Steps>
+1. Events arrive from a source such as `Event Hubs`, applications, devices, or logs.
+2. ADX ingests the incoming stream into tables.
+3. Data is organized for analytical querying.
+4. Users or systems run queries through `KQL`.
+5. Results are sent to dashboards, operational tools, or analytics workflows.
+</Steps>
+
+### *Cluster And Database Model*
+
+The main architectural building blocks of ADX are:
+
+- `Cluster`
+- `Database`
+- `Table`
+
+A cluster provides the compute and storage engine.
+
+Inside the cluster, one or more databases hold tables with ingested data.
+
+This makes the architecture similar to a managed analytical engine rather than a simple storage account.
+
+### *Why ADX Is Fast*
+
+Azure Data Explorer is optimized for workloads that need both scale and speed.
+
+Its performance comes from architecture choices such as:
+
+- analytical storage organization
+- efficient ingestion pipelines
+- distributed query execution
+- compression optimized for telemetry and event data
+
+This makes it especially strong for interactive analysis on large datasets.
+
+### *Common Architecture Patterns*
+
+<CardGrid>
+  <Card title="Telemetry Platform" icon="document">
+    Ingest and analyze application, platform, or IoT telemetry at large scale.
+  </Card>
+
+  <Card title="Log Analytics Engine" icon="database">
+    Explore large operational or diagnostic datasets quickly.
+  </Card>
+
+  <Card title="Time-Series Analytics" icon="setting">
+    Analyze events and trends across time-based data streams.
+  </Card>
+</CardGrid>
+
+### *ADX And Event Sources*
+
+A common architecture pattern is:
+
+- `Event Hubs` or other event sources ingest data
+- `ADX` stores and analyzes the stream
+- dashboards or operational systems visualize the results
+
+This makes ADX an important middle layer between high-volume ingestion and analytical insight.
+
+### *ADX Vs. Stream Analytics*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Stream Analytics` | Processing events while they are in motion |
+| `Azure Data Explorer` | Fast analysis of ingested telemetry and event data at scale |
+
+A useful distinction is:
+
+- `Stream Analytics` transforms live streams
+- `ADX` is where large event datasets are explored and queried rapidly
+
+### *ADX Vs. Synapse*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Data Explorer` | Telemetry, logs, and time-series analytics |
+| `Azure Synapse Analytics` | Broader warehousing and integrated analytics workloads |
+
+`ADX` is more specialized for event-heavy analytical exploration.
+
+`Synapse` is broader as an integrated analytics platform.
+
+### *Key Design Considerations*
+
+A good ADX design usually thinks about:
+
+- ingestion rate
+- table design
+- retention period
+- query patterns
+- dashboard and analytics needs
+- cost of storing very large event volumes
+
+### *Summary*
+
+- `Azure Data Explorer` is built for high-ingestion analytical workloads
+- Its architecture is centered on ingestion, analytical storage, and fast query execution
+- It uses clusters, databases, and tables as core building blocks
+- It is especially strong for logs, telemetry, and time-series analytics
+- It fits between event ingestion and large-scale analytical insight in Azure architectures

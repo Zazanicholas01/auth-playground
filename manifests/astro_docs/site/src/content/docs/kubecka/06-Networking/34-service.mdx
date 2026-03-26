@@ -1,0 +1,56 @@
+---
+title: Services Networking
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Un `Service` fornisce un IP stabile e un nome DNS costante a un gruppo di Pod.
+
+### *Come funziona*
+
+<Steps>
+1. Il `Service` definisce un `selector`.
+2. Kubernetes trova i Pod con le label corrispondenti.
+3. I Pod vengono aggiunti agli `Endpoints`.
+4. Il traffico verso il `Service` viene distribuito ai Pod disponibili.
+</Steps>
+
+### *Tipi di Service*
+
+<CardGrid>
+  <Card title="ClusterIP" icon="document">
+    Accessibile solo dentro il cluster. E` il tipo predefinito.
+  </Card>
+
+  <Card title="NodePort" icon="warning">
+    Espone il servizio su una porta di ogni nodo.
+  </Card>
+
+  <Card title="LoadBalancer" icon="rocket">
+    Espone il servizio tramite un bilanciatore esterno.
+  </Card>
+
+  <Card title="ExternalName" icon="list-format">
+    Mappa il servizio su un nome DNS esterno.
+  </Card>
+</CardGrid>
+
+### *Ruolo di kube-proxy*
+
+- gira su ogni nodo
+- gestisce regole `iptables` o `IPVS`
+- intercetta il traffico destinato al `Service`
+- lo reindirizza verso un Pod sano
+
+### *Confronto rapido*
+
+| Tipo | Accesso | Uso tipico |
+| --- | --- | --- |
+| `ClusterIP` | Interno al cluster | Comunicazione tra servizi |
+| `NodePort` | Tramite IP del nodo e porta | Test o ambienti semplici |
+| `LoadBalancer` | Esterno al cluster | Applicazioni pubbliche |
+| `ExternalName` | Alias DNS | Servizi esterni |

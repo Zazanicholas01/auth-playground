@@ -1,0 +1,139 @@
+---
+title: Azure App Service
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure App Service`, the main `Platform as a Service (PaaS)` offering for hosting web applications, APIs, and background workloads without managing virtual machines directly.
+
+### *Azure App Service*
+
+`Azure App Service` allows you to deploy and run applications without managing the underlying operating system, patching, or server infrastructure.
+
+It is commonly used for:
+
+- web applications
+- REST APIs
+- backend services
+- scheduled or background jobs
+
+<Aside type="note">
+With App Service, Azure manages the platform while you focus on the application code and runtime configuration.
+</Aside>
+
+### *Supported Workloads*
+
+<CardGrid>
+  <Card title="Web Apps" icon="document">
+    Host websites and frontend applications with built-in scaling, TLS, and deployment support.
+  </Card>
+
+  <Card title="API Apps" icon="setting">
+    Run backend APIs with authentication, routing, and monitoring integration.
+  </Card>
+
+  <Card title="WebJobs" icon="warning">
+    Execute scheduled or background tasks alongside an App Service application.
+  </Card>
+</CardGrid>
+
+### *Key Features*
+
+<CardGrid>
+  <Card title="Auto-Scaling" icon="setting">
+    Increase or decrease the number of instances based on traffic, CPU usage, or schedules.
+  </Card>
+
+  <Card title="Custom Domains & TLS" icon="document">
+    Bind custom domains and secure them with managed or uploaded certificates.
+  </Card>
+
+  <Card title="Deployment Slots" icon="database">
+    Deploy a staging version of the app and swap it into production with reduced risk.
+  </Card>
+
+  <Card title="Built-In Monitoring" icon="warning">
+    Integrates with `Azure Monitor` and `Application Insights` for logs, metrics, and diagnostics.
+  </Card>
+</CardGrid>
+
+### *App Service Plan*
+
+An `App Service Plan` defines the compute resources used by one or more App Service apps.
+
+It controls:
+
+- pricing tier
+- region
+- instance size
+- scaling limits
+
+Multiple apps can share the same plan, which means they also share the underlying compute resources.
+
+### *Pricing Tiers*
+
+| Tier | Typical Use |
+| --- | --- |
+| Free / Shared | Learning, testing, small demos |
+| Basic | Small production workloads with dedicated resources |
+| Standard | Production apps needing scaling and staging slots |
+| Premium | High-performance workloads, advanced scaling, networking features |
+| Isolated | Highly secure workloads running in dedicated environments |
+
+### *Deployment Flow*
+
+<Steps>
+1. Create or choose an `App Service Plan`.
+2. Create the `Web App` or `API App`.
+3. Deploy the application code using Git, ZIP deploy, CI/CD, or container images.
+4. Configure environment variables, connection strings, and custom domains.
+5. Scale the app horizontally or vertically as traffic changes.
+</Steps>
+
+### *Deployment Slots*
+
+`Deployment Slots` let you run multiple versions of the same app inside the same App Service.
+
+Common example:
+
+- `staging`
+- `production`
+
+This allows you to:
+
+- validate a release before exposing it to users
+- perform safer production swaps
+- reduce downtime during releases
+
+### *Scaling Options*
+
+| Scaling Type | Description |
+| --- | --- |
+| Scale Up | Increase CPU, memory, and instance size |
+| Scale Out | Add more app instances |
+| Scheduled Scaling | Change capacity based on time of day |
+| Metric-Based Scaling | Scale automatically using metrics such as CPU or request count |
+
+### *Best Practices*
+
+<CardGrid>
+  <Card title="Use Deployment Slots" icon="document">
+    Test releases in staging before swapping to production.
+  </Card>
+
+  <Card title="Store Secrets Safely" icon="warning">
+    Use `Azure Key Vault` or App Settings instead of hardcoding secrets in the application.
+  </Card>
+
+  <Card title="Enable Monitoring" icon="setting">
+    Connect the app to `Application Insights` for observability and troubleshooting.
+  </Card>
+
+  <Card title="Choose The Right Plan" icon="database">
+    Avoid overpaying by matching the App Service tier to the workload profile.
+  </Card>
+</CardGrid>

@@ -1,0 +1,47 @@
+---
+title: Cluster Design
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+La progettazione di un cluster dipende da infrastruttura, nodi, storage e architettura del control plane.
+
+### *Cloud vs On-Premise*
+
+| Modello | Vantaggi | Svantaggi |
+| --- | --- | --- |
+| `Public Cloud` | Control Plane gestito, scalabilita`, integrazioni native | Costi e lock-in |
+| `On-Premise` | Controllo totale, latenza locale, costi piu` prevedibili | Maggiore complessita` operativa |
+
+### *Bare Metal vs VM*
+
+<CardGrid>
+  <Card title="Virtual Machines" icon="laptop">
+    Offrono isolamento aggiuntivo e grande flessibilita`.
+  </Card>
+
+  <Card title="Bare Metal" icon="rocket">
+    Offrono performance elevate e meno overhead di virtualizzazione.
+  </Card>
+</CardGrid>
+
+### *Decisioni sullo storage*
+
+| Tipo | Punto di forza | Limite principale |
+| --- | --- | --- |
+| `Local Storage` | Prestazioni molto alte | I dati restano legati al nodo |
+| `Network Storage` | Alta disponibilita` | Maggiore latenza |
+| `Cloud Block Storage` | Facile da gestire | Spesso `ReadWriteOnce` |
+
+### *Control Plane*
+
+- `Single Master`: adatto solo a test o lab
+- `HA Control Plane`: almeno 3 nodi per garantire quorum di `etcd`
+
+<Aside type="note">
+Con `etcd`, tre nodi sono il minimo pratico per evitare problemi di quorum e `split-brain`.
+</Aside>

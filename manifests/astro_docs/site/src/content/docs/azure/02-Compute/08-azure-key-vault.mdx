@@ -1,0 +1,111 @@
+---
+title: Azure Key Vault
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Key Vault`, the central Azure service for storing and protecting sensitive information.
+
+### *Azure Key Vault*
+
+`Azure Key Vault` is the secure location for storing sensitive digital assets such as passwords, API keys, and certificates.
+
+In modern cloud architecture, secrets should not be hard-coded into source code or configuration files.
+
+Instead, applications should retrieve them from `Key Vault` at runtime.
+
+<Aside type="note">
+`Key Vault` is a foundational security service in Azure and is commonly used together with managed identities to avoid storing credentials in applications.
+</Aside>
+
+### *Object Types In Key Vault*
+
+`Azure Key Vault` stores three main types of objects.
+
+<CardGrid>
+  <Card title="Secrets" icon="document">
+    Plain values such as passwords, connection strings, or API keys that can be written and read as text.
+  </Card>
+
+  <Card title="Keys" icon="setting">
+    Cryptographic keys used for encryption and decryption. The private key material is normally not exposed directly.
+  </Card>
+
+  <Card title="Certificates" icon="warning">
+    SSL and TLS certificates used for secure communication. Key Vault can also help manage renewal.
+  </Card>
+</CardGrid>
+
+### *Key Protection Tiers*
+
+When creating a vault, you choose the protection level for stored keys.
+
+| Tier | Description |
+| --- | --- |
+| Standard | Uses software-protected keys with strong security at lower cost |
+| Premium | Uses `HSM`-backed protection with dedicated hardware security modules |
+
+`Premium` is used when stronger cryptographic protection or regulatory requirements make `HSM` support necessary.
+
+### *Access Models*
+
+There are two ways to control access to a vault.
+
+<CardGrid>
+  <Card title="Azure RBAC" icon="setting">
+    Recommended model. Uses Azure role assignments such as `Key Vault Secrets User` at the vault scope.
+  </Card>
+
+  <Card title="Access Policies" icon="warning">
+    Legacy model. Uses a separate permission list inside the vault to manually allow operations such as `Get`, `List`, or `Delete`.
+  </Card>
+</CardGrid>
+
+<Aside type="note">
+`Azure RBAC` is generally the preferred and more modern model because it aligns Key Vault access with the rest of Azure governance.
+</Aside>
+
+### *How Applications Use Key Vault*
+
+Applications usually access Key Vault through a managed identity instead of through stored credentials.
+
+<Steps>
+1. The application is assigned a `Managed Identity`.
+2. That identity is granted access to the vault using `Azure RBAC`.
+3. The application requests a token from Azure.
+4. The token is used to access secrets, keys, or certificates in `Key Vault`.
+5. The secret is retrieved securely at runtime.
+</Steps>
+
+### *Key Vault In Kubernetes*
+
+In Kubernetes environments, the `Secrets Store CSI Driver` can connect a cluster to external secret providers such as `Azure Key Vault`.
+
+Its role is to:
+
+- fetch secrets from Key Vault
+- mount them into the pod as files
+- avoid storing sensitive values directly in manifests
+
+This lets an application read secrets from the file system instead of embedding them in the container image or deployment YAML.
+
+### *Why Key Vault Matters*
+
+| Benefit | Explanation |
+| --- | --- |
+| Centralization | Sensitive values are stored in one secure service |
+| Rotation | Secrets and certificates can be updated without changing application code |
+| Reduced Exposure | Applications do not need hard-coded credentials |
+| Integration | Works with managed identities, RBAC, and Kubernetes secret providers |
+
+### *Summary*
+
+- `Key Vault` stores secrets, cryptographic keys, and certificates
+- `Standard` and `Premium` tiers define the strength of key protection
+- `Azure RBAC` is the recommended access model
+- Applications should use managed identities to access Key Vault securely
+- In Kubernetes, the `Secrets Store CSI Driver` can mount Key Vault secrets into pods

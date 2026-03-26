@@ -1,0 +1,123 @@
+---
+title: Tags
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Tags`, the metadata system used to organize, govern, and report on Azure resources.
+
+### *Tags*
+
+`Tags` are key-value pairs attached to Azure resources.
+
+They do not change the technical behavior of a resource, but they add important metadata that helps teams manage Azure environments more effectively.
+
+Common tag examples include:
+
+- `Environment = Production`
+- `Owner = PlatformTeam`
+- `CostCenter = Finance`
+- `Project = Alpha`
+
+<Aside type="note">
+Tags are one of the simplest and most powerful governance tools in Azure because they improve organization, reporting, automation, and cost tracking.
+</Aside>
+
+### *Why Use Tags*
+
+<CardGrid>
+  <Card title="Organization" icon="document">
+    Group and identify resources by project, team, environment, or purpose.
+  </Card>
+
+  <Card title="Cost Tracking" icon="database">
+    Attribute Azure spending to departments, workloads, or business units.
+  </Card>
+
+  <Card title="Automation" icon="setting">
+    Use tags to drive scripts, policies, reporting, and lifecycle actions.
+  </Card>
+
+  <Card title="Governance" icon="warning">
+    Standardize how resources are labeled across the environment.
+  </Card>
+</CardGrid>
+
+### *How Tags Work*
+
+A tag consists of:
+
+- a `key`
+- a `value`
+
+Example:
+
+- `Environment = Dev`
+- `Owner = Nicholas`
+
+These tags can be read by Azure services, administrators, automation tools, and governance policies.
+
+### *Typical Flow*
+
+<Steps>
+1. Define a standard tag strategy for the organization.
+2. Apply tags to resources, resource groups, or subscriptions.
+3. Use `Azure Policy` to require or enforce important tags.
+4. Use tags in cost analysis, reporting, and automation.
+5. Review and maintain tag quality over time.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Cost Allocation" icon="document">
+    Use tags such as `CostCenter` or `Department` for billing and reporting analysis.
+  </Card>
+
+  <Card title="Environment Tracking" icon="setting">
+    Distinguish resources across `Dev`, `Test`, and `Production`.
+  </Card>
+
+  <Card title="Ownership" icon="warning">
+    Mark who is responsible for a resource with tags such as `Owner` or `Team`.
+  </Card>
+</CardGrid>
+
+### *Tags And Governance*
+
+Tags work especially well with other Azure governance tools.
+
+| Tool | Role |
+| --- | --- |
+| `Tags` | Add metadata for organization and reporting |
+| `Azure Policy` | Enforce required tags or allowed values |
+| `Cost Management` | Use tags to analyze and allocate spend |
+
+This makes tags an important link between technical resources and business governance.
+
+### *Good Tagging Practice*
+
+A strong tagging model should be:
+
+- simple
+- consistent
+- standardized
+- useful for reporting and automation
+
+Too many tags or inconsistent names reduce the value of the system.
+
+<Aside type="caution">
+A tagging strategy should be agreed at the organizational level. If every team invents different tag names, reporting and governance become much harder.
+</Aside>
+
+### *Summary*
+
+- `Tags` are key-value metadata pairs attached to Azure resources
+- They help with organization, cost tracking, automation, and governance
+- Common examples include environment, owner, project, and cost center
+- `Azure Policy` can enforce tagging standards
+- A simple and consistent tagging strategy provides the most value

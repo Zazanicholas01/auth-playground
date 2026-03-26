@@ -1,0 +1,79 @@
+---
+title: Azure Artifacts
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Artifacts`, the Azure DevOps service used to manage packages and reusable software artifacts.
+
+### *Azure Artifacts*
+
+`Azure Artifacts` is the package management service inside Azure DevOps.
+
+It allows teams to create, host, and share packages such as:
+
+- NuGet packages
+- npm packages
+- Maven packages
+- Python packages
+- universal packages
+
+It is useful when software teams want controlled internal package feeds for reusable libraries and build outputs.
+
+<Aside type="note">
+`Azure Artifacts` helps teams treat packages as managed assets instead of passing files around manually between builds and projects.
+</Aside>
+
+### *Why Use Azure Artifacts*
+
+<CardGrid>
+  <Card title="Package Sharing" icon="document">
+    Publish reusable libraries and packages for other teams or projects to consume.
+  </Card>
+
+  <Card title="Internal Feeds" icon="setting">
+    Maintain private package feeds inside the organization.
+  </Card>
+
+  <Card title="Dependency Control" icon="warning">
+    Manage which package versions are approved and available to development teams.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+<Steps>
+1. A package is built through a development or CI process.
+2. The package is published to an `Azure Artifacts` feed.
+3. Other projects or pipelines connect to that feed.
+4. Teams consume the package as a managed dependency.
+5. New versions are published and tracked over time.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Reusable Libraries" icon="document">
+    Share internal frameworks, SDKs, and common code packages across teams.
+  </Card>
+
+  <Card title="Build Outputs" icon="database">
+    Store versioned artifacts produced by CI pipelines.
+  </Card>
+
+  <Card title="Controlled Dependencies" icon="setting">
+    Keep package usage inside trusted organizational feeds.
+  </Card>
+</CardGrid>
+
+### *Summary*
+
+- `Azure Artifacts` is the package management service in Azure DevOps
+- It hosts internal feeds for reusable software packages
+- It helps teams version, publish, and consume dependencies
+- It supports several common package ecosystems
+- It improves dependency governance and reuse

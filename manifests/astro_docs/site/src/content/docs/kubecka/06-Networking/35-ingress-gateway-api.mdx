@@ -1,0 +1,57 @@
+---
+title: Ingress & Gateway API
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+`Ingress` e `Gateway API` gestiscono il traffico applicativo in ingresso verso i `Service` del cluster.
+
+### *Ingress*
+
+L'`Ingress` definisce regole HTTP e HTTPS per instradare il traffico esterno.
+
+<CardGrid>
+  <Card title="Ingress Resource" icon="document">
+    Descrive host, path e regole di routing.
+  </Card>
+
+  <Card title="Ingress Controller" icon="setting">
+    Implementa realmente il comportamento leggendo le regole.
+  </Card>
+
+  <Card title="TLS Termination" icon="warning">
+    E` il punto tipico per gestire certificati HTTPS.
+  </Card>
+</CardGrid>
+
+### *Come funziona*
+
+<Steps>
+1. Arriva traffico dall'esterno.
+2. L'`Ingress Controller` riceve la richiesta.
+3. Valuta host e path.
+4. Instrada il traffico verso il `Service` corretto.
+</Steps>
+
+### *Gateway API*
+
+La `Gateway API` separa responsabilità e rende il routing piu` modulare.
+
+| Risorsa | Ruolo |
+| --- | --- |
+| `GatewayClass` | Definisce il tipo di infrastruttura gateway |
+| `Gateway` | Definisce listener, porte e TLS |
+| `HTTPRoute` | Definisce le regole di instradamento |
+
+<Aside type="note">
+`Gateway API` adotta un modello più orientato ai ruoli rispetto all'`Ingress` tradizionale.
+</Aside>
+
+### *Differenza chiave*
+
+- `Ingress`: modello piu` semplice e concentrato in una singola risorsa
+- `Gateway API`: modello piu` modulare, estensibile e scalabile

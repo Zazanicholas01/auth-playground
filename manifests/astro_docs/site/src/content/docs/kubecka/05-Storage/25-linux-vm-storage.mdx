@@ -1,0 +1,61 @@
+---
+title: Linux & VM Storage
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Kubernetes astrae concetti Linux classici come dischi, file system, mount point e storage di rete.
+
+### *File system vs Block storage*
+
+<CardGrid>
+  <Card title="Block Storage" icon="document">
+    E' il disco grezzo, visto come device tipo `/dev/sdb`.
+  </Card>
+
+  <Card title="File System" icon="list-format">
+    Organizza i blocchi in file e directory, ad esempio `ext4` o `xfs`.
+  </Card>
+</CardGrid>
+
+### *Mounting*
+
+Per usare un disco in Linux servono alcuni passaggi fondamentali.
+
+<Steps>
+1. Il disco viene creato (`provisioning`).
+2. Il disco viene collegato alla VM (`attaching`).
+3. Il device viene montato in una directory (`mounting`).
+</Steps>
+
+### *Ephemeral vs Persistent*
+
+| Tipo | Significato |
+| --- | --- |
+| Root Disk | Disco del sistema, spesso legato al ciclo di vita della VM |
+| Data Disk | Disco separato che puo` sopravvivere alla VM |
+
+<Aside type="note">
+Il concetto di `Persistent Volume` nasce proprio dall'idea del data disk persistente.
+</Aside>
+
+### *NAS*
+
+Lo storage di rete permette la condivisione tra piu` macchine.
+
+- protocolli comuni: `NFS`, `SMB`
+- permette accesso `ReadWriteMany`
+- utile per file condivisi tra Pod
+
+### *Mappa Linux vs Kubernetes*
+
+| Concetto Linux / VM | Corrispettivo Kubernetes |
+| --- | --- |
+| Physical Disk | `PersistentVolume` |
+| Mount Point | `volumeMounts` |
+| NFS Share | RWX storage |
+| Fstab / mount automatico | `PersistentVolumeClaim` + provisioning |

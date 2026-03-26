@@ -1,0 +1,96 @@
+---
+title: Big Data Services Comparison
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section compares the main Azure big data and analytics services covered so far.
+
+### *Big Data Services Comparison*
+
+Azure provides several services for analytics, big data processing, event handling, and large-scale data exploration.
+
+The key question is usually:
+
+- is the workload storage, processing, streaming, or analytics
+- is the data batch or real time
+- is the goal transformation, exploration, warehousing, or unified analytics
+
+### *Core Comparison*
+
+| Service | Main Role | Best For |
+| --- | --- | --- |
+| `Azure Synapse Analytics` | Integrated analytics platform | Data warehousing, pipelines, and large-scale analytics |
+| `Azure Data Lake Storage` | Analytical storage foundation | Storing raw and processed data at scale |
+| `Azure Databricks` | Distributed processing engine | Spark-based data engineering and transformation |
+| `Azure Stream Analytics` | Real-time stream processing | Near real-time event filtering and aggregation |
+| `Azure Data Explorer` | High-speed analytics engine | Telemetry, logs, and time-series analytics |
+| `Microsoft Fabric` | Unified analytics platform | End-to-end analytics with strong BI integration |
+
+### *How To Think About Them*
+
+<CardGrid>
+  <Card title="Storage Foundation" icon="database">
+    `Azure Data Lake Storage` is the storage layer for many analytics architectures.
+  </Card>
+
+  <Card title="Processing Engines" icon="setting">
+    `Azure Databricks` and `Azure Stream Analytics` process data in batch and streaming scenarios.
+  </Card>
+
+  <Card title="Analytical Exploration" icon="document">
+    `Azure Data Explorer` is optimized for fast querying over telemetry, logs, and event-heavy datasets.
+  </Card>
+
+  <Card title="Integrated Platforms" icon="warning">
+    `Azure Synapse Analytics` and `Microsoft Fabric` provide broader analytics platform experiences.
+  </Card>
+</CardGrid>
+
+### *Quick Decision Guide*
+
+| If You Need... | Use |
+| --- | --- |
+| Store raw and processed analytical data | `Azure Data Lake Storage` |
+| Transform large datasets with Spark | `Azure Databricks` |
+| Process live streams in near real time | `Azure Stream Analytics` |
+| Query high-volume telemetry and log data quickly | `Azure Data Explorer` |
+| Build integrated warehouse and analytics workflows | `Azure Synapse Analytics` |
+| Use a more unified SaaS-style analytics platform | `Microsoft Fabric` |
+
+### *Platform Vs. Engine Vs. Storage*
+
+| Type | Services |
+| --- | --- |
+| Storage Foundation | `Azure Data Lake Storage` |
+| Processing Engine | `Azure Databricks`, `Azure Stream Analytics` |
+| Analytical Query Engine | `Azure Data Explorer` |
+| Integrated Analytics Platform | `Azure Synapse Analytics`, `Microsoft Fabric` |
+
+This makes it easier to understand that these services often complement each other rather than replace one another directly.
+
+### *Typical Architecture View*
+
+A common Azure analytics flow can look like this:
+
+- raw data lands in `Azure Data Lake Storage`
+- streaming data may be handled by `Azure Stream Analytics`
+- telemetry and event-heavy datasets may be explored in `Azure Data Explorer`
+- large transformation workloads may run in `Azure Databricks`
+- broader analytics and reporting may be handled in `Azure Synapse Analytics` or `Microsoft Fabric`
+
+<Aside type="note">
+Many real-world architectures combine several of these services. The right design depends on whether the main challenge is ingestion, transformation, fast analytical querying, warehousing, or reporting.
+</Aside>
+
+### *Summary*
+
+- `Azure Data Lake Storage` is the storage foundation
+- `Azure Databricks` is strong for distributed engineering workloads
+- `Azure Stream Analytics` handles live event processing
+- `Azure Data Explorer` is strong for telemetry, logs, and time-series analytics
+- `Azure Synapse Analytics` provides integrated analytics and warehousing
+- `Microsoft Fabric` offers a unified analytics and BI-oriented platform

@@ -1,0 +1,90 @@
+---
+title: Azure Bastion
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Bastion`, the Azure service used to connect securely to virtual machines without exposing them directly to the public internet.
+
+### *Azure Bastion*
+
+`Azure Bastion` is a managed service that provides secure `RDP` and `SSH` access to virtual machines through the Azure Portal.
+
+Instead of assigning public IP addresses to VMs or opening ports such as `3389` or `22`, Azure Bastion acts as a secure jump point inside the virtual network.
+
+<Aside type="note">
+`Azure Bastion` is one of the recommended Azure services for reducing administrative exposure and improving VM access security.
+</Aside>
+
+### *Why Use Azure Bastion*
+
+<CardGrid>
+  <Card title="No Public IP On VMs" icon="document">
+    Virtual machines can remain private and do not need direct internet exposure for remote administration.
+  </Card>
+
+  <Card title="Secure Browser Access" icon="setting">
+    Administrators can connect to VMs through the Azure Portal using `RDP` or `SSH` over `SSL`.
+  </Card>
+
+  <Card title="Reduced Attack Surface" icon="warning">
+    By avoiding open management ports, the environment becomes less exposed to internet-based attacks.
+  </Card>
+</CardGrid>
+
+### *How Bastion Works*
+
+Azure Bastion is deployed into a dedicated subnet inside the virtual network.
+
+The required subnet name is:
+
+- `AzureBastionSubnet`
+
+Once deployed, Bastion provides management access to VMs in that VNet without requiring direct inbound internet rules on the machines themselves.
+
+### *Typical Flow*
+
+<Steps>
+1. Create the required subnet named `AzureBastionSubnet`.
+2. Deploy the `Azure Bastion` resource into the VNet.
+3. Open the Azure Portal and select a virtual machine.
+4. Choose `Connect` and then select `Bastion`.
+5. Start the secure `RDP` or `SSH` session through the browser.
+</Steps>
+
+### *Azure Bastion Vs. Traditional Jump Host*
+
+| Option | Main Idea |
+| --- | --- |
+| Traditional Jump Host | A manually managed VM used for remote access to other VMs |
+| `Azure Bastion` | A managed Azure service for secure portal-based VM access |
+
+`Azure Bastion` reduces the need to patch, secure, and maintain a separate jump server.
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Administrative Access" icon="document">
+    Connect securely to Windows and Linux virtual machines for management tasks.
+  </Card>
+
+  <Card title="Private VMs" icon="database">
+    Administer VMs that do not have public IP addresses.
+  </Card>
+
+  <Card title="Secure Operations" icon="warning">
+    Remove the need to expose `RDP` and `SSH` ports directly to the internet.
+  </Card>
+</CardGrid>
+
+### *Summary*
+
+- `Azure Bastion` provides secure `RDP` and `SSH` access through the Azure Portal
+- Virtual machines do not need public IP addresses for administration
+- It requires a dedicated subnet named `AzureBastionSubnet`
+- It reduces the attack surface by avoiding public management ports
+- It replaces the need for a traditional jump host in many Azure environments

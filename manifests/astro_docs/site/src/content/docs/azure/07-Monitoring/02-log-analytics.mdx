@@ -1,0 +1,121 @@
+---
+title: Log Analytics
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Log Analytics`, the Azure service used to store, query, and analyze log data.
+
+### *Log Analytics*
+
+`Log Analytics` is the log data analysis engine inside the Azure monitoring ecosystem.
+
+While `Azure Monitor` is the broader observability platform, `Log Analytics` is the part used to work directly with collected logs.
+
+It is built for:
+
+- troubleshooting
+- investigation
+- operational analysis
+- security review
+- historical querying
+
+<Aside type="note">
+If metrics answer "What is happening right now?", logs often answer "Why did it happen?"
+</Aside>
+
+### *Log Analytics Workspace*
+
+A `Log Analytics Workspace` is the main container for log data.
+
+Azure resources, agents, and services send diagnostic data into the workspace, where it can be queried and analyzed.
+
+A workspace acts as the central location for:
+
+- collected logs
+- query history
+- saved searches
+- monitoring integrations
+
+### *Why Use Log Analytics*
+
+<CardGrid>
+  <Card title="Deep Troubleshooting" icon="document">
+    Investigate incidents with detailed records instead of only high-level metrics.
+  </Card>
+
+  <Card title="Centralized Log Search" icon="database">
+    Query log data from many Azure resources in one place.
+  </Card>
+
+  <Card title="Historical Analysis" icon="setting">
+    Review past behavior, trends, and incidents over time.
+  </Card>
+
+  <Card title="Alerting Support" icon="warning">
+    Create alerts based on log queries and specific detected conditions.
+  </Card>
+</CardGrid>
+
+### *KQL Queries*
+
+Log Analytics uses `Kusto Query Language (KQL)` to search and analyze data.
+
+With `KQL`, you can:
+
+- filter records
+- sort results
+- aggregate values
+- correlate events
+- build operational queries
+
+This makes it one of the most powerful tools for Azure diagnostics and investigation.
+
+### *Typical Flow*
+
+<Steps>
+1. Azure resources send logs into a `Log Analytics Workspace`.
+2. The logs are stored and indexed.
+3. Engineers use `KQL` queries to search or analyze the data.
+4. Queries can power dashboards, workbooks, or alerts.
+5. Teams investigate incidents or monitor trends over time.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Incident Investigation" icon="document">
+    Find the root cause of failures, outages, or performance issues.
+  </Card>
+
+  <Card title="Operational Queries" icon="setting">
+    Analyze system health, failed requests, or unusual platform events.
+  </Card>
+
+  <Card title="Security Review" icon="warning">
+    Search activity and event logs for suspicious or unexpected behavior.
+  </Card>
+</CardGrid>
+
+### *Log Analytics Vs. Metrics*
+
+| Type | Best For |
+| --- | --- |
+| Metrics | Fast numerical monitoring and threshold alerts |
+| Logs | Detailed event records, analysis, and troubleshooting |
+
+Metrics are lighter and faster for real-time monitoring.
+
+Logs are richer and better for deeper investigation.
+
+### *Summary*
+
+- `Log Analytics` is the log analysis engine of Azure monitoring
+- A `Log Analytics Workspace` stores and organizes collected logs
+- `KQL` is used to query and analyze the data
+- It is essential for troubleshooting and operational investigation
+- It complements metrics-based monitoring in `Azure Monitor`

@@ -1,0 +1,93 @@
+---
+title: DevOps Services Comparison
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section compares the main Azure DevOps services covered so far.
+
+### *DevOps Services Comparison*
+
+`Azure DevOps Services` is made of several connected tools, each responsible for a different part of the software delivery lifecycle.
+
+The main idea is:
+
+- plan the work
+- store the code
+- build and deploy it
+- manage reusable packages
+
+### *Core Comparison*
+
+| Service | Main Role | Best For |
+| --- | --- | --- |
+| `Azure Boards` | Work tracking and planning | Backlogs, sprints, bugs, and agile delivery management |
+| `Azure Repos` | Source control | Git repositories, pull requests, and code collaboration |
+| `Azure Pipelines` | CI/CD automation | Builds, tests, and deployments |
+| `Azure Artifacts` | Package management | Internal package feeds and reusable software artifacts |
+
+### *How To Think About Them*
+
+<CardGrid>
+  <Card title="Planning" icon="document">
+    `Azure Boards` manages the work that needs to be delivered.
+  </Card>
+
+  <Card title="Code" icon="database">
+    `Azure Repos` stores the application and infrastructure source code.
+  </Card>
+
+  <Card title="Delivery" icon="setting">
+    `Azure Pipelines` automates build, test, and deployment workflows.
+  </Card>
+
+  <Card title="Reuse" icon="warning">
+    `Azure Artifacts` stores packages and dependencies for reuse across teams and projects.
+  </Card>
+</CardGrid>
+
+### *Typical Delivery Flow*
+
+A common Azure DevOps flow looks like this:
+
+- work is planned in `Azure Boards`
+- code is stored in `Azure Repos`
+- builds and releases run through `Azure Pipelines`
+- reusable packages are stored in `Azure Artifacts`
+
+This makes each service part of one larger delivery chain.
+
+### *Quick Decision Guide*
+
+| If You Need... | Use |
+| --- | --- |
+| Track epics, stories, bugs, and tasks | `Azure Boards` |
+| Store and review source code | `Azure Repos` |
+| Automate CI/CD | `Azure Pipelines` |
+| Publish and share packages | `Azure Artifacts` |
+
+### *Why They Work Best Together*
+
+These services become more valuable when used as one platform.
+
+Benefits include:
+
+- traceability from work item to deployment
+- centralized collaboration
+- repeatable software delivery
+- stronger governance over code and packages
+
+<Aside type="note">
+The power of Azure DevOps is not only in each individual service, but in how they connect planning, development, packaging, and delivery into one workflow.
+</Aside>
+
+### *Summary*
+
+- `Azure Boards` manages work
+- `Azure Repos` manages source code
+- `Azure Pipelines` automates CI/CD
+- `Azure Artifacts` manages packages
+- Together they form the main operational flow of Azure DevOps

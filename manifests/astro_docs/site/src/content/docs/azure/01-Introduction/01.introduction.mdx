@@ -1,0 +1,59 @@
+---
+title: Cloud Introduction
+description: Internal documentation site powered by Astro Starlight.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+In Azure, the cloud is not a single place but a `delivery model`.
+
+The choice between different cloud models usually depends on three questions:
+
+- who owns the hardware
+- how much control is needed
+- who else is using the infrastructure
+
+<Aside type="note">
+Azure can support different delivery models depending on business, security, and compliance needs.
+</Aside>
+
+---
+
+### *Key Decision Factors*
+
+<CardGrid>
+  <Card title="Ownership" icon="document">
+    Who owns and manages servers, storage, and networking.
+  </Card>
+
+  <Card title="Control" icon="list-format">
+    How much direct control you need over infrastructure and operations.
+  </Card>
+
+  <Card title="Tenancy" icon="warning">
+    Whether resources are shared with others or dedicated to one organization.
+  </Card>
+</CardGrid>
+
+### *Cloud Models Comparison*
+
+| Model | Ownership | Tenancy | Best For |
+| --- | --- | --- | --- |
+| Public | Provider | Multi-tenant | Startups, web apps, variable workloads |
+| Private | Organization | Single-tenant | Regulated industries, full control |
+| Hybrid | Shared | Mixed | Compliance plus cloud scalability |
+
+### *Hybrid Cloud And Cloud Bursting*
+
+The `Hybrid Cloud` model connects private infrastructure and the Azure public cloud.
+
+`Cloud bursting` means that when private infrastructure reaches its limit, extra workload can run in the public cloud.
+
+### *Summary*
+
+- `Public Cloud` gives simplicity and elasticity
+- `Private Cloud` gives control and isolation
+- `Hybrid Cloud` gives flexibility across both environments

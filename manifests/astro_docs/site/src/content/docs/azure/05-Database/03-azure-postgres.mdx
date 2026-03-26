@@ -1,0 +1,100 @@
+---
+title: Azure Database For PostgreSQL
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Database for PostgreSQL`, the managed PostgreSQL database service in Azure.
+
+### *Azure Database For PostgreSQL*
+
+`Azure Database for PostgreSQL` is a fully managed relational database service based on the PostgreSQL engine.
+
+It is designed for applications that need:
+
+- open-source PostgreSQL compatibility
+- managed backups
+- high availability
+- reduced administrative overhead
+- cloud-native scalability
+
+With this service, Microsoft manages much of the platform, including patching, backups, and core infrastructure operations.
+
+<Aside type="note">
+This service is a strong choice when applications already use PostgreSQL or when teams prefer open-source relational database technology in a managed Azure platform.
+</Aside>
+
+### *Why Use It*
+
+<CardGrid>
+  <Card title="Managed PostgreSQL" icon="document">
+    Use PostgreSQL without managing operating systems, patching, or manual infrastructure tasks.
+  </Card>
+
+  <Card title="Relational Model" icon="database">
+    Store structured data with tables, relationships, indexes, and SQL queries.
+  </Card>
+
+  <Card title="Open-Source Ecosystem" icon="setting">
+    Keep compatibility with PostgreSQL tools, libraries, and developer workflows.
+  </Card>
+</CardGrid>
+
+### *Deployment Option*
+
+The modern Azure deployment model is `Flexible Server`.
+
+`Flexible Server` gives more control over configuration, maintenance timing, scaling, and networking compared to older models.
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Web Applications" icon="document">
+    Store relational application data for cloud-native websites and APIs.
+  </Card>
+
+  <Card title="PostgreSQL Migration" icon="setting">
+    Move existing PostgreSQL workloads from on-premises or other environments into Azure.
+  </Card>
+
+  <Card title="Open-Source Platforms" icon="warning">
+    Support applications built around PostgreSQL tools and frameworks.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+<Steps>
+1. Create an `Azure Database for PostgreSQL` server.
+2. Configure compute, storage, and availability settings.
+3. Define networking and access rules.
+4. Create databases and users.
+5. Connect applications with standard PostgreSQL clients and drivers.
+</Steps>
+
+### *PostgreSQL Vs. Azure SQL Database*
+
+| Service | Best For |
+| --- | --- |
+| `Azure SQL Database` | Microsoft SQL Server-based managed relational workloads |
+| `Azure Database for PostgreSQL` | Managed open-source PostgreSQL workloads |
+
+### *Typical Features*
+
+- automated backups
+- scaling options
+- high availability
+- maintenance management
+- Azure monitoring integration
+
+### *Summary*
+
+- `Azure Database for PostgreSQL` is a managed PostgreSQL service
+- It provides relational database capabilities with reduced administration
+- It is built for PostgreSQL-compatible applications and tools
+- `Flexible Server` is the main deployment model
+- It is a strong choice for open-source relational workloads in Azure

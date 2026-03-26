@@ -1,0 +1,42 @@
+---
+title: Scheduler
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+
+
+Lo `Scheduler` assegna un nodo ai Pod che non ne hanno ancora uno.
+
+Non esegue i container: scrive solo il nodo scelto nel Pod tramite l'`API Server`.
+
+
+#### *Filtering*
+
+Scarta i nodi non idonei.
+
+- Risorse insufficienti **(Pressure)**
+- `nodeSelector` o `nodeAffinity` non soddisfatti
+- `Taints` non tollerati
+- Porte richieste già occupate
+
+#### *Ranking*
+
+Valuta i nodi rimasti e assegna un punteggio.
+
+- Distribuzione del carico
+- Preferisce nodi con immagini già presenti
+- Favorisce presenza di Affinity
+- Distribuzione tra zone e rack diversi
+
+#### *Binding*
+
+Seleziona il nodo migliore e registra la decisione.
+
+- Invia il `Binding` all'`API Server`
+- L'`API Server` aggiorna `ETCD`
+- il `Kubelet` del nodo scelto avvia il Pod

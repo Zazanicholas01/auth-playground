@@ -1,0 +1,99 @@
+---
+title: Azure Container Apps
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Container Apps`, a serverless container platform designed for modern applications and microservices.
+
+### *Azure Container Apps*
+
+If `ACI` is a hotel room for a short stay, `Azure Container Apps (ACA)` is a serviced apartment.
+
+It is still serverless, but it includes built-in features that make it suitable for running full applications and microservices.
+
+`ACA` is built on top of `Kubernetes`, but Microsoft hides most of the cluster management and operational complexity.
+
+This makes it a middle ground between:
+
+- very simple `ACI`
+- more advanced and fully managed `AKS`
+
+<Aside type="note">
+`Azure Container Apps` gives you many Kubernetes-style capabilities without requiring you to manage a Kubernetes cluster directly.
+</Aside>
+
+### *Why Use Azure Container Apps*
+
+<CardGrid>
+  <Card title="Scale To Zero" icon="document">
+    If the application receives no traffic, it can scale down to `0` running replicas to reduce cost.
+  </Card>
+
+  <Card title="Automatic Ingress" icon="setting">
+    Azure handles HTTPS exposure, certificates, and routing for public application access.
+  </Card>
+
+  <Card title="Microservice Friendly" icon="database">
+    Built-in support for `Dapr` helps services communicate, manage state, and work with pub/sub patterns.
+  </Card>
+</CardGrid>
+
+### *How ACA Fits In Azure Compute*
+
+`ACA` fills the gap between simpler container execution and full cluster orchestration.
+
+| Service | Best For |
+| --- | --- |
+| `ACI` | Short-lived, simple containers |
+| `ACA` | Microservices, APIs, event-driven apps |
+| `AKS` | Full Kubernetes control and advanced orchestration |
+
+### *KEDA-Based Scaling*
+
+Unlike `VM Scale Sets`, which usually scale on CPU or memory, `ACA` uses `KEDA` (`Kubernetes Event-Driven Autoscaling`).
+
+This allows scaling based on richer signals.
+
+<CardGrid>
+  <Card title="HTTP Traffic" icon="document">
+    Scale up when request concurrency reaches a defined level, such as more than `50` concurrent requests.
+  </Card>
+
+  <Card title="Message Queues" icon="warning">
+    Scale up when queue depth increases, such as when more than `100` messages are waiting in `Azure Service Bus`.
+  </Card>
+
+  <Card title="Events" icon="setting">
+    Scale based on external event sources such as `Kafka`, `RabbitMQ`, or even SQL-driven triggers.
+  </Card>
+</CardGrid>
+
+### *Deployment Features*
+
+`Azure Container Apps` supports modern release strategies for safer deployments.
+
+- rolling updates
+- blue/green deployments
+- canary deployments
+
+### *Typical Flow*
+
+<Steps>
+1. Deploy a container image to `Azure Container Apps`.
+2. Configure ingress, environment variables, and scaling rules.
+3. Azure exposes the app over HTTPS.
+4. `KEDA` scales replicas based on traffic or events.
+5. If no traffic exists, the app can scale down to `0`.
+</Steps>
+
+### *Summary*
+
+- `ACA` is a serverless platform for containerized applications
+- It is built on Kubernetes, but the cluster is hidden from the user
+- It is ideal for microservices and event-driven workloads
+- `KEDA` enables more advanced autoscaling than basic CPU or memory rules

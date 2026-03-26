@@ -1,0 +1,42 @@
+---
+title: API Server
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+
+Il cervello del cluster e unico componente del Control Plane con 
+cui gli utenti e i nodi comunicano direttamente.
+
+:::note
+Utilizza gRPC per le chiamate sia tra componenti che dall'esterno
+:::
+
+### Come gestisce le richieste
+
+Quando invii un comando, l'API Server segue questi step:
+
+<Steps>
+1. **Autenticazione** - Verifica dell'identità tramite `Certificati TLS`, `Token` o `OIDC`.
+2. **Autorizzazione** - Controlla i permessi `RBAC`.
+3. **Validazione** - Verifica sintassi YAML corretta e controlla gli `Admission Controllers`.
+4. **Update ETCD** - Dopo aver superato i controlli, API Server legge lo stato attuale
+da ETCD o scrive il nuovo stato desiderato.
+5. **Scheduling** - API Server non decide dove va il Pod, ma aggiorna il database.
+Lo **`Scheduler`** is occupa di assegnare un nodo al Pod.
+6. **Kubelet** - Il Kubelet viene avvisato del nuovo Pod da schedulare e si occupa
+di utilizzare il Container Runtime del nodo per effettivamente lanciare il Pod.
+7. **Monitoring** - Kubelet si occupa anche di monitorare lo stato dei container che girano sul nodo
+e comunica costantemente con l'API Server.
+</Steps>
+
+| Azione | Componente |
+| :--- | :--- |
+| **Persistenza Dati** | API Server --> ETCD | 
+| **Scelta Nodo** | Scheduler | 
+| **Creazione Processo** | Container Runtime | 
+| **Report Salute** | Kubelet

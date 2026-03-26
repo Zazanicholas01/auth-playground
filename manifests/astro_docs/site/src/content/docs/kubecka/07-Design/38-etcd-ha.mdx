@@ -1,0 +1,67 @@
+---
+title: ETCD High Availability
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+`ETCD` protegge l'integrita` del cluster usando consenso, quorum e replica dei dati.
+
+### *Raft*
+
+<CardGrid>
+  <Card title="Leader Election" icon="warning">
+    In ogni momento un solo nodo è `Leader`.
+  </Card>
+
+  <Card title="Followers" icon="list-format">
+    I follower ricevono e replicano le scritture del leader.
+  </Card>
+
+  <Card title="Log Replication" icon="document">
+    Una scrittura e` valida solo dopo conferma del quorum.
+  </Card>
+</CardGrid>
+
+### *Flusso di scrittura*
+
+<Steps>
+1. Una richiesta di scrittura arriva al `Leader`.
+2. Il `Leader` la replica ai `Followers`.
+3. La maggioranza dei nodi conferma la scrittura.
+4. Il dato viene considerato `committed`.
+</Steps>
+
+### *Quorum e tolleranza ai guasti*
+
+| Nodi etcd | Quorum | Guasti tollerati |
+| --- | --- | --- |
+| 1 | 1 | 0 |
+| 3 | 2 | 1 |
+| 5 | 3 | 2 |
+| 7 | 4 | 3 |
+
+<Aside type="note">
+In pratica si usano spesso 3 o 5 nodi. Aggiungere troppi membri rallenta le scritture.
+</Aside>
+
+### *Performance dello storage*
+
+- `etcd` e` molto sensibile alla latenza del disco
+- `SSD` o `NVMe` sono fortemente raccomandati
+- E' preferibile usare un mount dedicato per `/var/lib/etcd`
+
+### *Snapshot e Disaster Recovery*
+
+<Steps>
+1. Esegui uno snapshot con `etcdctl snapshot save`.
+2. Conserva il file in una posizione sicura.
+3. In caso di disastro, ripristina il cluster da quello snapshot.
+</Steps>
+
+<Aside type="caution">
+L'`HA` protegge dal guasto dei nodi, ma non da errori logici o cancellazioni accidentali. Per questo servono gli snapshot.
+</Aside>

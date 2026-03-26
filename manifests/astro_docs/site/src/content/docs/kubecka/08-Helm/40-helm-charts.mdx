@@ -1,0 +1,63 @@
+---
+title: Helm Charts
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Una `Helm Chart` e` un pacchetto riutilizzabile che genera manifest Kubernetes configurabili.
+
+### *Anatomia di una chart*
+
+<CardGrid>
+  <Card title="Chart.yaml" icon="document">
+    Contiene i metadati della chart.
+  </Card>
+
+  <Card title="values.yaml" icon="list-format">
+    Contiene i valori configurabili e i default.
+  </Card>
+
+  <Card title="templates/" icon="setting">
+    Contiene i manifest Kubernetes con template Go.
+  </Card>
+
+  <Card title="charts/" icon="puzzle">
+    Contiene eventuali dipendenze di altre chart.
+  </Card>
+</CardGrid>
+
+### *Templating*
+
+Helm usa variabili per generare YAML dinamico.
+
+- `.Values` legge i valori da `values.yaml`
+- `.Release.Name` usa il nome della release
+- la stessa chart puo` essere riusata in ambienti diversi
+
+### *Debugging*
+
+<Steps>
+1. Usa `helm lint` per controllare la chart.
+2. Usa `helm install --debug --dry-run` per simulare l'installazione.
+3. Controlla i manifest generati prima di applicarli al cluster.
+</Steps>
+
+
+### *Versioning e rollback*
+
+- ogni `helm upgrade` crea una nuova revisione
+- puoi vedere la cronologia delle modifiche
+- puoi tornare a una revisione precedente con `helm rollback`
+
+### *Sintesi*
+
+| Concetto | Descrizione | Analogia |
+| --- | --- | --- |
+| `Chart` | Pacchetto riutilizzabile | Ricetta |
+| `Values` | Parametri configurabili | Ingredienti |
+| `Release` | Istanza installata nel cluster | Piatto servito |
+| `Revision` | Storico delle modifiche | Versioni |

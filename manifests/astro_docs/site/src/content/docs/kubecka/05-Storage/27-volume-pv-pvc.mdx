@@ -1,0 +1,79 @@
+---
+title: Volumes / PV / PVC
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Kubernetes separa chi fornisce lo storage da chi lo consuma.
+
+### *Livelli principali*
+
+<CardGrid>
+  <Card title="Volume" icon="list-format">
+    Storage legato al ciclo di vita del Pod.
+  </Card>
+
+  <Card title="Persistent Volume" icon="document">
+    Risorsa di storage persistente disponibile nel cluster.
+  </Card>
+
+  <Card title="Persistent Volume Claim" icon="warning">
+    Richiesta di storage fatta dallo sviluppatore.
+  </Card>
+</CardGrid>
+
+### *Volumes*
+
+Un `Volume` esiste all'interno del Pod.
+
+- sopravvive al crash di un container
+- viene perso se il Pod viene eliminato, salvo storage persistente
+- esempi comuni: `emptyDir`, `hostPath`, `configMap`, `Secret`
+
+| Tipo | Uso tipico |
+| --- | --- |
+| `emptyDir` | File temporanei o dati intermedi |
+| `hostPath` | Test o accesso a directory del nodo |
+| `configMap` | File di configurazione |
+| `Secret` | Dati sensibili montati come file |
+
+
+### *Persistent Volume*
+
+Il `PersistentVolume` rappresenta lo storage reale del cluster.
+
+- esiste indipendentemente dai Pod
+- definisce capacità e modalita` di accesso
+- può rappresentare `EBS`, `NFS`, dischi locali o altri backend
+
+### *Persistent Volume Claim*
+
+La `PersistentVolumeClaim` e` la richiesta di storage.
+
+- lo sviluppatore chiede spazio e caratteristiche
+- Kubernetes cerca un `PV` compatibile
+- se trova un match, esegue il `binding`
+
+### *Binding*
+
+<Steps>
+1. Lo sviluppatore crea una `PVC`.
+2. Kubernetes cerca un `PV` compatibile.
+3. `PVC` e `PV` vengono collegati.
+4. Il Pod usa la `PVC` per montare lo storage.
+</Steps>
+
+### *Reclaim Policy*
+
+| Policy | Effetto |
+| --- | --- |
+| `Retain` | I dati restano e richiedono pulizia manuale |
+| `Delete` | Il volume fisico viene eliminato |
+
+<Aside type="note">
+`Retain` è utile quando vuoi conservare i dati anche dopo la cancellazione del `PVC`.
+</Aside>

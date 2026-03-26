@@ -1,0 +1,65 @@
+---
+title: Namespaces & Docker Networking
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Sia Docker sia Kubernetes usano `network namespaces`, ma Kubernetes estende il modello per funzionare su piu` nodi.
+
+### *Linux Network Namespaces*
+
+Un `network namespace` isola lo stack di rete.
+
+- interfacce
+- tabelle di routing
+- regole firewall
+- porte in ascolto
+
+In Kubernetes ogni `Pod` ha il proprio namespace di rete, condiviso tra tutti i container del Pod.
+
+
+### *Docker: modello Bridge*
+
+<CardGrid>
+  <Card title="docker0" icon="list-format">
+    Docker crea un bridge virtuale sull'host.
+  </Card>
+
+  <Card title="IP locali" icon="document">
+    I container ricevono IP validi solo dentro quell'host.
+  </Card>
+
+  <Card title="Port Mapping" icon="warning">
+    Per esporre un container serve `-p host:container`.
+  </Card>
+</CardGrid>
+
+### *Kubernetes: modello Flat*
+
+Kubernetes assegna a ogni `Pod` un IP unico nel cluster.
+
+- ogni Pod puo` parlare con ogni altro Pod
+- ogni nodo puo` parlare con ogni Pod
+- non serve `NAT` tra Pod nel cluster
+
+### *Veth Pair*
+
+<Steps>
+1. Kubernetes crea una coppia di interfacce virtuali.
+2. Una estremita` entra nel namespace del Pod come `eth0`.
+3. L'altra resta nel namespace dell'host.
+4. Questa interfaccia si collega al bridge o alla rete gestita dal `CNI`.
+</Steps>
+
+### *Confronto rapido*
+
+| Caratteristica | Docker | Kubernetes |
+| --- | --- | --- |
+| Ambito IP | Locale al singolo host | Unico in tutto il cluster |
+| Comunicazione | Port mapping verso l'esterno | Diretta tra Pod |
+| Isolamento | Network namespace per container | Network namespace per Pod |
+| Bridge | `docker0` | bridge o interfaccia del `CNI` |

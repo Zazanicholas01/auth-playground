@@ -1,0 +1,79 @@
+---
+title: Container Storage Interfaces
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Il `CSI` e` l'interfaccia standard che permette a Kubernetes di parlare con sistemi di storage esterni.
+
+### *Cos'e` il CSI*
+
+<CardGrid>
+  <Card title="Standard" icon="document">
+    Definisce come Kubernetes richiede operazioni di storage.
+  </Card>
+
+  <Card title="Driver esterni" icon="setting">
+    I vendor implementano plugin separati dal codice di Kubernetes.
+  </Card>
+
+  <Card title="Separazione" icon="list-format">
+    Kubernetes invia richieste standard, il driver le traduce per lo storage reale.
+  </Card>
+</CardGrid>
+
+### *CSI Provisioner*
+
+Il `Provisioner` osserva le `PVC` e crea lo storage richiesto.
+
+<Steps>
+1. Viene creata una `PVC`.
+2. Kubernetes rileva la `StorageClass`.
+3. Il `CSI Provisioner` chiama le API dello storage.
+4. Viene creato il volume fisico.
+5. Kubernetes crea il `PV` e lo collega alla `PVC`.
+</Steps>
+
+### *Soluzioni comuni*
+
+<CardGrid>
+  <Card title="Longhorn" icon="rocket">
+    Storage distribuito semplice, con replica, backup e UI.
+  </Card>
+
+  <Card title="OpenEBS" icon="puzzle">
+    Approccio modulare `CAS`, con diversi motori di storage.
+  </Card>
+
+  <Card title="Ceph / Rook" icon="warning">
+    Soluzione enterprise per block, file e object storage.
+  </Card>
+
+  <Card title="Local Path Provisioner" icon="laptop">
+    Soluzione leggera per cluster di sviluppo, basata su storage locale.
+  </Card>
+</CardGrid>
+
+### *Idea chiave*
+
+| Componente | Ruolo |
+| --- | --- |
+| `CSI` | Standard di integrazione storage |
+| `Driver` | Plugin del vendor |
+| `Provisioner` | Crea i volumi quando arriva una `PVC` |
+| `StorageClass` | Definisce come creare lo storage |
+
+<Aside type="note">
+Il `Local Path Provisioner` è utile in sviluppo, ma non offre replica o alta affidabilita`.
+</Aside>
+
+| Driver | Punto di forza | Limite principale | Uso tipico |
+| --- | --- | --- | --- |
+| `Longhorn` | Semplice, cloud-native, con replica e backup | Meno adatto a scenari molto complessi | Cluster piccoli o medi |
+| `OpenEBS` | Modulare e flessibile | Richiede piu` scelta e progettazione | Storage custom o alte performance |
+| `Ceph / Rook` | Molto completo e potente | Complesso da gestire | Ambienti enterprise |
+| `Local Path Provisioner` | Leggero e facilissimo | Nessuna replica o HA | Sviluppo e lab |

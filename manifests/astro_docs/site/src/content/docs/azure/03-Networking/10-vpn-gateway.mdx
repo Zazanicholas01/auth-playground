@@ -1,0 +1,110 @@
+---
+title: Azure VPN Gateway
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure VPN Gateway`, the Azure service used to create encrypted tunnels between Azure and remote networks or individual clients.
+
+### *Azure VPN Gateway*
+
+`Azure VPN Gateway` is the managed Azure service used to connect a `Virtual Network` to:
+
+- remote users
+- branch offices
+- on-premises datacenters
+
+It creates encrypted tunnels over the public internet so traffic can move securely between Azure and external networks.
+
+<Aside type="note">
+`VPN Gateway` is a common hybrid connectivity option when an organization needs secure communication with Azure but does not require a dedicated private circuit like `ExpressRoute`.
+</Aside>
+
+### *Gateway Subnet*
+
+To deploy a `VPN Gateway`, the VNet must contain a dedicated subnet named `GatewaySubnet`.
+
+This subnet is reserved for the gateway service and should not host normal application resources.
+
+### *Main VPN Types*
+
+Azure VPN Gateway supports two main connection models.
+
+<CardGrid>
+  <Card title="Point-To-Site" icon="document">
+    A single client device connects securely to Azure through an encrypted tunnel.
+  </Card>
+
+  <Card title="Site-To-Site" icon="database">
+    An entire office or on-premises network connects to Azure through a persistent VPN tunnel.
+  </Card>
+</CardGrid>
+
+### *Point-To-Site VPN*
+
+`Point-to-Site (P2S)` is used when one user device needs access to Azure resources.
+
+Common examples include:
+
+- remote developers
+- administrators working from home
+- small teams without full office-to-cloud networking
+
+The user connects from a laptop or workstation directly into Azure.
+
+### *Site-To-Site VPN*
+
+`Site-to-Site (S2S)` is used when an entire on-premises network must connect to Azure.
+
+This allows office systems and Azure resources to communicate as if they were part of a larger connected environment.
+
+It is commonly used by:
+
+- small and medium businesses
+- branch offices
+- hybrid cloud environments
+
+### *How It Works*
+
+<Steps>
+1. Create a `GatewaySubnet` inside the VNet.
+2. Deploy the `VPN Gateway` resource.
+3. Define the remote network or client configuration.
+4. Establish the encrypted tunnel over the internet.
+5. Exchange traffic securely between Azure and the remote side.
+</Steps>
+
+### *VPN Gateway Vs. ExpressRoute*
+
+| Service | Connectivity Type | Best For |
+| --- | --- | --- |
+| `VPN Gateway` | Encrypted tunnel over the public internet | Flexible and lower-cost hybrid connectivity |
+| `ExpressRoute` | Dedicated private connection | High-bandwidth, low-latency enterprise connectivity |
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Remote Access" icon="document">
+    Allow individual users to connect securely to Azure from their own devices.
+  </Card>
+
+  <Card title="Hybrid Networking" icon="setting">
+    Connect on-premises offices or datacenters to Azure VNets.
+  </Card>
+
+  <Card title="Backup Connectivity" icon="warning">
+    Use VPN as a backup or secondary path for hybrid connectivity designs.
+  </Card>
+</CardGrid>
+
+### *Summary*
+
+- `VPN Gateway` creates encrypted tunnels between Azure and remote networks or users
+- It requires a dedicated subnet named `GatewaySubnet`
+- `Point-to-Site` connects individual devices
+- `Site-to-Site` connects entire networks
+- It is a common hybrid connectivity solution when `ExpressRoute` is not required

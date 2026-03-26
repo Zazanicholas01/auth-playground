@@ -1,0 +1,62 @@
+---
+title: CRDs & Operators
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Se gli oggetti standard non bastano, puoi estendere Kubernetes con `Custom Resources`, `Controllers` e `Operators`.
+
+### *Elementi principali*
+
+<CardGrid>
+  <Card title="CRD" icon="document">
+    Definisce un nuovo tipo di risorsa personalizzata.
+  </Card>
+
+  <Card title="Controller" icon="setting">
+    Osserva le risorse e agisce per allineare lo stato reale.
+  </Card>
+
+  <Card title="Operator" icon="rocket">
+    Combina risorsa personalizzata e logica operativa avanzata.
+  </Card>
+</CardGrid>
+
+### *Custom Resource Definition*
+
+Una `CRD` dice all'`API Server` come deve essere fatto un nuovo oggetto.
+
+- introduce un nuovo tipo di risorsa
+- definisce struttura e schema
+- permette comandi come `kubectl get <nuova-risorsa>`
+
+### *Custom Controller*
+
+Un `Controller` osserva le risorse e reagisce ai cambiamenti.
+
+<Steps>
+1. Rileva la creazione o modifica di una `Custom Resource`.
+2. Confronta stato desiderato e stato reale.
+3. Esegue le azioni necessarie.
+4. Aggiorna lo stato della risorsa.
+</Steps>
+
+### *Operator*
+
+Un `Operator` e` un controller che incorpora logica operativa specifica di un'applicazione.
+
+- installa e configura software complessi
+- gestisce aggiornamenti
+- puo` gestire backup, failover e manutenzione
+
+### *Idea chiave*
+
+| Concetto | Scopo |
+| --- | --- |
+| `CRD` | Definisce una nuova risorsa |
+| `Controller` | Esegue la logica di riconciliazione |
+| `Operator` | Automatizza la gestione completa di un'applicazione |

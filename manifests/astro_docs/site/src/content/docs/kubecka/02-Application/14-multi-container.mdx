@@ -1,0 +1,53 @@
+---
+title: Multi Container Pods
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+<Aside type="tip">
+In un Pod, più container condividono ciclo di vita, rete e volumi.
+</Aside>
+
+### *Panoramica*
+
+<CardGrid>
+  <Card title="Init Containers" icon="list-format">
+    Eseguiti prima dell'applicazione, uno alla volta.
+  </Card>
+
+  <Card title="Sidecar Containers" icon="rocket">
+    Eseguiti insieme al container principale per tutta la vita del Pod.
+  </Card>
+</CardGrid>
+
+### *Init Containers*
+
+Gli `Init Containers` preparano l'ambiente prima che parta l'applicazione.
+
+<Steps>
+1. Kubernetes avvia il primo `Init Container`.
+2. Se termina con successo, passa al successivo.
+3. Solo dopo il completamento di tutti gli init container parte il container principale.
+</Steps>
+
+**Casi d'uso**
+- attendere che un servizio sia pronto
+- scaricare configurazioni o certificati
+- preparare permessi su volumi condivisi
+
+### *Sidecar Containers*
+
+I `Sidecar` affiancano il container principale durante tutto il ciclo di vita del Pod.
+
+- aggiungono funzionalita` senza modificare l'app
+- condividono rete e storage con il container principale
+- restano attivi insieme all'applicazione
+
+**Casi d'uso**
+- raccolta e inoltro dei log
+- proxy di rete per service mesh
+- aggiornamento periodico di token o secret

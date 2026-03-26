@@ -1,0 +1,117 @@
+---
+title: Azure Files
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Files`, the Azure service used to provide managed cloud file shares.
+
+### *Azure Files*
+
+`Azure Files` provides fully managed file shares in Azure.
+
+These file shares can be accessed using standard file-sharing protocols such as:
+
+- `SMB`
+- `NFS`
+
+This makes Azure Files useful for workloads that expect a traditional shared file system rather than object storage.
+
+<Aside type="note">
+`Azure Files` is often used as a cloud replacement for on-premises file servers or for lift-and-shift migrations that still rely on shared file paths.
+</Aside>
+
+### *Why Use Azure Files*
+
+<CardGrid>
+  <Card title="Managed File Shares" icon="document">
+    Azure manages the storage platform while applications use standard shared file access.
+  </Card>
+
+  <Card title="Lift And Shift" icon="setting">
+    Useful for legacy workloads that depend on shared drives or mapped network paths.
+  </Card>
+
+  <Card title="Hybrid Access" icon="warning">
+    Can be used both in Azure and in hybrid scenarios that still involve on-premises infrastructure.
+  </Card>
+</CardGrid>
+
+### *How Azure Files Works*
+
+Azure Files lives inside a `Storage Account`.
+
+The basic structure is:
+
+<Steps>
+1. Create a `Storage Account`
+2. Create a `File Share`
+3. Mount the share from a VM, container, or on-premises system
+</Steps>
+
+Applications can then read and write files as if they were working with a standard network share.
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="File Server Replacement" icon="document">
+    Replace traditional on-premises file servers with managed cloud-based shares.
+  </Card>
+
+  <Card title="Application Shared Storage" icon="database">
+    Allow multiple VMs or containers to access the same shared files.
+  </Card>
+
+  <Card title="Lift And Shift Migration" icon="setting">
+    Support existing applications that require SMB-style file shares without redesigning the app.
+  </Card>
+</CardGrid>
+
+### *Azure Files Vs. Blob Storage*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Files` | Shared file systems using `SMB` or `NFS` |
+| `Azure Blob Storage` | Scalable object storage for unstructured data |
+
+### *Access Models*
+
+Azure Files can be used in multiple environments.
+
+- Azure virtual machines
+- containers
+- on-premises servers
+- hybrid workloads
+
+This makes it useful when one application footprint spans both cloud and on-premises infrastructure.
+
+### *Performance Tiers*
+
+Azure Files can be deployed with different performance options depending on workload needs.
+
+| Tier | Best For |
+| --- | --- |
+| Standard | General-purpose file shares |
+| Premium | High-performance workloads requiring lower latency |
+
+### *Typical Flow*
+
+<Steps>
+1. Create a `Storage Account`.
+2. Create a `File Share`.
+3. Configure identity, network access, and permissions.
+4. Mount the share on the required systems.
+5. Read and write files through standard file protocols.
+</Steps>
+
+### *Summary*
+
+- `Azure Files` provides managed cloud file shares
+- It supports `SMB` and `NFS`
+- It is useful for file server replacement and lift-and-shift workloads
+- It differs from Blob Storage because it provides shared file system access
+- It can be used in Azure-only or hybrid environments

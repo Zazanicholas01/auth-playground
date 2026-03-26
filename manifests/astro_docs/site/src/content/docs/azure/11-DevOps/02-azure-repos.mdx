@@ -1,0 +1,115 @@
+---
+title: Azure Repos
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Repos`, the source control service inside Azure DevOps.
+
+### *Azure Repos*
+
+`Azure Repos` is the version control service used to store and manage source code inside `Azure DevOps Services`.
+
+It supports modern Git-based development workflows and allows teams to collaborate on application code, infrastructure definitions, and configuration files.
+
+Typical capabilities include:
+
+- Git repositories
+- branching
+- pull requests
+- code review
+- branch policies
+
+<Aside type="note">
+`Azure Repos` is the code collaboration foundation of Azure DevOps. It is where teams store source code before building, testing, and deploying it.
+</Aside>
+
+### *Why Use Azure Repos*
+
+<CardGrid>
+  <Card title="Source Control" icon="document">
+    Track code changes over time and maintain version history.
+  </Card>
+
+  <Card title="Team Collaboration" icon="setting">
+    Allow multiple developers to work on the same codebase using branches and pull requests.
+  </Card>
+
+  <Card title="Governed Reviews" icon="warning">
+    Use branch policies and pull request workflows to improve code quality and control changes.
+  </Card>
+</CardGrid>
+
+### *Common Git Workflows*
+
+Azure Repos supports familiar Git practices such as:
+
+- feature branches
+- pull requests
+- code reviews
+- protected main branches
+- merge validation
+
+This helps teams keep development safe, reviewable, and traceable.
+
+### *Branch Policies*
+
+Branch policies are one of the key governance features of Azure Repos.
+
+They can require:
+
+- pull request approval
+- successful build validation
+- linked work items
+- comment resolution
+- restricted direct pushes
+
+This helps protect important branches such as `main` or `production`.
+
+### *Typical Flow*
+
+<Steps>
+1. Developers clone the repository.
+2. A feature branch is created for a new change.
+3. Code is committed and pushed to Azure Repos.
+4. A pull request is opened.
+5. Reviewers approve the change and branch policies are validated.
+6. The code is merged into the target branch.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Application Code" icon="document">
+    Store source code for web apps, services, scripts, and APIs.
+  </Card>
+
+  <Card title="Infrastructure As Code" icon="database">
+    Version control templates such as `Bicep`, ARM, or deployment configuration.
+  </Card>
+
+  <Card title="Team Governance" icon="setting">
+    Enforce review and validation rules before code reaches protected branches.
+  </Card>
+</CardGrid>
+
+### *Azure Repos Vs. GitHub*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Repos` | Source control inside Azure DevOps with integrated enterprise governance |
+| `GitHub` | Broad developer collaboration with a large open-source and ecosystem focus |
+
+Both are Git-based, but Azure Repos is especially strong when teams want code management tightly integrated with Azure DevOps planning and pipelines.
+
+### *Summary*
+
+- `Azure Repos` is the source control service in Azure DevOps
+- It supports Git repositories, branches, pull requests, and reviews
+- Branch policies help protect important branches
+- It is useful for both application code and infrastructure as code
+- It acts as the foundation for CI/CD workflows in Azure DevOps

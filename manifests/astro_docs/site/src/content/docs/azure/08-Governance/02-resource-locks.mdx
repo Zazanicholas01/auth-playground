@@ -1,0 +1,110 @@
+---
+title: Resource Locks
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Resource Locks`, the Azure feature used to protect important resources from accidental change or deletion.
+
+### *Resource Locks*
+
+`Resource Locks` are governance controls that help prevent accidental operations on Azure resources.
+
+They are especially useful for critical resources that should not be deleted or modified by mistake.
+
+Examples include:
+
+- production databases
+- shared virtual networks
+- critical storage accounts
+- core platform services
+
+<Aside type="note">
+A resource lock does not replace `RBAC` or `Azure Policy`. It adds an extra layer of protection against accidental change.
+</Aside>
+
+### *Lock Types*
+
+Azure provides two main lock types.
+
+| Lock Type | Effect |
+| --- | --- |
+| `CanNotDelete` | The resource can still be modified, but it cannot be deleted |
+| `ReadOnly` | The resource cannot be modified or deleted |
+
+`ReadOnly` is the stronger option because it blocks update operations as well as deletion.
+
+### *Why Use Resource Locks*
+
+<CardGrid>
+  <Card title="Accidental Deletion Protection" icon="warning">
+    Prevent important resources from being removed by mistake.
+  </Card>
+
+  <Card title="Change Protection" icon="document">
+    Stop unwanted modifications on sensitive resources.
+  </Card>
+
+  <Card title="Operational Safety" icon="setting">
+    Add a simple safeguard to high-value or shared infrastructure.
+  </Card>
+</CardGrid>
+
+### *Where Locks Can Be Applied*
+
+Locks can be applied at different scopes.
+
+- subscription
+- resource group
+- individual resource
+
+Because Azure uses hierarchical scope inheritance, a lock at a higher level affects the resources below it.
+
+### *How It Works*
+
+<Steps>
+1. Choose the scope where protection is needed.
+2. Apply a `CanNotDelete` or `ReadOnly` lock.
+3. Azure enforces the lock before a change or delete operation completes.
+4. If an operation conflicts with the lock, Azure blocks it.
+5. Administrators must remove the lock before the blocked action can proceed.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Production Protection" icon="document">
+    Protect production resource groups or databases from accidental deletion.
+  </Card>
+
+  <Card title="Shared Infrastructure" icon="database">
+    Prevent changes to shared VNets, gateways, or platform resources used by many teams.
+  </Card>
+
+  <Card title="Critical Services" icon="warning">
+    Add extra safety to resources that would cause major impact if changed incorrectly.
+  </Card>
+</CardGrid>
+
+### *Resource Locks Vs. Azure Policy*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Policy` | Enforcing governance and compliance rules |
+| `Resource Locks` | Preventing accidental delete or modification operations |
+
+`Azure Policy` defines what should be allowed.
+
+`Resource Locks` protect important resources from being changed or removed.
+
+### *Summary*
+
+- `Resource Locks` protect Azure resources from accidental change
+- `CanNotDelete` blocks deletion
+- `ReadOnly` blocks both modification and deletion
+- Locks can be applied at subscription, resource group, or resource level
+- They are useful for production and shared infrastructure protection

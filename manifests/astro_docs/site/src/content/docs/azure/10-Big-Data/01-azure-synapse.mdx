@@ -1,0 +1,117 @@
+---
+title: Azure Synapse Analytics
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Synapse Analytics`, the Azure platform used for large-scale data integration, warehousing, and analytics.
+
+### *Azure Synapse Analytics*
+
+`Azure Synapse Analytics` is an integrated analytics platform in Azure.
+
+It brings together several data capabilities in one environment, including:
+
+- data integration
+- data warehousing
+- big data processing
+- analytics querying
+- reporting integration
+
+It is designed for organizations that need to work with large volumes of data across many systems.
+
+<Aside type="note">
+`Synapse` is often used when the goal is not only to store data, but to combine, transform, query, and analyze it at scale.
+</Aside>
+
+### *What Synapse Combines*
+
+<CardGrid>
+  <Card title="Data Integration" icon="document">
+    Ingest and move data from different systems into analytical pipelines.
+  </Card>
+
+  <Card title="Data Warehousing" icon="database">
+    Store and query structured analytical data at large scale.
+  </Card>
+
+  <Card title="Big Data Processing" icon="setting">
+    Work with large datasets using distributed compute models.
+  </Card>
+
+  <Card title="Analytics Workspace" icon="warning">
+    Use one workspace for data engineering, querying, and orchestration.
+  </Card>
+</CardGrid>
+
+### *Why Use Synapse*
+
+`Azure Synapse Analytics` is useful when data must move through multiple stages before becoming valuable for analysis.
+
+Typical goals include:
+
+- combining data from many sources
+- preparing data for analytics
+- running large analytical queries
+- building enterprise reporting pipelines
+
+### *Typical Flow*
+
+<Steps>
+1. Connect data sources to the Synapse environment.
+2. Ingest and transform the data.
+3. Store it in an analytical structure such as a warehouse or lake-connected layer.
+4. Query and analyze the data.
+5. Expose results to reporting or downstream analytics tools.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Enterprise Reporting" icon="document">
+    Build large-scale reporting and analytical workloads across many business systems.
+  </Card>
+
+  <Card title="Data Warehousing" icon="database">
+    Centralize structured analytical data for BI and decision-making.
+  </Card>
+
+  <Card title="Unified Analytics" icon="setting">
+    Combine ingestion, processing, storage, and analysis inside one platform.
+  </Card>
+</CardGrid>
+
+### *Synapse Vs. Traditional Database Services*
+
+| Service | Best For |
+| --- | --- |
+| `Azure SQL Database` | Application transactional data |
+| `Azure Synapse Analytics` | Large-scale analytical and warehouse workloads |
+
+Transactional databases are built for application operations.
+
+Synapse is built for analytics and large-scale data processing.
+
+### *Main Architectural Idea*
+
+Synapse is not just one database.
+
+It is a workspace-oriented analytics platform where teams can:
+
+- move data
+- transform data
+- store analytical data
+- query large datasets
+- orchestrate analytical workflows
+
+### *Summary*
+
+- `Azure Synapse Analytics` is an integrated analytics platform
+- It combines ingestion, warehousing, transformation, and analytics
+- It is designed for large-scale analytical workloads
+- It is best for enterprise data and reporting scenarios
+- It differs from application databases by focusing on analytics rather than transactions

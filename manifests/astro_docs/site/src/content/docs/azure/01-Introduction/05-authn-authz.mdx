@@ -1,0 +1,125 @@
+---
+title: Authentication & Authorization
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+
+In the cloud, identity is the new perimeter, so understanding the difference between `authentication` and `authorization` is fundamental to Azure security.
+
+### *Authentication Vs. Authorization*
+
+Although the terms are often used together, they answer two different questions in the `Microsoft Entra ID` lifecycle.
+
+| Concept | Question Answered | Real-World Analogy |
+| --- | --- | --- |
+| Authentication (`AuthN`) | Who are you? | Showing your passport at the airport |
+| Authorization (`AuthZ`) | What can you do? | Your boarding pass determines where you can sit |
+
+
+### *Authentication*
+
+`Authentication` is the process of verifying identity by challenging the user for credentials.
+
+<CardGrid>
+  <Card title="Primary Methods" icon="document">
+    Common methods include passwords, biometrics such as `Windows Hello`, and `FIDO2` security keys.
+  </Card>
+
+  <Card title="Modern Standards" icon="setting">
+    Azure commonly uses `OpenID Connect (OIDC)` and `SAML` for web-based authentication.
+  </Card>
+
+  <Card title="Multi-Factor Authentication" icon="warning">
+    MFA requires two or more factors such as something you know, something you have, or something you are.
+  </Card>
+</CardGrid>
+
+### *How Authentication Works*
+
+<Steps>
+1. The user tries to access an Azure application or resource.
+2. `Microsoft Entra ID` asks for credentials.
+3. The identity is verified using password, biometrics, or another supported method.
+4. If required, `MFA` adds a second verification step.
+5. If the check succeeds, the authentication process is completed.
+</Steps>
+
+**MFA factors:**
+
+- something you know, such as a password or PIN
+- something you have, such as a trusted phone or hardware key
+- something you are, such as a fingerprint or face scan
+
+<Aside type="note">
+As of `2026`, passwordless authentication with `Microsoft Authenticator` or `FIDO2` keys is the recommended standard because it reduces phishing risk.
+</Aside>
+
+### *Authorization And RBAC*
+
+Once an identity is authenticated, Azure must decide what that identity is allowed to do.
+
+This is handled through `Azure Role-Based Access Control (Azure RBAC)`.
+
+### *The RBAC Formula*
+
+An RBAC assignment is based on three elements:
+
+<CardGrid>
+  <Card title="Security Principal" icon="document">
+    The who. This can be a user, group, service principal, or managed identity.
+  </Card>
+
+  <Card title="Role Definition" icon="setting">
+    The what. A collection of permissions such as `Owner`, `Contributor`, or `Reader`.
+  </Card>
+
+  <Card title="Scope" icon="database">
+    The where. Permissions can be assigned at the management group, subscription, resource group, or individual resource level.
+  </Card>
+</CardGrid>
+
+### *How Authorization Works*
+
+<Steps>
+1. The authenticated identity presents its security token.
+2. Azure checks the `RBAC` assignments linked to that identity.
+3. Azure evaluates the assigned role and the applied scope.
+4. The target resource decides whether the requested action is allowed.
+5. Access is granted or denied.
+</Steps>
+
+### *Common Built-In Roles*
+
+| Role | Description |
+| --- | --- |
+| Owner | Full access to all resources and can grant access to others |
+| Contributor | Can create and manage resources but cannot grant access |
+| Reader | Can view resources but cannot create or modify them |
+
+### *Managed Identities*
+
+`Managed Identities` allow an Azure resource to authenticate to another Azure service without storing passwords or secrets in code.
+
+<CardGrid>
+  <Card title="System-Assigned" icon="document">
+    Tied to a single Azure resource. If that resource is deleted, the identity is deleted too.
+  </Card>
+
+  <Card title="User-Assigned" icon="setting">
+    Created as a standalone resource and can be attached to multiple Azure resources.
+  </Card>
+</CardGrid>
+
+### *Summary: The Identity Flow*
+
+<Steps>
+1. A user requests access to a resource such as a `Storage Account`.
+2. `Entra ID` authenticates the identity and evaluates policies like `Conditional Access`.
+3. Entra ID issues a security token.
+4. The target resource checks the token against its `RBAC` assignments.
+5. Access is granted or denied.
+</Steps>

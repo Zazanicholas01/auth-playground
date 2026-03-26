@@ -1,0 +1,124 @@
+---
+title: Azure Event Hubs
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Event Hubs`, the Azure service used for large-scale event ingestion and streaming.
+
+### *Azure Event Hubs*
+
+`Azure Event Hubs` is a big data event streaming service.
+
+It is designed to ingest and process massive volumes of events in near real time.
+
+Typical event sources include:
+
+- IoT devices
+- applications
+- logs
+- sensors
+- telemetry pipelines
+
+It is often used when the system must handle high-throughput streams of incoming data.
+
+<Aside type="note">
+`Event Hubs` is built for event ingestion at scale, not for per-device management or IoT-specific identity. That is why it often complements `IoT Hub` instead of replacing it.
+</Aside>
+
+### *Why Use Event Hubs*
+
+<CardGrid>
+  <Card title="High Throughput" icon="document">
+    Ingest large volumes of streaming events from many producers at once.
+  </Card>
+
+  <Card title="Real-Time Pipelines" icon="setting">
+    Feed analytics, monitoring, and processing systems with continuous event streams.
+  </Card>
+
+  <Card title="Scalable Consumers" icon="warning">
+    Allow multiple consumers to process event streams independently.
+  </Card>
+</CardGrid>
+
+### *Core Concepts*
+
+<CardGrid>
+  <Card title="Producer" icon="document">
+    The system or device that sends events into Event Hubs.
+  </Card>
+
+  <Card title="Event Hub" icon="database">
+    The logical streaming endpoint that receives and stores incoming events temporarily.
+  </Card>
+
+  <Card title="Partition" icon="setting">
+    A scalability unit that spreads events across multiple streams for higher throughput.
+  </Card>
+
+  <Card title="Consumer Group" icon="warning">
+    A separate view of the stream that allows different applications to read the same events independently.
+  </Card>
+</CardGrid>
+
+### *How It Works*
+
+<Steps>
+1. Producers send events into an `Event Hub`.
+2. Events are stored temporarily across partitions.
+3. Consumer applications read from the event stream.
+4. Each consumer group tracks its own reading position independently.
+5. Events flow into analytics, processing, or storage systems.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Telemetry Ingestion" icon="document">
+    Ingest large streams of telemetry from applications, devices, or sensors.
+  </Card>
+
+  <Card title="Log Streaming" icon="database">
+    Collect and forward logs for monitoring or downstream analysis.
+  </Card>
+
+  <Card title="Real-Time Analytics" icon="setting">
+    Feed event streams into processing systems such as stream analytics or custom consumers.
+  </Card>
+</CardGrid>
+
+### *Event Hubs Vs. IoT Hub*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Event Hubs` | High-scale general-purpose event ingestion |
+| `Azure IoT Hub` | Device communication with identity, management, and cloud-to-device support |
+
+`Event Hubs` is event-centric.
+
+`IoT Hub` is device-centric.
+
+### *Partitioning And Scale*
+
+Partitions are one of the key architecture concepts in Event Hubs.
+
+They allow:
+
+- parallel ingestion
+- parallel consumption
+- better scaling for large event streams
+
+A good partitioning strategy helps support higher throughput and more balanced processing.
+
+### *Summary*
+
+- `Azure Event Hubs` is a high-scale event streaming service
+- It is built for ingesting large volumes of events in near real time
+- Key concepts include partitions and consumer groups
+- It is ideal for telemetry, logs, and streaming pipelines
+- It complements IoT services but does not replace device-specific services such as `IoT Hub`

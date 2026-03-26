@@ -1,0 +1,68 @@
+---
+title: Control Plane Troubleshooting
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Se il `Control Plane` fallisce, il cluster perde la capacita` di creare, aggiornare o schedulare nuove risorse.
+
+### *Workflow di diagnosi*
+
+<Steps>
+1. Controlla lo stato dei nodi master.
+2. Verifica i `Static Pods` del control plane.
+3. Analizza i log del `Kubelet`.
+4. Controlla la salute di `etcd`.
+5. Verifica la validita` dei certificati.
+</Steps>
+
+### *Aree da controllare*
+
+<CardGrid>
+  <Card title="Master Nodes" icon="laptop">
+    Verifica stato `NotReady`, risorse e connettivita`.
+  </Card>
+
+  <Card title="Static Pods" icon="document">
+    Controlla `kube-apiserver`, `etcd`, `scheduler` e `controller-manager`.
+  </Card>
+
+  <Card title="Kubelet" icon="setting">
+    E` responsabile dell'avvio dei componenti del control plane.
+  </Card>
+
+  <Card title="etcd" icon="warning">
+    Se fallisce o perde quorum, il cluster si blocca.
+  </Card>
+</CardGrid>
+
+### *Controlli chiave*
+
+- `kubectl get nodes`
+- `crictl ps -a`
+- `journalctl -u kubelet -f`
+- `etcdctl endpoint health`
+- `kubeadm certs check-expiration`
+
+### *Problemi comuni*
+
+| Componente | Sintomo | Strumento |
+| --- | --- | --- |
+| `API Server` | `kubectl` non risponde o connection refused | `crictl logs`, `journalctl` |
+| `etcd` | Cluster lento o scritture bloccate | `etcdctl endpoint health` |
+| `Scheduler` | Pod bloccati in `Pending` | log dello `scheduler` |
+| `Kubelet` | Nodo `NotReady` | `systemctl status kubelet` |
+
+### *Certificati*
+
+<Aside type="note">
+I certificati scaduti sono una causa comune di guasti silenziosi nel control plane.
+</Aside>
+
+- verifica con `kubeadm certs check-expiration`
+- rinnova con `kubeadm certs renew all`
+- riavvia i componenti se necessario

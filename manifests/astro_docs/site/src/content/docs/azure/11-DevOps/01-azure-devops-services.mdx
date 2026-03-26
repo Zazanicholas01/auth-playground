@@ -1,0 +1,102 @@
+---
+title: Azure DevOps Services
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure DevOps Services`, the Microsoft platform used to support software planning, source control, build automation, testing, and delivery.
+
+### *Azure DevOps Services*
+
+`Azure DevOps Services` is a cloud platform that provides a full set of DevOps tools for software teams.
+
+It helps teams manage the full software lifecycle, including:
+
+- planning work
+- storing source code
+- building and testing applications
+- publishing artifacts
+- deploying releases
+
+<Aside type="note">
+`Azure DevOps Services` is not one single tool. It is a suite of connected DevOps services that support collaboration from planning to production.
+</Aside>
+
+### *Main Services In Azure DevOps*
+
+<CardGrid>
+  <Card title="Azure Repos" icon="document">
+    Source control for Git repositories and code collaboration.
+  </Card>
+
+  <Card title="Azure Pipelines" icon="setting">
+    CI/CD pipelines for building, testing, and deploying applications.
+  </Card>
+
+  <Card title="Azure Boards" icon="database">
+    Work tracking for features, bugs, tasks, and agile planning.
+  </Card>
+
+  <Card title="Azure Artifacts" icon="warning">
+    Package management for reusable build artifacts and dependencies.
+  </Card>
+</CardGrid>
+
+### *Why Use Azure DevOps Services*
+
+`Azure DevOps Services` is useful when teams want one platform for collaboration across development and operations.
+
+Typical goals include:
+
+- traceability from work item to deployment
+- consistent CI/CD workflows
+- centralized source control
+- integrated agile planning
+- controlled package distribution
+
+### *Typical Flow*
+
+<Steps>
+1. Teams plan work in `Azure Boards`.
+2. Developers store code in `Azure Repos`.
+3. `Azure Pipelines` builds and tests the code.
+4. Packages are stored in `Azure Artifacts` when needed.
+5. The application is deployed through release pipelines or delivery automation.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Team Collaboration" icon="document">
+    Bring developers, testers, and operations teams into one delivery workflow.
+  </Card>
+
+  <Card title="CI/CD Automation" icon="setting">
+    Automate builds, tests, and deployments across environments.
+  </Card>
+
+  <Card title="Enterprise DevOps" icon="database">
+    Support structured governance and large-team software delivery processes.
+  </Card>
+</CardGrid>
+
+### *Azure DevOps Vs. GitHub*
+
+| Platform | Best For |
+| --- | --- |
+| `Azure DevOps Services` | Full enterprise DevOps platform with planning, repos, pipelines, and artifacts |
+| `GitHub` | Developer collaboration platform with strong Git-based workflow and ecosystem integration |
+
+In many organizations, the two can also be used together.
+
+### *Summary*
+
+- `Azure DevOps Services` is a full DevOps platform
+- It includes planning, source control, CI/CD, and artifact management tools
+- It supports the software lifecycle from backlog to deployment
+- It is especially useful for teams that want an integrated enterprise DevOps workflow
+- It is made up of multiple connected services rather than one single product

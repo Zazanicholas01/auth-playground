@@ -1,0 +1,127 @@
+---
+title: Azure Machine Learning
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Machine Learning`, the Azure platform used to build, train, deploy, and manage custom machine learning models.
+
+### *Azure Machine Learning*
+
+`Azure Machine Learning` is the Azure service for end-to-end machine learning lifecycle management.
+
+It is used when teams need to work with custom ML workflows such as:
+
+- model training
+- experimentation
+- feature engineering
+- model deployment
+- model monitoring
+- MLOps
+
+Unlike `Azure AI Services`, which focuses on consuming managed AI capabilities, Azure Machine Learning is built for creating and operating custom machine learning solutions.
+
+<Aside type="note">
+`Azure Machine Learning` is best when an organization needs more control over the full ML lifecycle rather than just consuming a ready-made AI API.
+</Aside>
+
+### *Why Use Azure Machine Learning*
+
+<CardGrid>
+  <Card title="Custom Models" icon="document">
+    Build and train machine learning models for organization-specific data and use cases.
+  </Card>
+
+  <Card title="MLOps" icon="setting">
+    Manage model versioning, deployment, and operational lifecycle in a structured way.
+  </Card>
+
+  <Card title="Scalable Compute" icon="database">
+    Use Azure compute resources for training and inference workloads.
+  </Card>
+
+  <Card title="Managed Platform" icon="warning">
+    Combine experimentation, deployment, and monitoring inside one Azure ML environment.
+  </Card>
+</CardGrid>
+
+### *Typical Lifecycle*
+
+A common Azure Machine Learning workflow includes:
+
+<Steps>
+1. Prepare and explore data.
+2. Train and evaluate a model.
+3. Register and version the model.
+4. Deploy the model as an endpoint or service.
+5. Monitor model behavior and retrain when needed.
+</Steps>
+
+### *Core Capabilities*
+
+<CardGrid>
+  <Card title="Training" icon="document">
+    Train models using Azure-managed compute and ML workflows.
+  </Card>
+
+  <Card title="Deployment" icon="setting">
+    Expose models through managed endpoints for applications or services.
+  </Card>
+
+  <Card title="Model Management" icon="database">
+    Track models, versions, experiments, and lifecycle history.
+  </Card>
+
+  <Card title="Monitoring" icon="warning">
+    Observe model performance and operational health after deployment.
+  </Card>
+</CardGrid>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Predictive Models" icon="document">
+    Build models for forecasting, classification, regression, and recommendation.
+  </Card>
+
+  <Card title="Data Science Workflows" icon="database">
+    Support notebook-based experimentation and model development.
+  </Card>
+
+  <Card title="Operational ML" icon="setting">
+    Deploy ML models into business applications and production workflows.
+  </Card>
+</CardGrid>
+
+### *Azure Machine Learning Vs. Azure OpenAI*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Machine Learning` | Custom model lifecycle and MLOps |
+| `Azure OpenAI Service` | Managed foundation models and generative AI consumption |
+
+A simple way to think about it is:
+
+- `Azure OpenAI Service` is for using managed powerful AI models
+- `Azure Machine Learning` is for building and operating custom ML solutions
+
+### *Why It Matters*
+
+Many organizations need both:
+
+- managed AI services for quick adoption
+- custom ML platforms for specialized predictive models
+
+This is why Azure Machine Learning is a key part of the broader Azure AI landscape.
+
+### *Summary*
+
+- `Azure Machine Learning` is the custom ML platform in Azure
+- It supports training, deployment, monitoring, and MLOps
+- It is used for custom predictive and analytical models
+- It differs from Azure AI Services by focusing on the ML lifecycle
+- It is a core service for production-grade machine learning solutions

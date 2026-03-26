@@ -1,0 +1,61 @@
+---
+title: Worker Node Troubleshooting
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Se un `Worker Node` diventa instabile, i Pod possono essere `Evicted`, diventare irraggiungibili o smettere di rispondere.
+
+### *Workflow di diagnosi*
+
+<Steps>
+1. Controlla lo stato del nodo con `kubectl get nodes`.
+2. Analizza condizioni e pressioni con `kubectl describe node`.
+3. Verifica il `Kubelet`.
+4. Controlla il `Container Runtime`.
+5. Analizza rete, `CNI` e `kube-proxy`.
+</Steps>
+
+### *Controlli principali*
+
+<CardGrid>
+  <Card title="Node Status" icon="document">
+    Verifica se il nodo è `Ready` o `NotReady`.
+  </Card>
+
+  <Card title="Kubelet" icon="setting">
+    Controlla se il nodo continua a inviare heartbeat.
+  </Card>
+
+  <Card title="Container Runtime" icon="warning">
+    Verifica lo stato di `containerd` o `docker`.
+  </Card>
+
+  <Card title="Networking" icon="random">
+    Controlla `kube-proxy`, CNI e connettivita`.
+  </Card>
+</CardGrid>
+
+### *Problemi comuni*
+
+| Sintomo | Causa probabile | Comando |
+| --- | --- | --- |
+| `Node NotReady` | `Kubelet` fermo o in errore | `systemctl status kubelet` |
+| Pod senza rete | Problemi `CNI` o `kube-proxy` | `kubectl get pods -n kube-system` |
+| `Pod Evicted` | `MemoryPressure` o `DiskPressure` | `kubectl describe node` |
+| Stato incerto | Problemi di rete del nodo | `ping <ip-nodo>` |
+
+### *Verifiche importanti*
+
+- `systemctl status kubelet`
+- `journalctl -u kubelet -f`
+- `systemctl status containerd`
+- `dmesg | grep -i oom`
+
+<Aside type="note">
+Se il nodo mostra `MemoryPressure`, `DiskPressure` o `PIDPressure`, il problema e` spesso nelle risorse fisiche del sistema.
+</Aside>

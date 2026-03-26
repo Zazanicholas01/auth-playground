@@ -1,0 +1,117 @@
+---
+title: Azure Databricks
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Databricks`, the Azure service used for large-scale data engineering, analytics, and machine learning workloads.
+
+### *Azure Databricks*
+
+`Azure Databricks` is a managed analytics platform based on `Apache Spark`.
+
+It is designed for teams that need distributed processing for very large datasets.
+
+It is commonly used for:
+
+- data engineering
+- ETL and ELT pipelines
+- large-scale analytics
+- machine learning preparation
+- notebook-based collaborative analytics
+
+<Aside type="note">
+`Azure Databricks` is especially useful when data volume, transformation complexity, or collaborative analytics work is too large for traditional database tools alone.
+</Aside>
+
+### *Why Use Databricks*
+
+<CardGrid>
+  <Card title="Distributed Processing" icon="document">
+    Use scalable Spark clusters to process very large datasets in parallel.
+  </Card>
+
+  <Card title="Data Engineering" icon="database">
+    Build transformation pipelines for analytical and machine learning workloads.
+  </Card>
+
+  <Card title="Collaborative Notebooks" icon="setting">
+    Analysts, engineers, and data scientists can work together in shared notebook environments.
+  </Card>
+
+  <Card title="Lake Integration" icon="warning">
+    Works closely with lake-based architectures such as `Azure Data Lake Storage`.
+  </Card>
+</CardGrid>
+
+### *How It Fits In Big Data Architecture*
+
+Databricks is often used in the middle of the analytics pipeline.
+
+A common pattern is:
+
+- raw data lands in a data lake
+- Databricks transforms and enriches the data
+- refined datasets are stored for analytics, BI, or machine learning
+
+This makes Databricks a strong engine for processing and preparing data before it is consumed.
+
+### *Typical Flow*
+
+<Steps>
+1. Data is stored in `Azure Data Lake Storage`.
+2. A Databricks cluster reads the data.
+3. Data engineers transform, clean, and enrich the data.
+4. Refined results are written back to analytical storage.
+5. Reporting, analytics, or ML systems use the processed datasets.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="ETL And ELT" icon="document">
+    Clean and transform large datasets before loading them into analytical systems.
+  </Card>
+
+  <Card title="Data Science Preparation" icon="database">
+    Prepare datasets for machine learning, feature engineering, and model workflows.
+  </Card>
+
+  <Card title="Large-Scale Analytics" icon="setting">
+    Run distributed analytics jobs on data that is too large for traditional single-system processing.
+  </Card>
+</CardGrid>
+
+### *Databricks Vs. Synapse*
+
+| Service | Best For |
+| --- | --- |
+| `Azure Databricks` | Spark-based processing, data engineering, and collaborative analytics |
+| `Azure Synapse Analytics` | Integrated analytics platform including warehousing and orchestration |
+
+These services often complement each other rather than compete directly.
+
+Databricks is often stronger for distributed processing and engineering workflows.
+
+Synapse is often stronger as a broader integrated analytics platform.
+
+### *Main Architectural Idea*
+
+The main architectural strength of Databricks is its ability to combine:
+
+- distributed compute
+- lake-based storage
+- collaborative development
+- scalable transformation pipelines
+
+### *Summary*
+
+- `Azure Databricks` is a managed Spark-based analytics platform
+- It is used for data engineering, transformation, and large-scale processing
+- It works closely with `Azure Data Lake Storage`
+- It is a strong choice for collaborative notebook-based analytics
+- It complements platforms such as `Azure Synapse Analytics`

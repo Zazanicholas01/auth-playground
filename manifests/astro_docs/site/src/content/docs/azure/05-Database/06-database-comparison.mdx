@@ -1,0 +1,111 @@
+---
+title: Database Comparison
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section compares the main Azure database services covered so far.
+
+### *Database Comparison*
+
+Azure provides different database services for different application needs.
+
+The three main database options in this section are:
+
+- `Azure SQL Database`
+- `Azure Database for PostgreSQL`
+- `Azure Cosmos DB`
+
+The right choice depends on the data model, scaling needs, application architecture, and operational preferences.
+
+### *Core Comparison*
+
+| Service | Database Type | Best For |
+| --- | --- | --- |
+| `Azure SQL Database` | Managed relational database | SQL Server-based business apps and transactional systems |
+| `Azure Database for PostgreSQL` | Managed relational database | PostgreSQL applications and open-source relational workloads |
+| `Azure Cosmos DB` | Managed NoSQL database | Global, low-latency, high-scale NoSQL applications |
+
+### *How To Think About Them*
+
+<CardGrid>
+  <Card title="Azure SQL Database" icon="document">
+    Best when you need structured relational data, strong SQL support, and Microsoft SQL Server compatibility.
+  </Card>
+
+  <Card title="Azure Database for PostgreSQL" icon="database">
+    Best when you want relational data with PostgreSQL and the open-source ecosystem.
+  </Card>
+
+  <Card title="Azure Cosmos DB" icon="setting">
+    Best when you need flexible schema, global distribution, and very large-scale NoSQL access patterns.
+  </Card>
+</CardGrid>
+
+### *Feature Comparison*
+
+| Feature | Azure SQL Database | Azure Database for PostgreSQL | Azure Cosmos DB |
+| --- | --- | --- | --- |
+| Data Model | Relational | Relational | NoSQL |
+| Query Style | SQL | PostgreSQL SQL | API-dependent, often document queries |
+| Schema Flexibility | Structured schema | Structured schema | Flexible schema |
+| Global Distribution | Limited compared to Cosmos DB | Limited compared to Cosmos DB | Core design feature |
+| Best For Transactions | Strong | Strong | Depends on model and design |
+| Best For Massive Global Scale | Moderate | Moderate | Strong |
+| Ecosystem | SQL Server | PostgreSQL / open source | Multi-model NoSQL APIs |
+
+### *When To Choose SQL Or PostgreSQL*
+
+Choose a relational service when:
+
+- the data has strong structure
+- transactions matter
+- relationships between tables are important
+- the application uses SQL heavily
+
+Then the choice becomes:
+
+- `Azure SQL Database` if the workload fits the SQL Server ecosystem
+- `Azure Database for PostgreSQL` if the workload fits PostgreSQL and open-source tooling
+
+### *When To Choose Cosmos DB*
+
+Choose `Cosmos DB` when:
+
+- the schema changes often
+- the application is globally distributed
+- latency must stay very low across regions
+- the workload is high-scale and NoSQL-friendly
+
+<Aside type="note">
+The main architectural question is often not "Which database is best?" but "Does this workload need relational consistency or flexible global-scale NoSQL design?"
+</Aside>
+
+### *Operational Mindset*
+
+| Service | Operational Style |
+| --- | --- |
+| `Azure SQL Database` | Managed relational platform with SQL Server compatibility |
+| `Azure Database for PostgreSQL` | Managed relational platform with more open-source alignment |
+| `Azure Cosmos DB` | Managed globally distributed NoSQL platform with scale-first design |
+
+### *Quick Decision Guide*
+
+| If You Need... | Use |
+| --- | --- |
+| SQL Server compatibility | `Azure SQL Database` |
+| PostgreSQL compatibility | `Azure Database for PostgreSQL` |
+| Flexible NoSQL schema | `Azure Cosmos DB` |
+| Global low-latency replication | `Azure Cosmos DB` |
+| Traditional transactional relational apps | `Azure SQL Database` or `PostgreSQL` |
+
+### *Summary*
+
+- `Azure SQL Database` is best for SQL Server-based relational workloads
+- `Azure Database for PostgreSQL` is best for managed PostgreSQL workloads
+- `Azure Cosmos DB` is best for global, high-scale NoSQL workloads
+- Relational services fit structured transactional applications
+- Cosmos DB fits flexible, distributed, and low-latency NoSQL designs

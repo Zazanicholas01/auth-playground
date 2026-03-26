@@ -1,0 +1,90 @@
+---
+title: Availability
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section explains how Azure reduces downtime through physical and logical separation.
+
+While `Availability Zones` are the modern standard, `Availability Sets` are still relevant for legacy workloads or regions that do not support zones.
+
+### *High Availability: Sets Vs. Zones*
+
+To keep applications online during hardware failures or scheduled maintenance, Azure provides two main options for distributing `Virtual Machines`.
+
+<CardGrid>
+  <Card title="Availability Sets" icon="document">
+    Protect against localized hardware failures inside a single datacenter by spreading VMs across different hardware nodes.
+  </Card>
+
+  <Card title="Availability Zones" icon="database">
+    Protect against the failure of an entire datacenter by distributing workloads across separate physical locations in one region.
+  </Card>
+</CardGrid>
+
+### *Availability Sets*
+
+`Availability Sets` protect VMs from localized failures inside a single datacenter.
+
+Azure uses two main concepts:
+
+<CardGrid>
+  <Card title="Fault Domains" icon="warning">
+    Physical groups of hardware, similar to server racks, with separate power and network paths. VMs are usually spread across `2` or `3` fault domains.
+  </Card>
+
+  <Card title="Update Domains" icon="setting">
+    Logical groups used for planned maintenance. Only one update domain is rebooted or patched at a time.
+  </Card>
+</CardGrid>
+
+**Best for:**
+
+- legacy applications
+- workloads not designed for zone-aware deployment
+- smaller regions without Availability Zone support
+
+### *Availability Zones*
+
+`Availability Zones` protect against the failure of an entire datacenter facility.
+
+Each zone is a separate physical location inside one Azure region.
+
+- independent power
+- independent cooling
+- independent networking
+- connected through high-speed private fiber links
+
+They also provide a higher SLA:
+
+- `99.99%` for Availability Zones
+- `99.95%` for Availability Sets
+
+### *Zone Deployment Models*
+
+There are two ways to use Availability Zones:
+
+| Model | Description |
+| --- | --- |
+| Zonal | The resource is deployed in one specific zone, such as `Zone 1` |
+| Zone-redundant | Azure automatically replicates the service across zones |
+
+### *Summary Comparison*
+
+| Feature | Availability Sets | Availability Zones |
+| --- | --- | --- |
+| Scope of Failure | Rack or hardware failure | Datacenter or facility failure |
+| SLA (2+ VMs) | `99.95%` | `99.99%` |
+| Separation | Logical inside one datacenter | Physical across different buildings |
+| Latency | Very low | Low |
+| Cost | No extra cost for the set | Usually no extra cost, but inter-zone transfer may apply |
+
+
+### *Combined Strategy*
+
+<Aside type="note">
+For mission-critical applications, the standard approach is to use `Availability Zones` for local high availability and `Region Pairs` or `Site Recovery` for full regional disaster recovery.
+</Aside>

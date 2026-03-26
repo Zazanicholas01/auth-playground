@@ -1,0 +1,96 @@
+---
+title: Azure Firewall
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure Firewall`, the managed Azure service used to centrally inspect and control network traffic.
+
+### *Azure Firewall*
+
+`Azure Firewall` is a managed, cloud-native `Firewall as a Service (FWaaS)`.
+
+It is `stateful`, which means it understands the full conversation between endpoints rather than inspecting packets in isolation.
+
+`Azure Firewall` is commonly used when organizations need centralized inbound and outbound traffic control across multiple virtual networks.
+
+<Aside type="note">
+Unlike `NSGs`, which are usually applied close to individual workloads, `Azure Firewall` is typically deployed as a shared inspection point in a hub network.
+</Aside>
+
+### *Firewall SKUs*
+
+Azure Firewall is available in three main SKUs.
+
+| SKU | Typical Use | Main Features |
+| --- | --- | --- |
+| Basic | Small projects and simpler environments | Essential Layer 3-7 filtering |
+| Standard | Enterprise production workloads | Layer 3-7 filtering with threat intelligence |
+| Premium | High-security and regulated environments | Adds advanced inspection such as `IDPS` and `TLS Inspection` |
+
+### *Premium Features*
+
+The `Premium` tier includes advanced security controls.
+
+<CardGrid>
+  <Card title="IDPS" icon="warning">
+    Intrusion Detection and Prevention System monitors traffic patterns and helps block known malicious activity.
+  </Card>
+
+  <Card title="TLS Inspection" icon="setting">
+    The firewall can decrypt HTTPS traffic, inspect it, and re-encrypt it before forwarding it.
+  </Card>
+
+  <Card title="URL Filtering" icon="document">
+    Filtering can be applied at a more granular URL level instead of only at the domain level.
+  </Card>
+</CardGrid>
+
+### *Why Azure Firewall Is Centralized*
+
+Deploying a separate firewall in every `VNet` is usually too expensive and harder to manage.
+
+The common Azure pattern is `Hub and Spoke`.
+
+<CardGrid>
+  <Card title="Hub" icon="document">
+    A central VNet hosts shared services, including `Azure Firewall`, inside a dedicated subnet named `AzureFirewallSubnet`.
+  </Card>
+
+  <Card title="Spokes" icon="database">
+    Application VNets are peered to the hub instead of hosting their own firewall instances.
+  </Card>
+
+  <Card title="Routing" icon="setting">
+    `User Defined Routes (UDRs)` force traffic from spoke subnets to pass through the firewall first.
+  </Card>
+</CardGrid>
+
+### *Traffic Flow In Hub And Spoke*
+
+<Steps>
+1. Deploy `Azure Firewall` in the hub VNet inside `AzureFirewallSubnet`.
+2. Peer application VNets to the hub.
+3. Create `UDRs` in spoke subnets.
+4. Route traffic such as `0.0.0.0/0` to the private IP of the firewall.
+5. Let the firewall inspect and allow or deny traffic based on policy.
+</Steps>
+
+### *Firewall Vs. NSG*
+
+| Service | Main Purpose |
+| --- | --- |
+| `NSG` | Basic Layer 3-4 filtering close to subnets and NICs |
+| `Azure Firewall` | Centralized Layer 3-7 inspection and advanced traffic control |
+
+### *Summary*
+
+- `Azure Firewall` is a managed and stateful firewall service
+- It is available in `Basic`, `Standard`, and `Premium` tiers
+- `Premium` adds `IDPS`, `TLS Inspection`, and more advanced filtering
+- It is commonly deployed in a `Hub and Spoke` architecture
+- `UDRs` are used to force traffic through the firewall

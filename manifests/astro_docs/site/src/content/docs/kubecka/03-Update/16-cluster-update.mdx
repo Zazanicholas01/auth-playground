@@ -1,0 +1,60 @@
+---
+title: Cluster Update
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+<Aside type="tip">
+Un cluster Kubernetes si aggiorna in ordine: prima il `Control Plane`, poi i `Worker Nodes`.
+</Aside>
+
+### *Regole d'oro*
+
+<CardGrid>
+  <Card title="No version skip" icon="warning">
+    Sui master posso fare solo un salto di versione minor, sui Worker un massimo di 2 a meno che non ci siano breaking changes.
+  </Card>
+
+  <Card title="Compatibilità" icon="information">
+    Il `Control Plane` deve avere versione uguale o superiore ai worker.
+  </Card>
+
+  <Card title="Backup" icon="document">
+    Esegui sempre uno snapshot di `etcd` prima dell'upgrade.
+  </Card>
+</CardGrid>
+
+### *Upgrade del Control Plane*
+
+<Steps>
+1. Aggiorna `kubeadm` sul nodo control plane.
+2. Esegui `kubeadm upgrade plan`.
+3. Esegui `kubeadm upgrade apply v1.x.x`.
+4. Aggiorna `kubelet` e `kubectl`.
+5. Riavvia il `kubelet`.
+</Steps>
+
+<Aside type="note">
+In configurazioni HA, i nodi control plane si aggiornano uno alla volta.
+</Aside>
+
+### *Upgrade dei Worker Nodes*
+
+<Steps>
+1. Esegui `kubectl drain <node>`.
+2. Aggiorna `kubeadm` sul worker.
+3. Esegui `kubeadm upgrade node`.
+4. Aggiorna `kubelet` e `kubectl`.
+5. Riavvia il `kubelet`.
+6. Esegui `kubectl uncordon <node>`.
+</Steps>
+
+### *Ordine corretto*
+
+- `Control Plane` prima
+- `Worker Nodes` dopo
+- un nodo alla volta

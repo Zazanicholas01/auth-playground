@@ -1,0 +1,58 @@
+---
+title: Charts Management
+description: First steps
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+Per usare Helm in modo professionale devi gestire configurazione, upgrade, rollback, hook e dipendenze.
+
+### *Personalizzazione dei parametri*
+
+<CardGrid>
+  <Card title="values file" icon="document">
+    Metodo consigliato per ambienti diversi come Dev, Staging e Prod.
+  </Card>
+
+  <Card title="--set" icon="list-format">
+    Utile per modifiche rapide o pipeline CI/CD.
+  </Card>
+
+  <Card title="Tipi di dato" icon="warning">
+    Stringhe, numeri e booleani vanno passati con attenzione.
+  </Card>
+</CardGrid>
+
+### *Lifecycle Management*
+
+<Steps>
+1. Usa `helm upgrade` per aggiornare una release.
+2. Usa `--atomic` per annullare tutto se qualcosa fallisce.
+3. Consulta la cronologia con `helm history`.
+4. Usa `helm rollback` per tornare a una revisione stabile.
+</Steps>
+
+### *Helm Hooks*
+
+Gli `Hooks` eseguono operazioni prima o dopo eventi del ciclo di vita.
+
+| Hook | Uso tipico |
+| --- | --- |
+| `pre-install` / `post-install` | Job prima o dopo l'installazione |
+| `pre-upgrade` / `post-upgrade` | Backup o migrazioni |
+| `pre-delete` | Pulizia di risorse esterne |
+
+### *Dipendenze*
+
+Le chart possono dipendere da altre chart.
+
+- le dipendenze si definiscono in `Chart.yaml`
+- si scaricano con `helm dependency update`
+- permettono di riusare componenti come `Redis` o `PostgreSQL`
+
+<Aside type="note">
+La combinazione di `values` separati, `upgrade --atomic` e `rollback` rende Helm molto adatto agli ambienti di produzione.
+</Aside>

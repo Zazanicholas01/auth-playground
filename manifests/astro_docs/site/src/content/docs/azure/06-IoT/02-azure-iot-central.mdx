@@ -1,0 +1,111 @@
+---
+title: Azure IoT Central
+description: First steps
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { Steps } from '@astrojs/starlight/components';
+import { Card } from '@astrojs/starlight/components';
+import { CardGrid } from '@astrojs/starlight/components';
+
+This section covers `Azure IoT Central`, the higher-level managed IoT application platform in Azure.
+
+### *Azure IoT Central*
+
+`Azure IoT Central` is a fully managed `Software as a Service (SaaS)` platform for building IoT solutions more quickly.
+
+While `Azure IoT Hub` gives you the core device communication building blocks, `IoT Central` provides a ready-made application layer on top.
+
+It is designed for organizations that want to:
+
+- connect devices quickly
+- monitor fleets through dashboards
+- manage devices without building everything from scratch
+- reduce custom development effort
+
+<Aside type="note">
+`IoT Central` is often the fastest way to deliver an IoT solution when the goal is operational visibility and device management rather than full custom platform engineering.
+</Aside>
+
+### *What IoT Central Adds*
+
+<CardGrid>
+  <Card title="Dashboards" icon="document">
+    Built-in user interfaces for viewing device telemetry, health, and operational trends.
+  </Card>
+
+  <Card title="Device Templates" icon="setting">
+    Standardized models that define what a device can send, receive, and expose.
+  </Card>
+
+  <Card title="Rules And Actions" icon="warning">
+    Trigger alerts, workflows, or automation when telemetry matches certain conditions.
+  </Card>
+
+  <Card title="Managed Experience" icon="database">
+    Reduces the amount of custom infrastructure and application code needed.
+  </Card>
+</CardGrid>
+
+### *How It Relates To IoT Hub*
+
+`IoT Central` uses Azure IoT services behind the scenes, but presents them as a more complete application platform.
+
+| Service | Best For |
+| --- | --- |
+| `Azure IoT Hub` | Custom IoT platform development and deep integration |
+| `Azure IoT Central` | Faster delivery with dashboards, templates, and built-in device management |
+
+In simple terms:
+
+- `IoT Hub` is the platform building block
+- `IoT Central` is the ready-to-use application layer
+
+### *Typical Flow*
+
+<Steps>
+1. Create an `IoT Central` application.
+2. Define or import a device template.
+3. Connect devices to the platform.
+4. View telemetry and health through dashboards.
+5. Configure rules, alerts, and operational actions.
+</Steps>
+
+### *Common Use Cases*
+
+<CardGrid>
+  <Card title="Fleet Monitoring" icon="document">
+    Track large groups of devices through dashboards and centralized views.
+  </Card>
+
+  <Card title="Operational Visibility" icon="database">
+    Give business or operations teams a ready-made interface for device monitoring.
+  </Card>
+
+  <Card title="Faster Delivery" icon="setting">
+    Launch IoT solutions more quickly without building the entire app layer manually.
+  </Card>
+</CardGrid>
+
+### *Why Choose IoT Central*
+
+Choose `IoT Central` when:
+
+- you want a faster path to a working IoT solution
+- dashboards and operational tools matter immediately
+- you prefer configuration over custom platform engineering
+- the use case fits a managed SaaS-style IoT platform
+
+Choose `IoT Hub` when:
+
+- you need full architecture control
+- you want deeper custom integrations
+- you are building your own IoT platform layer
+
+### *Summary*
+
+- `Azure IoT Central` is a managed IoT application platform
+- It builds on Azure IoT services but adds a ready-made application experience
+- It provides dashboards, device templates, and rules
+- It is ideal for faster IoT solution delivery
+- It is higher level than `Azure IoT Hub`
