@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: ghcr.io/zazanicholas01/greenhouse-iot-api:run-18 # {"$imagepolicy": "flux-system:greenhouse-iot-api"}
+          image: ghcr.io/zazanicholas01/greenhouse-iot-api:run-19 # {"$imagepolicy": "flux-system:greenhouse-iot-api"}
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
