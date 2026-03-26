@@ -3,8 +3,6 @@ kind: Deployment
 metadata:
   name: iot-api
   namespace: iot-playground
-  labels:
-    backstage.io/kubernetes-id: greenhouse-iot
 spec:
   replicas: 1
   selector:
@@ -14,7 +12,6 @@ spec:
     metadata:
       labels:
         app: iot-api
-        backstage.io/kubernetes-id: greenhouse-iot
     spec:
       containers:
         - name: api
