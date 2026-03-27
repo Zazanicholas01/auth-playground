@@ -243,6 +243,7 @@ export function renderTwinWorkspacePage({
   state,
   twinZoneSummaryEl,
   twinGatewayListEl,
+  twinZonePanelEl,
   zoneNetworkMapEl,
   zoneNetworkBadgesEl,
   selectedZone,
@@ -254,59 +255,70 @@ export function renderTwinWorkspacePage({
 }) {
   if (!state.zones.length) return;
   const zone = selectedZone();
+  if (!zone) return;
+
   const devices = allTwinGateways(state).filter((device) => device.zoneId === zone.id);
   const activeDevice = devices.find((device) => device.id === state.selectedEdgeDeviceId) || devices[0];
   if (!activeDevice) return;
 
   if (twinZoneSummaryEl) {
     twinZoneSummaryEl.innerHTML = `
-      <article class="zone-hero ${severityClass(zone.severity)}">
-        <div>
-          <span class="section-label">Focused Zone</span>
-          <h3>${zone.name}</h3>
-          <p>${zoneDeviationSummary(zone)}</p>
-        </div>
-        <div class="zone-hero-metrics">
-          <div><span>Health</span><strong>${calcZoneHealthScore(zone)}</strong></div>
-          <div><span>Gateways</span><strong>${devices.length}</strong></div>
-          <div><span>Sensors</span><strong>${devices.reduce((sum, device) => sum + device.sensors.length, 0)}</strong></div>
-        </div>
-      </article>
+      <section class="overview-strip">
+        <article class="overview-metric">
+          <span class="overview-label">Focused zone</span>
+          <strong class="overview-value">${zone.name}</strong>
+          <span class="overview-note">${zoneDeviationSummary(zone)}</span>
+        </article>
+        <article class="overview-metric">
+          <span class="overview-label">Zone health</span>
+          <strong class="overview-value">${calcZoneHealthScore(zone)}</strong>
+          <span class="overview-note">${devices.length} gateways in this zone</span>
+        </article>
+        <article class="overview-metric">
+          <span class="overview-label">Sensors online</span>
+          <strong class="overview-value">${devices.reduce((sum, device) => sum + device.sensors.length, 0)}</strong>
+          <span class="overview-note">${activeDevice.name} currently selected</span>
+        </article>
+      </section>
     `;
   }
-
 
   if (twinGatewayListEl) {
     twinGatewayListEl.innerHTML = devices.map((device) => `
       <button
         type="button"
-        class="entity-card ${surfaceClass("light")} ${device.id === activeDevice.id ? "active" : ""}"
+        class="entity-card ${surfaceClass("light")} ${device.id === activeDevice.id ? "active" : ""} ${edgeSeverityClass(device.status)}"
         data-twin-gateway-id="${device.id}"
       >
         <div class="entity-header">
           <strong class="${textToneClass("strong")}">${device.name}</strong>
           <span class="pill ${edgeSeverityClass(device.status)}">${device.status}</span>
-        </div>  <div class="entity-meta ${textToneClass("muted")}">
-          ${device.sensors.length} sensors &middot; ${device.brokerLink}
-        </div>  <div class="metric-chip-row">
-          <span class="metric-chip ${surfaceClass("light")}">
-            <label class="${textToneClass("soft")}">Signal</label>
-            <strong class="${textToneClass("strong")}">${device.signalRssi} dBm</strong>
-          </span>
-          <span class="metric-chip ${surfaceClass("light")}">
-            <label class="${textToneClass("soft")}">Loss</label>
-            <strong class="${textToneClass("strong")}">${device.packetLossPct}%</strong>
-          </span>
         </div>
+
+        <div class="entity-meta ${surfaceTextToneClass("light", "muted")}">
+          <div class="zone-health-block ${edgeSeverityClass(device.status)}">
+            <div class="asset-load-meta">
+              <span class="${surfaceTextToneClass("light", "soft")}">Health</span>
+              <strong class="${surfaceTextToneClass("light", "strong")}">${device.healthScore ?? "--"}%</strong>
+            </div>
+            <div class="asset-load-bar" aria-label="Gateway health">
+              <span style="width:${device.healthScore ?? 0}%"></span>
+            </div>
+          </div>
+        </div>
+
       </button>
     `).join("");
 
     twinGatewayListEl.querySelectorAll("[data-twin-gateway-id]").forEach((element) => {
       element.addEventListener("click", () => {
         selectEdgeDevice(element.dataset.twinGatewayId);
+        render();
       });
     });
   }
+
+
 
   if (zoneNetworkMapEl) {
     zoneNetworkMapEl.innerHTML = `
@@ -314,38 +326,72 @@ export function renderTwinWorkspacePage({
         <div class="topology-stage">
           <img class="facility-map-photo twin-photo" src="${twinPhotoUrl}" alt="Focused greenhouse twin view" />
         </div>
-        <div class="sensor-flow-grid">
-          ${activeDevice.sensors.map((sensor) => `
-            <article class="sensor-flow-card ${surfaceClass("light")} ${edgeSeverityClass(sensor.status)}">
-              <div>
-                <span class="section-label ${textToneClass("soft")}">Sensor path</span>
-                <strong class="${textToneClass("strong")}">${sensor.name}</strong>
-              </div>
-              <span class="${textToneClass("muted")}">${sensor.metricType}</span>
-              <div class="sensor-flow-line"></div>
-              <div class="sensor-flow-meta">
-                <span class="${textToneClass("muted")}">${sensor.lastReading || "--"}</span>
-                <span class="pill ${edgeSeverityClass(sensor.status)}">${sensor.status}</span>
-              </div>
-            </article>
-          `).join("")}
-        </div>
       </article>
     `;
 
     zoneNetworkMapEl.querySelectorAll("[data-gateway-hotspot]").forEach((element) => {
       element.addEventListener("click", () => {
         selectEdgeDevice(element.dataset.gatewayHotspot);
-        const nextDevice = devices.find((device) => device.id === element.dataset.gatewayHotspot);
-        if (nextDevice?.zoneId && nextDevice.zoneId !== state.selectedZoneId) {
-          focusZone(nextDevice.zoneId, { updateHistory: false });
-        } else {
-          render();
-        }
+        render();
       });
     });
   }
+
+  if (twinZonePanelEl) {
+    twinZonePanelEl.innerHTML = `
+      <article class="zone-summary-card ${surfaceClass("dark")} ${severityClass(zone.severity)}">
+        <div class="zone-summary-head">
+          <div>
+            <h3 class="${textToneClass("strong", true)}">${activeDevice.name}</h3>
+          </div>
+        </div>
+
+        <div class="twin-metric-grid">
+          <div class="sensor-row twin-mini-metric ${surfaceClass("light")}">
+            <div class="sensor-row-copy">
+              <span class="${textToneClass("soft")}">Signal</span>
+              <strong class="${textToneClass("strong")}">${activeDevice.signalRssi} dBm</strong>
+            </div>
+          </div>
+
+          <div class="sensor-row twin-mini-metric ${surfaceClass("light")}">
+            <div class="sensor-row-copy">
+              <span class="${textToneClass("soft")}">Loss</span>
+              <strong class="${textToneClass("strong")}">${activeDevice.packetLossPct}%</strong>
+            </div>
+          </div>
+
+          <div class="sensor-row twin-mini-metric ${surfaceClass("light")}">
+            <div class="sensor-row-copy">
+              <span class="${textToneClass("soft")}">Sensors</span>
+              <strong class="${textToneClass("strong")}">${activeDevice.sensors.length}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-subsection">
+          <div class="asset-load-head">
+            <span class="${textToneClass("soft", true)}">Sensors</span>
+          </div>
+
+          <div class="sensor-list-compact">
+            ${activeDevice.sensors.map((sensor) => `
+              <article class="sensor-row twin-mini-metric ${surfaceClass("light")} ${edgeSeverityClass(sensor.status)}">
+                <div class="sensor-row-copy">
+                  <span class="${textToneClass("soft")}">${sensor.name}</span>
+                  <strong class="${textToneClass("strong")}">${sensor.lastReading || sensor.metricType || "--"}</strong>
+                </div>
+                <span class="pill ${edgeSeverityClass(sensor.status)}">${sensor.status}</span>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
 }
+
 
 export function renderOperationsWorkspacePage({ state, opsSummaryEl, operationsBoardEl, managedZones, selectedZone, incidentCardHtml }) {
   const focused = selectedZone();

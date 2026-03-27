@@ -129,6 +129,9 @@ const sensorAlertListEl = document.getElementById("sensor-alert-list");
 const mapPhotoUrl = "/dev-assets/map.png";
 const twinPhotoUrl = "/dev-assets/greenhouse-twin.png";
 
+const twinZonePanelEl = document.getElementById("twin-zone-panel");
+
+
 function incidentCardHtml({ timeLabel, scopeLabel, severity, message, actionHtml = "", dataAttrs = "" }) {
   const severityTone = severityClass(severity);
   const surface = "light";
@@ -556,21 +559,20 @@ function render() {
     });
   }
 
-  if (currentPage === "twin") {
-    renderTwinWorkspacePage({
-      state,
-      twinZoneSummaryEl,
-      twinGatewayListEl,
-      zoneNetworkMapEl,
-      zoneNetworkBadgesEl,
-      selectedZone: () => selectedZone(state),
-      allTwinGateways,
-      render,
-      focusZone,
-      selectEdgeDevice,
-      twinPhotoUrl
-    });
-  }
+  renderTwinWorkspacePage({
+    state,
+    twinZoneSummaryEl,
+    twinGatewayListEl,
+    twinZonePanelEl,
+    zoneNetworkMapEl,
+    zoneNetworkBadgesEl,
+    selectedZone: () => selectedZone(state),
+    allTwinGateways,
+    render,
+    focusZone,
+    selectEdgeDevice,
+    twinPhotoUrl
+  });
 
   if (currentPage === "operations") {
     renderOperationsWorkspacePage({

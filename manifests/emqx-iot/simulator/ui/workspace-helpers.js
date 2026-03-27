@@ -184,3 +184,22 @@ export function textClasses({ surface = "light", tone = "strong" } = {}) {
 export function surfaceTextToneClass(surface = "light", tone = "strong") {
   return textToneClass(tone, surface === "dark");
 }
+
+export function calcGatewayHealthScore(device) {
+  if (!device) return 0;
+
+  const signalPenalty = Math.min(Math.max((-70 - (device.signalRssi ?? -70)) * 1.4, 0), 26);
+  const lossPenalty = Math.min((device.packetLossPct ?? 0) * 4.5, 28);
+  const brokerPenalty =
+    device.brokerLink === "down" ? 34 :
+    device.brokerLink === "unstable" ? 16 :
+    0;
+  const statusPenalty =
+    device.status === "offline" ? 32 :
+    device.status === "degraded" ? 14 :
+    device.status === "critical" ? 24 :
+    device.status === "warning" ? 10 :
+    0;
+
+  return Math.round(clamp(100 - signalPenalty - lossPenalty - brokerPenalty - statusPenalty, 12, 100));
+}

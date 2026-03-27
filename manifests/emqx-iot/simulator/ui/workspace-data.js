@@ -1,4 +1,6 @@
 import { clamp } from "./workspace-helpers.js";
+import { calcGatewayHealthScore } from "./workspace-helpers.js";
+
 
 export const zoneNames = {
   "greenhouse-a-north": "North Bay",
@@ -187,7 +189,13 @@ export function createFallbackEdgeDevices(tick = 0) {
         { id: "north-temp-1", name: "Canopy Temp", metricType: "temperature", status: "healthy", lastReading: "23.6 C", lastSeenMs: 3000, batteryPct: 91 },
         { id: "north-hum-1", name: "Humidity Probe", metricType: "humidity", status: "healthy", lastReading: "68 %", lastSeenMs: 5000, batteryPct: 88 },
         { id: "north-soil-1", name: "Soil Sensor", metricType: "soil moisture", status: pulse > 0.55 ? "stale" : "healthy", lastReading: "0.31", lastSeenMs: pulse > 0.55 ? 52000 : 4000, batteryPct: 54 }
-      ]
+      ],
+      healthScore: calcGatewayHealthScore({
+        status: pulse > 0.55 ? "degraded" : "healthy",
+        brokerLink: pulse > 0.55 ? "unstable" : "linked",
+        signalRssi: pulse > 0.55 ? -81 : -62,
+        packetLossPct: pulse > 0.55 ? 4.2 : 0.3
+      }),
     },
     {
       id: "edge-south-1",
@@ -204,7 +212,13 @@ export function createFallbackEdgeDevices(tick = 0) {
       sensors: [
         { id: "south-temp-1", name: "Canopy Temp", metricType: "temperature", status: "offline", lastReading: "--", lastSeenMs: 185000, batteryPct: 0 },
         { id: "south-flow-1", name: "Irrigation Flow", metricType: "flow", status: "offline", lastReading: "--", lastSeenMs: 185000, batteryPct: 0 }
-      ]
+      ],
+      healthScore: calcGatewayHealthScore({
+        status: "offline",
+        brokerLink: "down",
+        signalRssi: -96,
+        packetLossPct: 100
+      }),
     }
   ];
 }
@@ -231,7 +245,13 @@ export function createSyntheticZoneEdgeDevice(zone) {
       { id: `${zone.id}-humidity`, name: "Humidity", metricType: "humidity", status: humidityStatus, lastReading: `${Math.round(zone.indoor.humidity ?? 0)} %`, lastSeenMs: humidityStatus === "stale" ? 42000 : 5000, batteryPct: 73 },
       { id: `${zone.id}-root-water`, name: "Root Moisture", metricType: "soil moisture", status: soilStatus, lastReading: `${(zone.soil.moisture ?? 0).toFixed(2)}`, lastSeenMs: soilStatus === "offline" ? 110000 : soilStatus === "stale" ? 52000 : 4000, batteryPct: soilStatus === "offline" ? 0 : 62 },
       { id: `${zone.id}-irrigation`, name: "Irrigation Flow", metricType: "flow", status: zone.severity === "critical" ? "stale" : "healthy", lastReading: `${(zone.soil.irrigationFlow ?? 0).toFixed(1)} L/min`, lastSeenMs: zone.severity === "critical" ? 48000 : 6000, batteryPct: 68 }
-    ]
+    ],
+    healthScore: calcGatewayHealthScore({
+      status: severity,
+      brokerLink: zone.severity === "critical" ? "unstable" : "linked",
+      signalRssi: zone.severity === "critical" ? -88 : -66,
+      packetLossPct: zone.severity === "critical" ? 12 : zone.severity === "warning" ? 4.1 : 0.8
+    }),
   };
 }
 
