@@ -35,7 +35,7 @@ body {
   color: var(--text-on-dark-strong);
   background:
     radial-gradient(circle at top left, rgba(79, 159, 158, 0.05), transparent 26%),
-    linear-gradient(180deg, #8cb4ca 0%, #13465f 100%);
+    linear-gradient(135deg, #638dff 0%, #1e233b 40%, #162d94 60%, #000000 70%, #00244d 100%);
 }
 
 a {
