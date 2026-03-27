@@ -1,0 +1,27 @@
+name: Mirror Ollama To GHCR
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Install crane
+        run: |
+          curl -fsSL https://github.com/google/go-containerregistry/releases/download/v0.20.3/go-containerregistry_Linux_x86_64.tar.gz \
+            | tar -xz crane
+          sudo mv crane /usr/local/bin/crane
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | crane auth login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Copy image from Docker Hub to GHCR
+        run: |
+          crane copy \
+            docker.io/ollama/ollama:0.6.6 \
+            ghcr.io/${{ github.repository_owner }}/ollama:0.6.6
