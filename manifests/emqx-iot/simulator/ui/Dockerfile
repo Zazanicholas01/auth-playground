@@ -13,6 +13,7 @@ COPY workspace-edge.js /src/workspace-edge.js
 COPY workspace-helpers.js /src/workspace-helpers.js
 COPY workspace-pages.js /src/workspace-pages.js
 COPY workspace-shell.js /src/workspace-shell.js
+COPY styles/ /src/styles/
 COPY dev-assets/greenhouse-twin.png /src/dev-assets/greenhouse-twin.png
 COPY dev-assets/map.png /src/dev-assets/map.png
 
@@ -32,6 +33,7 @@ COPY --from=build /src/workspace-edge.js /src/workspace-edge.js
 COPY --from=build /src/workspace-helpers.js /src/workspace-helpers.js
 COPY --from=build /src/workspace-pages.js /src/workspace-pages.js
 COPY --from=build /src/workspace-shell.js /src/workspace-shell.js
+COPY --from=build /src/styles /src/styles
 COPY --from=build /src/dev-assets/greenhouse-twin.png /src/dev-assets/greenhouse-twin.png
 COPY --from=build /src/dev-assets/map.png /src/dev-assets/map.png
 
