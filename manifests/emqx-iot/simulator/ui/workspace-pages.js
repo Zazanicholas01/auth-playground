@@ -24,12 +24,11 @@ function metricCard(label, value, note, tone = "normal") {
 
   return `
     <article class="kpi-card ${surfaceClass(surface)}">
-      <div class="kpi-label ${surfaceTextToneClass(surface, "soft")}">${label}</div>
+      <div class="kpi-label ${surfaceTextToneClass(surface, "strong")}">${label}</div>
       <div class="kpi-value-row">
         <strong class="${surfaceTextToneClass(surface, "strong")}">${value}</strong>
-        <span class="pill ${tone}">${tone === "normal" ? "stable" : tone}</span>
+        <span class="pill ${tone}">${tone}</span>
       </div>
-      <p class="${surfaceTextToneClass(surface, "muted")}">${note}</p>
     </article>
   `;
 }
@@ -54,11 +53,11 @@ function zoneStageBadge(title, value, note, tone = "normal") {
 
 
 
-function mapHotspot(zone, active, managed) {
+function mapHotspot(zone, active) {
   return `
     <button
       type="button"
-      class="map-hotspot ${surfaceClass("light")} ${active ? "active" : ""} ${managed ? "managed" : ""} ${severityClass(zone.severity)}"
+      class="map-hotspot ${surfaceClass("light")} ${active ? "active" : ""} ${severityClass(zone.severity)}"
       data-zone-hotspot="${zone.id}"
       style="left:${((zone.x + zone.width / 2) / 980 * 100).toFixed(2)}%; top:${((zone.y + zone.height / 2) / 640 * 100).toFixed(2)}%;"
       aria-pressed="${active ? "true" : "false"}"
@@ -100,57 +99,79 @@ export function renderMapWorkspacePage({
   sceneBadgesEl,
   schematicEl,
   mapZonePanelEl,
-  managedZones,
   selectedZone,
-  isManagedZone,
   focusZone,
   mapPhotoUrl
 }) {
   if (!state.zones.length) return;
   const zone = selectedZone();
-  const managed = managedZones();
+  if (!zone) return;
+
   const warningCount = severityCount(state.zones, "warning");
   const criticalCount = severityCount(state.zones, "critical");
+  const normalCount = Math.max(state.zones.length - warningCount - criticalCount, 0);
+  const totalZones = Math.max(state.zones.length, 1);
+  const normalPct = ((normalCount / totalZones) * 100).toFixed(1);
+  const warningPct = ((warningCount / totalZones) * 100).toFixed(1);
+  const criticalPct = ((criticalCount / totalZones) * 100).toFixed(1);
   const avgTemp = state.zones.reduce((sum, item) => sum + (item.indoor.temperature ?? 0), 0) / state.zones.length;
   const avgMoisture = state.zones.reduce((sum, item) => sum + (item.soil.moisture ?? 0), 0) / state.zones.length;
 
-  if (overviewKpisEl) {
-    overviewKpisEl.innerHTML = [
-      metricCard("Managed scope", `${managed.length}/${state.zones.length}`, `${managed.map((item) => item.name).join(" - ")}`, "normal"),
-      metricCard("Facility heat", fmt(avgTemp, 1, " C"), `${criticalCount} critical zone${criticalCount === 1 ? "" : "s"} in command view`, criticalCount ? "critical" : warningCount ? "warning" : "normal"),
-      metricCard("Root-zone posture", fmt(avgMoisture, 2, ""), `${warningCount} warning zone${warningCount === 1 ? "" : "s"} drifting from recipe`, warningCount ? "warning" : "normal"),
-      metricCard("Incident pressure", `${state.alerts.length}`, zoneDeviationSummary(zone), criticalCount ? "critical" : state.alerts.length ? "warning" : "normal")
-    ].join("");
-  }
+  const warningAlerts = state.alerts.filter((event) => (event.payload?.severity || "normal") === "warning").length;
+  const criticalAlerts = state.alerts.filter((event) => (event.payload?.severity || "normal") === "critical").length;
 
-  if (sceneBadgesEl) {
-    sceneBadgesEl.innerHTML = [
-      zoneStageBadge("Focused zone", zone.name, zoneDeviationSummary(zone), severityClass(zone.severity)),
-      zoneStageBadge("Managed footprint", `${managed.length} zones`, `${managed.reduce((sum, item) => sum + item.assets.length, 0)} addressable assets`, "normal"),
-      zoneStageBadge("Telemetry posture", `${calcZoneHealthScore(zone)} health`, `${fmt(zone.indoor.temperature, 1, " C")} air - ${fmt(zone.derived.vpd, 2, " kPa")} VPD`, severityClass(zone.severity))
-    ].join("");
+  const actionableAlerts = Math.max(warningAlerts + criticalAlerts, 1);
+  const warningAlertPct = ((warningAlerts / actionableAlerts) * 100).toFixed(1);
+  const criticalAlertPct = ((criticalAlerts / actionableAlerts) * 100).toFixed(1);
+
+
+  if (overviewKpisEl) {
+    overviewKpisEl.innerHTML = `
+      <section class="overview-strip">
+        <article class="overview-metric">
+          <span class="overview-label">Zones in warning</span>
+          <strong class="overview-value">${warningCount}</strong>
+          <div class="overview-severity-bar">
+            <span class="normal" style="width:${normalPct}%"></span>
+            <span class="warning" style="width:${warningPct}%"></span>
+            <span class="critical" style="width:${criticalPct}%"></span>
+          </div>
+          <span class="overview-note">${normalCount} normal ? ${warningCount} warning ? ${criticalCount} critical</span>
+        </article>
+
+        <article class="overview-metric">
+          <span class="overview-label">Incidents</span>
+          <strong class="overview-value">${state.alerts.length}</strong>
+          <div class="overview-incident-split">
+            <span class="warning" style="width:${warningAlertPct}%"></span>
+            <span class="critical" style="width:${criticalAlertPct}%"></span>
+          </div>
+          <span class="overview-note">${warningAlerts} warning · ${criticalAlerts} critical</span>
+        </article>
+
+
+        <article class="overview-metric">
+          <span class="overview-label">Focused zone</span>
+          <strong class="overview-value">${zone.name}</strong>
+        </article>
+      </section>
+    `;
   }
 
   if (schematicEl) {
+
     schematicEl.innerHTML = `
       <div class="facility-map">
         <img class="facility-map-photo" src="${mapPhotoUrl}" alt="Greenhouse digital twin facility map" />
         <div class="facility-map-hotspots" aria-label="Greenhouse zones">
-          ${state.zones.map((item) => mapHotspot(item, item.id === state.selectedZoneId, isManagedZone(item.id))).join("")}
-        </div>
-        <div class="map-caption">
-          <div>
-            <span class="section-label">Facility Overview</span>
-            <strong>${zone.name}</strong>
-          </div>
-          <span>${zoneDeviationSummary(zone)}</span>
+          ${state.zones.map((item) => mapHotspot(item, item.id === state.selectedZoneId)).join("")}
         </div>
       </div>
     `;
 
     schematicEl.querySelectorAll("[data-zone-hotspot]").forEach((element) => {
       element.addEventListener("click", async () => {
-        await focusZone(element.dataset.zoneHotspot, { ensureManaged: true });
+        await focusZone(element.dataset.zoneHotspot);
       });
     });
   }
@@ -160,11 +181,10 @@ export function renderMapWorkspacePage({
       <article class="zone-summary-card ${surfaceClass("dark")} ${severityClass(zone.severity)}">
         <div class="zone-summary-head">
           <div>
-            <span class="section-label ${textToneClass("soft")}">Selected Zone</span>
             <h3 class="${textToneClass("strong")}">${zone.name}</h3>
           </div>
-          <span class="pill ${severityClass(zone.severity)}">${zone.severity}</span>
-        </div>  <p class="${textToneClass("muted")}">${zoneDeviationSummary(zone)}</p>  <div class="mini-metric-grid">
+        </div>  
+        <div class="mini-metric-grid">
           <div class="mini-metric ${surfaceClass("light")} mini-metric--air">
             <div class="mini-metric-copy">
               <span class="${textToneClass("soft")}">Air</span>
@@ -288,29 +308,11 @@ export function renderTwinWorkspacePage({
     });
   }
 
-  if (zoneNetworkBadgesEl) {
-    zoneNetworkBadgesEl.innerHTML = [
-      zoneStageBadge("Gateway focus", activeDevice.name, `${activeDevice.sensors.length} downstream sensors`, edgeSeverityClass(activeDevice.status)),
-      zoneStageBadge("Broker path", activeDevice.brokerLink, `Last seen ${Math.round((activeDevice.lastSeenMs ?? 0) / 1000)}s ago`, activeDevice.brokerLink === "down" ? "critical" : activeDevice.brokerLink === "unstable" ? "warning" : "normal"),
-      zoneStageBadge("Actuator load", `${zone.assets.filter((asset) => asset.load >= 0.55).length} elevated`, `${zone.assets.length} control surfaces tracked`, severityClass(zone.severity))
-    ].join("");
-  }
-
   if (zoneNetworkMapEl) {
     zoneNetworkMapEl.innerHTML = `
       <article class="topology-panel">
-        <div class="topology-head">
-          <div>
-            <span class="section-label">Zone Topology</span>
-            <h3>${zone.name}</h3>
-          </div>
-          <span class="pill ${severityClass(zone.severity)}">${zone.severity}</span>
-        </div>
         <div class="topology-stage">
           <img class="facility-map-photo twin-photo" src="${twinPhotoUrl}" alt="Focused greenhouse twin view" />
-          <div class="topology-overlay">
-            ${renderGatewayFocus(devices, activeDevice)}
-          </div>
         </div>
         <div class="sensor-flow-grid">
           ${activeDevice.sensors.map((sensor) => `
@@ -336,7 +338,7 @@ export function renderTwinWorkspacePage({
         selectEdgeDevice(element.dataset.gatewayHotspot);
         const nextDevice = devices.find((device) => device.id === element.dataset.gatewayHotspot);
         if (nextDevice?.zoneId && nextDevice.zoneId !== state.selectedZoneId) {
-          focusZone(nextDevice.zoneId, { ensureManaged: true, updateHistory: false });
+          focusZone(nextDevice.zoneId, { updateHistory: false });
         } else {
           render();
         }
@@ -346,7 +348,6 @@ export function renderTwinWorkspacePage({
 }
 
 export function renderOperationsWorkspacePage({ state, opsSummaryEl, operationsBoardEl, managedZones, selectedZone, incidentCardHtml }) {
-  const managed = managedZones();
   const focused = selectedZone();
   const totalAssets = managed.reduce((sum, zone) => sum + zone.assets.length, 0);
   const avgTemp = managed.reduce((sum, zone) => sum + (zone.indoor.temperature ?? 0), 0) / Math.max(managed.length, 1);
@@ -467,7 +468,6 @@ function trendChart(values, color) {
 export function renderGraphWorkspacePage({ state, graphGridEl, managedZones, selectedZone, historySlice, graphTimeLabels, createFallbackData }) {
   if (!graphGridEl) return;
   const zone = selectedZone();
-  const managed = managedZones();
   const baseHistory = state.history.length ? state.history : createFallbackData(4).history;
   const history = historySlice(state, baseHistory);
   const [startLabel, middleLabel, endLabel] = graphTimeLabels(history);

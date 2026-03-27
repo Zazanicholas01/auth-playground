@@ -1,0 +1,108 @@
+@media (max-width: 1280px) {
+  .workspace-shell {
+    grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  }
+
+  .evidence-rail {
+    grid-column: 1 / -1;
+  }
+
+  .stage-grid,
+  .operations-layout-grid,
+  .compact-incidents,
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .status-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .app-shell {
+    padding: 0 10px 10px;
+  }
+
+  .global-bar {
+    margin-left: -10px;
+    margin-right: -10px;
+    width: calc(100% + 20px);
+    border-radius: 0 0 18px 18px;
+  }
+
+  .workspace-shell,
+  .kpi-grid,
+  .badge-grid,
+  .asset-matrix,
+  .sensor-flow-grid,
+  .command-strip,
+  .fleet-hero-grid,
+  .compact-incidents,
+  .zone-hero,
+  .zone-hero-metrics,
+  .metric-chip-row,
+  .mini-metric-grid,
+  .workspace-toolbar-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .status-strip {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .brand-block h1 {
+    font-size: 22px;
+  }
+
+  .workspace-toolbar-copy h2 {
+    font-size: 24px;
+  }
+
+  .page-nav {
+    width: 100%;
+  }
+
+  .page-nav a {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+  }
+
+  .gateway-cluster {
+    position: static;
+    padding-top: 10px;
+  }
+
+  .facility-map-hotspots {
+    position: static;
+    display: grid;
+    gap: 8px;
+    padding-top: 10px;
+  }
+
+  .map-hotspot {
+    position: static;
+    transform: none;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .map-caption {
+    position: static;
+  }
+
+  .sensor-path-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 920px) {
+  .overview-strip {
+    flex-direction: column;
+  }
+
+  .overview-metric + .overview-metric {
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}

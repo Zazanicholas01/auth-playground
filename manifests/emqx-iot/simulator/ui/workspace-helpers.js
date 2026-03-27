@@ -30,12 +30,12 @@ export function selectedZone(state) {
 }
 
 export function isManagedZone(state, zoneId) {
-  return state.managedZoneIds.includes(zoneId);
+  return selectedZone(state)?.id === zoneId;
 }
 
 export function managedZones(state) {
-  const zones = state.zones.filter((zone) => isManagedZone(state, zone.id));
-  return zones.length ? zones : (selectedZone(state) ? [selectedZone(state)] : []);
+  const zone = selectedZone(state);
+  return zone ? [zone] : [];
 }
 
 export function managedAssets(state) {
@@ -49,16 +49,12 @@ export function managedAssets(state) {
 }
 
 export function selectedScenarioLabel(state) {
-  const scenarios = [...new Set(managedZones(state).map((zone) => zone.scenario).filter(Boolean))];
-  if (!scenarios.length) return String(state.scenario || "baseline-day").replace(/-/g, " ");
-  if (scenarios.length === 1) return scenarios[0].replace(/-/g, " ");
-  return "mixed profiles";
+  const zone = selectedZone(state);
+  return String(zone?.scenario || state.scenario || "baseline-day").replace(/-/g, " ");
 }
 
 export function selectedZoneLabel(state) {
-  const zones = managedZones(state);
-  if (zones.length <= 1) return zones[0]?.name || "--";
-  return `${zones.length} zones`;
+  return selectedZone(state)?.name || "--";
 }
 
 export function selectedEdgeDevice(state) {

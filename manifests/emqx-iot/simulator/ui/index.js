@@ -17,7 +17,6 @@ import {
   focusPathLabel,
   graphTimeLabels,
   historySlice,
-  isManagedZone,
   managedAssets,
   managedZones,
   selectedEdgeDevice as getSelectedEdgeDevice,
@@ -63,7 +62,6 @@ const state = {
   graphMetricGroup: "all",
   graphComparisonMode: "managed",
   selectedZoneId: "greenhouse-a-north",
-  managedZoneIds: ["greenhouse-a-north"],
   selectedAssetId: "north-fans"
 };
 
@@ -87,9 +85,7 @@ const scenarioPillEl = document.getElementById("scenario-pill");
 const selectedZonePillEl = document.getElementById("selected-zone-pill");
 const provenancePillEl = document.getElementById("provenance-pill");
 const timePillEl = document.getElementById("time-pill");
-const scopeSummaryEl = document.getElementById("scope-summary");
 const provenanceCardEl = document.getElementById("provenance-card");
-const focusPathNoteEl = document.getElementById("focus-path-note");
 
 const workspaceEyebrowEl = document.getElementById("workspace-eyebrow");
 const workspaceTitleEl = document.getElementById("workspace-title");
@@ -142,17 +138,14 @@ function incidentCardHtml({ timeLabel, scopeLabel, severity, message, actionHtml
       <div class="event-rail"></div>
       <div class="event-main">
         <div class="event-topline">
+          <strong class="${surfaceTextToneClass(surface, "strong")}">${scopeLabel}</strong>
           <span class="event-time ${surfaceTextToneClass(surface, "soft")}">${timeLabel}</span>
-          <span class="pill ${severityTone}">${severity || "normal"}</span>
         </div>
-        <strong class="${surfaceTextToneClass(surface, "strong")}">${scopeLabel}</strong>
         <p class="${surfaceTextToneClass(surface, "muted")}">${message}</p>
       </div>
-      <div class="event-actions">${actionHtml}</div>
     </article>
   `;
 }
-
 
 
 function incidentEmptyHtml(message) {
@@ -188,14 +181,6 @@ function assetSelectionGraphic(asset, zone) {
     </svg>`;
 }
 
-function syncManagedState() {
-  const zoneIds = new Set(state.zones.map((zone) => zone.id));
-  state.managedZoneIds = state.managedZoneIds.filter((zoneId) => zoneIds.has(zoneId));
-  if (!state.managedZoneIds.length && state.zones[0]) state.managedZoneIds = [state.zones[0].id];
-  if (!zoneIds.has(state.selectedZoneId)) state.selectedZoneId = state.managedZoneIds[0] || state.zones[0]?.id || state.selectedZoneId;
-  if (state.selectedZoneId && !isManagedZone(state, state.selectedZoneId)) state.managedZoneIds = [...state.managedZoneIds, state.selectedZoneId];
-}
-
 async function loadHistoryForZone(zoneId) {
   const history = await fetch(apiBase + "/history/" + zoneId).then((response) => response.json()).catch(() => []);
   state.history = history.map(mapHistoryPoint);
@@ -222,35 +207,14 @@ function selectSensor(sensorId) {
   render();
 }
 
-async function focusZone(zoneId, { ensureManaged = true, updateHistory = true } = {}) {
+async function focusZone(zoneId, { updateHistory = true } = {}) {
   state.selectedZoneId = zoneId;
-  if (ensureManaged && !isManagedZone(state, zoneId)) state.managedZoneIds = [...state.managedZoneIds, zoneId];
-  syncManagedState();
+
   const zone = selectedZone(state);
-  if (zone && !managedAssets(state).find((asset) => asset.id === state.selectedAssetId)) {
+  if (zone && !(zone.assets || []).find((asset) => asset.id === state.selectedAssetId)) {
     state.selectedAssetId = zone.assets[0]?.id || state.selectedAssetId;
   }
-  if (updateHistory && zone?.id) await loadHistoryForZone(zone.id);
-  render();
-}
 
-async function toggleManagedZone(zoneId, { updateHistory = true } = {}) {
-  const currentlyManaged = isManagedZone(state, zoneId);
-  if (currentlyManaged && state.managedZoneIds.length > 1 && state.selectedZoneId !== zoneId) {
-    state.selectedZoneId = zoneId;
-  } else if (currentlyManaged && state.managedZoneIds.length > 1) {
-    state.managedZoneIds = state.managedZoneIds.filter((id) => id !== zoneId);
-    if (state.selectedZoneId === zoneId) state.selectedZoneId = state.managedZoneIds[0];
-  } else if (!currentlyManaged) {
-    state.managedZoneIds = [...state.managedZoneIds, zoneId];
-    state.selectedZoneId = zoneId;
-  } else {
-    state.selectedZoneId = zoneId;
-  }
-
-  syncManagedState();
-  const zone = selectedZone(state);
-  if (zone && !managedAssets(state).find((asset) => asset.id === state.selectedAssetId)) state.selectedAssetId = zone.assets[0]?.id || state.selectedAssetId;
   if (updateHistory && zone?.id) await loadHistoryForZone(zone.id);
   render();
 }
@@ -281,49 +245,8 @@ function loadEdgeFallback(tick) {
 
 function selectedAsset() {
   const zone = selectedZone(state);
-  const assets = currentPage === "operations"
-    ? (zone?.assets || []).map((asset) => ({ ...asset, zoneId: zone.id, zoneName: zone.name, zoneSeverity: zone.severity, faultContext: zone.alerts[0] || "Nominal" }))
-    : managedAssets(state);
+  const assets = zone?.assets || [];
   return assets.find((asset) => asset.id === state.selectedAssetId) || assets[0] || null;
-}
-
-function renderScopeSummary() {
-  const managed = managedZones(state);
-  const focused = selectedZone(state);
-  const critical = managed.filter((zone) => zone.severity === "critical").length;
-  const warning = managed.filter((zone) => zone.severity === "warning").length;
-
-  if (!scopeSummaryEl || !focused) return;
-
-  scopeSummaryEl.innerHTML = `
-    <article class="summary-stack-card surface-dark">
-      <div class="summary-card-head">
-        <span class="section-label surface-text-soft">Managed</span>
-        <strong class="summary-card-value surface-text-strong">${managed.length} zone${managed.length === 1 ? "" : "s"}</strong>
-      </div>
-      <p class="summary-card-detail surface-text-muted">${managed.map((zone) => zone.name).join(", ")}</p>
-    </article>
-
-    <article class="summary-stack-card surface-dark">
-      <div class="summary-card-head">
-        <span class="section-label surface-text-soft">Focused</span>
-        <strong class="summary-card-value surface-text-strong">${focused.name}</strong>
-      </div>
-      <p class="summary-card-detail surface-text-muted">
-        ${calcZoneHealthScore(focused)} health, ${zoneDeviationSummary(focused)}
-      </p>
-    </article>
-
-    <article class="summary-stack-card surface-dark">
-      <div class="summary-card-head">
-        <span class="section-label surface-text-soft">Risk Mix</span>
-        <strong class="summary-card-value surface-text-strong">${critical} critical / ${warning} warning</strong>
-      </div>
-      <p class="summary-card-detail surface-text-muted">
-        ${state.alerts.length} active incident${state.alerts.length === 1 ? "" : "s"} across the managed command picture.
-      </p>
-    </article>
-  `;
 }
 
 
@@ -338,7 +261,7 @@ function renderZoneList() {
     return `
       <button
         type="button"
-        class="entity-card ${surfaceClass(surface)} ${item.id === zone?.id ? "active" : ""} ${isManagedZone(state, item.id) ? "managed" : ""}"
+        class="entity-card ${surfaceClass(surface)} ${item.id === zone?.id ? "active" : ""}"
         data-zone-id="${item.id}"
       >
         <div class="entity-header">
@@ -356,45 +279,17 @@ function renderZoneList() {
               <span style="width:${health}%"></span>
             </div>
           </div>
-          <span>${zoneDeviationSummary(item)}</span>
-        </div>
-
-        <div class="metric-chip-row">
-          <span class="metric-chip ${surfaceClass(surface)}">
-            <label class="${surfaceTextToneClass(surface, "soft")}">Air</label>
-            <strong class="${surfaceTextToneClass(surface, "strong")}">${fmt(item.indoor.temperature, 1, " C")}</strong>
-          </span>
-          <span class="metric-chip ${surfaceClass(surface)}">
-            <label class="${surfaceTextToneClass(surface, "soft")}">Root</label>
-            <strong class="${surfaceTextToneClass(surface, "strong")}">${fmt(item.soil.moisture, 2, "")}</strong>
-          </span>
-        </div>
-
-        <div class="entity-actions">
-          <button
-            type="button"
-            class="scope-toggle ${isManagedZone(state, item.id) ? "active" : ""}"
-            data-zone-manage="${item.id}"
-          >
-            ${isManagedZone(state, item.id) ? "Managed" : "Add to scope"}
-          </button>
         </div>
       </button>
     `;
+
   }).join("");
 
   setSlotHTML("zone-list", listHtml);
   slotEls("zone-list").forEach((container) => {
     container.querySelectorAll("[data-zone-id]").forEach((element) => {
       element.addEventListener("click", async () => {
-        await focusZone(element.dataset.zoneId, { ensureManaged: true });
-      });
-    });
-
-    container.querySelectorAll("[data-zone-manage]").forEach((element) => {
-      element.addEventListener("click", async (event) => {
-        event.stopPropagation();
-        await toggleManagedZone(element.dataset.zoneManage);
+        await focusZone(element.dataset.zoneId);
       });
     });
   });
@@ -404,15 +299,13 @@ function renderZoneList() {
 function renderAssetDetail() {
   const zone = selectedZone(state);
   const asset = selectedAsset();
-  const assets = currentPage === "operations"
-    ? (zone?.assets || []).map((item) => ({
-        ...item,
-        zoneId: zone.id,
-        zoneName: zone.name,
-        zoneSeverity: zone.severity,
-        faultContext: zone.alerts[0] || "Nominal"
-      }))
-    : managedAssets(state);
+  const assets = (zone?.assets || []).map((item) => ({
+    ...item,
+    zoneId: zone.id,
+    zoneName: zone.name,
+    zoneSeverity: zone.severity,
+    faultContext: zone.alerts[0] || "Nominal"
+  }));
 
   if (!zone || !asset) {
     setSlotHTML("asset-detail", incidentEmptyHtml("No asset selected."));
@@ -490,9 +383,8 @@ function renderAssetDetail() {
 
 
 function renderAlerts() {
-  const managedZoneIds = new Set(managedZones(state).map((zone) => zone.id));
   const scopedAlerts = currentPage === "operations"
-    ? state.alerts.filter((event) => managedZoneIds.has(event.payload?.zoneId || event.payload?.deviceId || ""))
+    ? state.alerts.filter((event) => (event.payload?.zoneId || event.payload?.deviceId || "") === state.selectedZoneId)
     : state.alerts;
 
   const rows = [...scopedAlerts]
@@ -505,7 +397,7 @@ function renderAlerts() {
         scopeLabel: zoneNames[zoneId] || zoneId || "System",
         severity: event.payload?.severity || "normal",
         message: event.payload?.message || event.type,
-        actionHtml: zoneId ? `<a class="text-link" href="/graphs?zone=${encodeURIComponent(zoneId)}">Graph</a>` : "",
+        actionHtml: "",
         dataAttrs: zoneId ? `data-alert-zone-id="${zoneId}"` : ""
       });
     }).join("");
@@ -515,7 +407,7 @@ function renderAlerts() {
     container.querySelectorAll("[data-alert-zone-id]").forEach((element) => {
       element.addEventListener("click", async (event) => {
         if (event.target.closest(".text-link")) return;
-        await focusZone(element.dataset.alertZoneId, { ensureManaged: true });
+        await focusZone(element.dataset.alertZoneId);
       });
     });
   });
@@ -584,8 +476,6 @@ function renderStatus() {
     else selectedZonePillEl.textContent = `Zone ${selectedZoneLabel(state)}`;
   }
 
-  if (focusPathNoteEl) focusPathNoteEl.textContent = `${managedZones(state).length} managed zone${managedZones(state).length === 1 ? "" : "s"} contributing to the current command context.`;
-
   applyWorkspaceChrome({
     currentPage,
     elements: {
@@ -648,7 +538,6 @@ function renderFleetPages() {
 function render() {
   renderClock();
   renderProvenance();
-  renderScopeSummary();
   renderStatus();
 
   if (currentPage === "operations" || currentPage === "graphs") renderGraphControls();
@@ -661,9 +550,7 @@ function render() {
       sceneBadgesEl,
       schematicEl,
       mapZonePanelEl,
-      managedZones: () => managedZones(state),
       selectedZone: () => selectedZone(state),
-      isManagedZone: (zoneId) => isManagedZone(state, zoneId),
       focusZone,
       mapPhotoUrl
     });
@@ -733,9 +620,7 @@ async function loadLiveData() {
 
   const primaryId = pendingZoneId || state.selectedZoneId;
   state.selectedZoneId = state.zones.find((zone) => zone.id === primaryId)?.id || state.zones[0]?.id || state.selectedZoneId;
-  if (pendingZoneId) state.managedZoneIds = [pendingZoneId];
   pendingZoneId = null;
-  syncManagedState();
 
   const zone = selectedZone(state);
   if (zone?.id) await loadHistoryForZone(zone.id);
@@ -774,9 +659,8 @@ async function refresh() {
   loadEdgeFallback(fallbackTick);
 
   if (!selectedZone(state)) state.selectedZoneId = state.zones[0]?.id || state.selectedZoneId;
-  syncManagedState();
   const zone = selectedZone(state);
-  const assets = managedAssets(state);
+  const assets = zone?.assets || [];
   if (zone && !assets.find((asset) => asset.id === state.selectedAssetId)) {
     state.selectedAssetId = assets[0]?.id || zone.assets[0]?.id || state.selectedAssetId;
   }

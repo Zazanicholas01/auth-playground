@@ -121,26 +121,10 @@
       </header>
 
       <div class="workspace-shell">
-        <aside class="workspace-rail scope-rail panel">
-          <div class="workspace-rail-head">
-            <div>
-              <div id="scope-eyebrow" class="eyebrow">Scope Rail</div>
-              <h2 id="scope-title">Managed Facility</h2>
-            </div>
-          </div>
-
-          <section class="rail-section panel-subtle">
-            <div class="section-label">Focus Path</div>
-            <div id="workspace-focus-path" class="focus-path">Facility / North Bay</div>
-          </section>
-
-          <section class="rail-section panel-subtle">
-            <div class="section-label">Scope Summary</div>
-            <div id="scope-summary" class="scope-summary"></div>
-          </section>
+        <aside class="workspace-rail scope-rail">
 
           <section class="rail-section page-general page-map page-operations page-graphs">
-            <div class="section-label">Zones</div>
+            <div class="section-label rail-title">Zones Overview</div>
             <div data-slot="zone-list" class="entity-list"></div>
           </section>
 
@@ -190,7 +174,7 @@
           <section id="page-map" class="page-layout page-map mission-stack">
             <div id="overview-kpis" class="kpi-grid"></div>
 
-            <div class="main-stage panel">
+            <div class="main-stage">
               <div id="scene-badges" class="badge-grid scene-badges"></div>
 
               <div class="stage-grid">
@@ -203,13 +187,6 @@
           <section id="page-twin" class="page-layout page-twin mission-stack">
             <div id="twin-zone-summary"></div>
             <div class="main-stage panel">
-              <div class="stage-head">
-                <div>
-                  <div class="eyebrow">Zone Diagnostics</div>
-                  <h3>Gateway And Asset Topology</h3>
-                </div>
-                <div id="zone-network-badges" class="badge-grid"></div>
-              </div>
               <div id="zone-network-map" class="stage-canvas"></div>
             </div>
           </section>
@@ -264,21 +241,9 @@
           </section>
         </main>
 
-        <aside class="workspace-rail evidence-rail panel">
-          <div class="workspace-rail-head">
-            <div>
-              <div id="context-eyebrow" class="eyebrow">Evidence Rail</div>
-              <h2 id="context-title">Context And Evidence</h2>
-              <p id="context-copy" class="workspace-copy">Keep asset detail, supporting incidents, and data provenance next to the mission canvas.</p>
-            </div>
-          </div>
+        <aside class="workspace-rail evidence-rail">
 
-          <section class="rail-section panel-subtle">
-            <div class="section-label surface-dark">Data Provenance</div>
-            <div id="provenance-card" class="provenance-card surface-dark"></div>
-          </section>
-
-          <section class="rail-section page-general page-map page-twin page-operations page-graphs">
+          <section class="rail-section page-twin page-operations page-graphs">
             <div class="section-label">Selected Asset</div>
             <div data-slot="asset-detail" class="asset-detail"></div>
           </section>

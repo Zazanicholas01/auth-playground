@@ -1,0 +1,47 @@
+.text-strong { color: var(--text-on-light-strong); }
+.text-muted { color: var(--text-on-light-muted); }
+.text-soft { color: var(--text-on-light-soft); }
+
+.text-strong-inverse { color: var(--text-on-dark-strong); }
+.text-muted-inverse { color: var(--text-on-dark-muted); }
+.text-soft-inverse { color: var(--text-on-dark-soft); }
+
+.surface-light {
+  --surface-text-strong: var(--text-on-light-strong);
+  --surface-text-muted: var(--text-on-light-muted);
+  --surface-text-soft: var(--text-on-light-soft);
+}
+
+.surface-dark {
+  --surface-text-strong: var(--text-on-dark-strong);
+  --surface-text-muted: var(--text-on-dark-muted);
+  --surface-text-soft: var(--text-on-dark-soft);
+}
+
+.surface-text-strong { color: var(--surface-text-strong); }
+.surface-text-muted { color: var(--surface-text-muted); }
+.surface-text-soft { color: var(--surface-text-soft); }
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  color: var(--text-on-dark-strong);
+  background:
+    radial-gradient(circle at top left, rgba(79, 159, 158, 0.05), transparent 26%),
+    linear-gradient(180deg, #8cb4ca 0%, #13465f 100%);
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+}
