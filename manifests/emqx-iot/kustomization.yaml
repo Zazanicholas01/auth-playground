@@ -16,7 +16,6 @@ resources:
   - simulator/timescaledb.yaml
   - simulator/dbgate.yaml
   - simulator/bronze-silver-cron.yaml
-  - simulator/local-llm.yaml
 
 configMapGenerator:
   - name: iot-sql-scripts

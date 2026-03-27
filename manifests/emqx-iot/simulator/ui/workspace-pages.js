@@ -43,9 +43,7 @@ function zoneStageBadge(title, value, note, tone = "normal") {
       <div class="badge-card-top">
         <span class="section-label ${surfaceTextToneClass(surface, "soft")}">${title}</span>
         <span class="pill ${tone}">${tone}</span>
-      </div>
-
-      <div class="badge-card-main">
+      </div><div class="badge-card-main">
         <strong class="badge-card-value ${surfaceTextToneClass(surface, "strong")}">${value}</strong>
         <p class="badge-card-note ${surfaceTextToneClass(surface, "muted")}">${note}</p>
       </div>
@@ -73,57 +71,6 @@ function mapHotspot(zone, active, managed) {
     </button>
   `;
 }
-
-function twinReportCard(reportState, loading) {
-  if (loading) {
-    return `
-      <article class="zone-summary-card ${surfaceClass("dark")}">
-        <div class="zone-summary-head">
-          <div>
-            <span class="section-label ${textToneClass("soft")}">AI Report</span>
-            <h3 class="${textToneClass("strong")}">Generating operational summary</h3>
-          </div>
-          <span class="pill warning">loading</span>
-        </div>
-        <p class="${textToneClass("muted")}">Checking twin, alerts, and recent metrics.</p>
-      </article>
-    `;
-  }
-
-  const report = reportState?.report;
-  if (!report) return "";
-
-  return `
-    <article class="zone-summary-card ${surfaceClass("dark")} ${severityClass(report.status || "normal")}">
-      <div class="zone-summary-head">
-        <div>
-          <span class="section-label ${textToneClass("soft")}">AI Report</span>
-          <h3 class="${textToneClass("strong")}">${report.headline}</h3>
-        </div>
-        <span class="pill ${severityClass(report.status || "normal")}">${report.status || "normal"}</span>
-      </div>
-
-      <p class="${textToneClass("muted")}">${report.summary}</p>
-
-      <div class="mini-metric-grid">
-        <div class="mini-metric ${surfaceClass("light")}">
-          <span class="${textToneClass("soft")}">Findings</span>
-          <strong class="${textToneClass("strong")}">${(report.findings || []).length}</strong>
-        </div>
-        <div class="mini-metric ${surfaceClass("light")}">
-          <span class="${textToneClass("soft")}">Actions</span>
-          <strong class="${textToneClass("strong")}">${(report.recommendedActions || []).length}</strong>
-        </div>
-      </div>
-
-      <div class="${textToneClass("muted")}">
-        ${(report.findings || []).map((item) => `<p>- ${item}</p>`).join("")}
-        ${(report.recommendedActions || []).map((item) => `<p><strong>Action:</strong> ${item}</p>`).join("")}
-      </div>
-    </article>
-  `;
-}
-
 
 
 function renderGatewayFocus(devices, activeDevice) {
@@ -217,11 +164,7 @@ export function renderMapWorkspacePage({
             <h3 class="${textToneClass("strong")}">${zone.name}</h3>
           </div>
           <span class="pill ${severityClass(zone.severity)}">${zone.severity}</span>
-        </div>
-
-        <p class="${textToneClass("muted")}">${zoneDeviationSummary(zone)}</p>
-
-        <div class="mini-metric-grid">
+        </div>  <p class="${textToneClass("muted")}">${zoneDeviationSummary(zone)}</p>  <div class="mini-metric-grid">
           <div class="mini-metric ${surfaceClass("light")} mini-metric--air">
             <div class="mini-metric-copy">
               <span class="${textToneClass("soft")}">Air</span>
@@ -233,9 +176,7 @@ export function renderMapWorkspacePage({
                 <path d="M9 6a3 3 0 1 1 6 0v7a5 5 0 1 1-6 0V6" />
               </svg>
             </span>
-          </div>
-
-          <div class="mini-metric ${surfaceClass("light")} mini-metric--humidity">
+          </div>    <div class="mini-metric ${surfaceClass("light")} mini-metric--humidity">
             <div class="mini-metric-copy">
               <span class="${textToneClass("soft")}">Humidity</span>
               <strong class="${textToneClass("strong")}">${fmt(zone.indoor.humidity, 0, " %")}</strong>
@@ -245,9 +186,7 @@ export function renderMapWorkspacePage({
                 <path d="M12 3C9 7 7 9.5 7 13a5 5 0 0 0 10 0c0-3.5-2-6-5-10Z" />
               </svg>
             </span>
-          </div>
-
-          <div class="mini-metric ${surfaceClass("light")} mini-metric--root">
+          </div>    <div class="mini-metric ${surfaceClass("light")} mini-metric--root">
             <div class="mini-metric-copy">
               <span class="${textToneClass("soft")}">Root moisture</span>
               <strong class="${textToneClass("strong")}">${fmt(zone.soil.moisture, 2, "")}</strong>
@@ -261,9 +200,7 @@ export function renderMapWorkspacePage({
                 <path d="M12 12c0 4 1 6 3 8" />
               </svg>
             </span>
-          </div>
-
-          <div class="mini-metric ${surfaceClass("light")} mini-metric--irrigation">
+          </div>    <div class="mini-metric ${surfaceClass("light")} mini-metric--irrigation">
             <div class="mini-metric-copy">
               <span class="${textToneClass("soft")}">Irrigation</span>
               <strong class="${textToneClass("strong")}">${fmt(zone.soil.irrigationFlow, 1, " L/min")}</strong>
@@ -276,9 +213,7 @@ export function renderMapWorkspacePage({
               </svg>
             </span>
           </div>
-
-
-        </div>
+  </div>
       </article>
     `;
   }
@@ -317,8 +252,6 @@ export function renderTwinWorkspacePage({
           <div><span>Sensors</span><strong>${devices.reduce((sum, device) => sum + device.sensors.length, 0)}</strong></div>
         </div>
       </article>
-
-      ${twinReportCard(state.twinReport, state.twinReportLoading)}
     `;
   }
 
@@ -333,13 +266,9 @@ export function renderTwinWorkspacePage({
         <div class="entity-header">
           <strong class="${textToneClass("strong")}">${device.name}</strong>
           <span class="pill ${edgeSeverityClass(device.status)}">${device.status}</span>
-        </div>
-
-        <div class="entity-meta ${textToneClass("muted")}">
+        </div>  <div class="entity-meta ${textToneClass("muted")}">
           ${device.sensors.length} sensors &middot; ${device.brokerLink}
-        </div>
-
-        <div class="metric-chip-row">
+        </div>  <div class="metric-chip-row">
           <span class="metric-chip ${surfaceClass("light")}">
             <label class="${textToneClass("soft")}">Signal</label>
             <strong class="${textToneClass("strong")}">${device.signalRssi} dBm</strong>
@@ -442,17 +371,13 @@ export function renderOperationsWorkspacePage({ state, opsSummaryEl, operationsB
           <p class="${textToneClass("muted")}">
             ${riskQueue[0] ? zoneDeviationSummary(riskQueue[0]) : "No zone selected"}
           </p>
-        </article>
-
-        <article class="command-card ${surfaceClass("light")} ${state.alerts.length ? "warning" : "normal"}">
+        </article>  <article class="command-card ${surfaceClass("light")} ${state.alerts.length ? "warning" : "normal"}">
           <span class="section-label ${textToneClass("soft")}">Incident queue</span>
           <strong class="${textToneClass("strong")}">${state.alerts.length}</strong>
           <p class="${textToneClass("muted")}">
             ${state.alerts.length ? "Use the evidence rail to pivot into graph and asset context." : "No active incidents in managed scope."}
           </p>
-        </article>
-
-        <article class="command-card ${surfaceClass("light")} ${severityClass(focused.severity)}">
+        </article>  <article class="command-card ${surfaceClass("light")} ${severityClass(focused.severity)}">
           <span class="section-label ${textToneClass("soft")}">Focused response</span>
           <strong class="${textToneClass("strong")}">${focused.name}</strong>
           <p class="${textToneClass("muted")}">
@@ -574,16 +499,10 @@ export function renderGraphWorkspacePage({ state, graphGridEl, managedZones, sel
             <h3 class="${textToneClass("strong")}">${metric.label}</h3>
           </div>
           <span class="pill normal">${history.length} pts</span>
-        </div>
-
-        <div class="chart-meta">
+        </div>  <div class="chart-meta">
           <span class="${textToneClass("muted")}">Min ${fmt(min, metric.digits, metric.suffix)}</span>
           <span class="${textToneClass("muted")}">Max ${fmt(max, metric.digits, metric.suffix)}</span>
-        </div>
-
-        ${trendChart(values, metric.color)}
-
-        <div class="chart-comparisons">
+        </div>  ${trendChart(values, metric.color)}  <div class="chart-comparisons">
           ${state.graphComparisonMode === "managed"
             ? managed.map((item) => `
                 <div class="chart-row ${surfaceClass("light")}">
@@ -592,9 +511,7 @@ export function renderGraphWorkspacePage({ state, graphGridEl, managedZones, sel
                 </div>
               `).join("")
             : `<div class="chart-note ${textToneClass("muted")}">Focused on ${zone.name} while keeping incidents and asset evidence visible.</div>`}
-        </div>
-
-        <div class="chart-meta time-axis">
+        </div>  <div class="chart-meta time-axis">
           <span class="${textToneClass("soft")}">${startLabel}</span>
           <span class="${textToneClass("soft")}">${middleLabel}</span>
           <span class="${textToneClass("soft")}">${endLabel}</span>
@@ -603,3 +520,7 @@ export function renderGraphWorkspacePage({ state, graphGridEl, managedZones, sel
     `;
   }).join("");
 }
+
+
+
+

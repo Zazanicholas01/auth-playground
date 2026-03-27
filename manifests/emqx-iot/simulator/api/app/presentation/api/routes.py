@@ -1,14 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-import httpx
 
 from app.application.use_cases.health import HealthUseCase
 from app.application.use_cases.telemetry import TelemetryUseCase
-from app.application.use_cases.twin_report import TwinReportUseCase
-from app.presentation.api.dependencies import (
-    get_health_use_case,
-    get_telemetry_use_case,
-    get_twin_report_use_case,
-)
+from app.presentation.api.dependencies import get_health_use_case, get_telemetry_use_case
+
 router = APIRouter()
 
 
@@ -74,23 +69,3 @@ async def gold_zone_metrics(
     telemetry: TelemetryUseCase = Depends(get_telemetry_use_case),
 ):
     return await telemetry.get_gold_zone_metrics(limit)
-
-@router.get("/twin-report")
-async def twin_report(
-    zone_id: str = Query(...),
-    twin_reports: TwinReportUseCase = Depends(get_twin_report_use_case),
-):
-    try:
-        return await twin_reports.get_report(zone_id)
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"twin-report-failed: {exc}")
-    
-@router.get("/twin-report/health")
-async def twin_report_health():
-    try:
-        async with httpx.AsyncClient(timeout=3) as client:
-            response = await client.get(f"{settings.local_llm_url}/api/tags")
-            response.raise_for_status()
-        return {"ok": True}
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"local-llm-unreachable: {exc}")

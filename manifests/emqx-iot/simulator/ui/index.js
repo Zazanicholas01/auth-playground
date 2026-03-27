@@ -55,9 +55,6 @@ const state = {
   history: [],
   edgeDevices: [],
   edgeAlerts: [],
-  twinReport: null,
-  twinReportZoneId: null,
-  twinReportLoading: false,
   provenance: "live",
   selectedEdgeDeviceId: null,
   selectedSensorId: null,
@@ -234,7 +231,6 @@ async function focusZone(zoneId, { ensureManaged = true, updateHistory = true } 
     state.selectedAssetId = zone.assets[0]?.id || state.selectedAssetId;
   }
   if (updateHistory && zone?.id) await loadHistoryForZone(zone.id);
-  if (zone?.id) await loadTwinReport(zone.id);
   render();
 }
 
@@ -543,33 +539,6 @@ function renderProvenance() {
     `;
   }
 }
-
-async function loadTwinReport(zoneId) {
-  state.twinReportLoading = true;
-  render();
-
-  try {
-    const response = await fetch(`${apiBase}/twin-report?zone_id=${encodeURIComponent(zoneId)}`);
-    state.twinReport = await response.json();
-    state.twinReportZoneId = zoneId;
-  } catch {
-    state.twinReport = {
-      zoneId,
-      report: {
-        status: "warning",
-        headline: "Twin report unavailable",
-        summary: "The report service could not be reached.",
-        findings: ["The UI could not load the LLM-generated report."],
-        recommendedActions: ["Check API logs and the local model service."]
-      }
-    };
-    state.twinReportZoneId = zoneId;
-  } finally {
-    state.twinReportLoading = false;
-    render();
-  }
-}
-
 function renderToggleGroup(root, options, activeValue, dataAttr, onSelect) {
   if (!root) return;
   root.innerHTML = options.map(([value, label]) => `
@@ -770,7 +739,6 @@ async function loadLiveData() {
 
   const zone = selectedZone(state);
   if (zone?.id) await loadHistoryForZone(zone.id);
-  if (zone?.id && state.twinReportZoneId !== zone.id) await loadTwinReport(zone.id);
 
   brokerPillEl.className = `pill ${health.mqttConnected ? "normal" : "critical"}`;
   brokerPillEl.textContent = health.mqttConnected ? "Broker linked" : "Broker lost";
@@ -784,8 +752,6 @@ function loadFallback(tick) {
   state.zones = fallback.devices.map((zone, index) => normalizeZone(zone, fallback.scenario, index));
   state.alerts = fallback.alerts;
   state.history = fallback.history;
-  state.twinReport = null;
-  state.twinReportZoneId = null;
   state.scenario = fallback.scenario;
   state.provenance = "synthetic";
   brokerPillEl.className = "pill warning";
@@ -821,6 +787,10 @@ async function refresh() {
 await refresh();
 setInterval(refresh, 3500);
 setInterval(renderClock, 1000);
+
+
+
+
 
 
 

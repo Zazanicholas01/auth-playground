@@ -20,9 +20,5 @@ class Settings(BaseSettings):
     db_bootstrap_max_attempts: int = Field(default=20, alias="DB_BOOTSTRAP_MAX_ATTEMPTS")
     db_bootstrap_retry_delay_ms: int = Field(default=3000, alias="DB_BOOTSTRAP_RETRY_DELAY_MS")
 
-    local_llm_url: str = Field(default="http://local-llm:11434", alias="LOCAL_LLM_URL")
-    local_llm_model: str = Field(default="qwen2.5:3b", alias="LOCAL_LLM_MODEL")
-    twin_report_timeout_ms: int = Field(default=15000, alias="TWIN_REPORT_TIMEOUT_MS")
-
 
 settings = Settings()
