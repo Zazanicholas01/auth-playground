@@ -20,17 +20,19 @@ spec:
           image: ghcr.io/zazanicholas01/ollama:0.6.6
           imagePullPolicy: IfNotPresent
           command:
-            - sh
-            - -c
-            - |
-              set -eu
-              ollama serve &
-              pid=$!
-              until wget -qO- http://127.0.0.1:11434/api/tags >/dev/null; do
-                sleep 2
-              done
+          - sh
+          - -c
+          - |
+            set -eu
+            ollama serve &
+            pid=$!
+            until ollama list >/dev/null 2>&1; do
+              sleep 2
+            done
+            if ! ollama list | grep -q '^qwen2.5:3b'; then
               ollama pull qwen2.5:3b
-              wait $pid
+            fi
+            wait $pid
           ports:
             - containerPort: 11434
               name: http
