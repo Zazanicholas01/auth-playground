@@ -33,6 +33,7 @@ import {
 import {
   renderGraphWorkspacePage,
   renderMapWorkspacePage,
+  renderOperationsCommandPriorityRail,
   renderOperationsWorkspacePage,
   renderTwinWorkspacePage
 } from "./workspace-pages.js";
@@ -148,6 +149,7 @@ const mapPhotoUrl = "/dev-assets/map.png";
 const twinPhotoUrl = "/dev-assets/greenhouse-twin.png";
 
 const twinZonePanelEl = document.getElementById("twin-zone-panel");
+const commandPriorityRailEls = () => slotEls("command-priority-rail");
 
 
 function incidentCardHtml({ timeLabel, scopeLabel, severity, message, actionHtml = "", dataAttrs = "" }) {
@@ -569,7 +571,7 @@ function render() {
   renderStatus();
 
   if (currentPage === "operations" || currentPage === "graphs") renderGraphControls();
-  if (!["edge-devices", "sensors"].includes(currentPage)) renderZoneList();
+  if (!["edge-devices", "sensors", "operations"].includes(currentPage)) renderZoneList();
 
   if (currentPage === "map") {
     renderMapWorkspacePage({
@@ -600,6 +602,14 @@ function render() {
   });
 
   if (currentPage === "operations") {
+    commandPriorityRailEls().forEach((element) => {
+      renderOperationsCommandPriorityRail({
+        state,
+        railEl: element,
+        managedZones: () => managedZones(state)
+      });
+    });
+
     renderOperationsWorkspacePage({
       state,
       opsSummaryEl,
@@ -700,6 +710,8 @@ async function refresh() {
 await refresh();
 setInterval(refresh, 3500);
 setInterval(renderClock, 1000);
+
+
 
 
 

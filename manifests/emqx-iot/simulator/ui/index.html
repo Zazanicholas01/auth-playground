@@ -123,9 +123,13 @@
       <div class="workspace-shell">
         <aside class="workspace-rail scope-rail">
 
-          <section class="rail-section page-general page-map page-operations page-graphs">
-            <div class="section-label rail-title">Zones Overview</div>
+          <section class="rail-section page-general page-map page-graphs">
             <div data-slot="zone-list" class="entity-list"></div>
+          </section>
+
+          <section class="rail-section page-operations">
+            <div class="section-label rail-title">Command Priorities</div>
+            <div data-slot="command-priority-rail" class="entity-list"></div>
           </section>
 
           <section class="rail-section page-twin">
@@ -298,6 +302,5 @@
     <script src="/index.js" type="module"></script>
   </body>
 </html>
-
 
 

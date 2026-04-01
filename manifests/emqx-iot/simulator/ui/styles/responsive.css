@@ -9,6 +9,9 @@
 
   .stage-grid,
   .operations-layout-grid,
+  .ops-decision-grid,
+  .ops-execution-grid,
+  .incident-workflow-grid,
   .compact-incidents,
   .chart-grid {
     grid-template-columns: 1fr;
@@ -37,6 +40,10 @@
   .asset-matrix,
   .sensor-flow-grid,
   .command-strip,
+  .ops-hero-strip,
+  .ops-efficiency-strip,
+  .actuator-grid,
+  .operator-note-grid,
   .fleet-hero-grid,
   .compact-incidents,
   .zone-hero,

@@ -397,104 +397,576 @@ export function renderTwinWorkspacePage({
 }
 
 
-export function renderOperationsWorkspacePage({ state, opsSummaryEl, operationsBoardEl, managedZones, selectedZone, incidentCardHtml }) {
-  const focused = selectedZone();
-  const totalAssets = managed.reduce((sum, zone) => sum + zone.assets.length, 0);
-  const avgTemp = managed.reduce((sum, zone) => sum + (zone.indoor.temperature ?? 0), 0) / Math.max(managed.length, 1);
-  const avgHumidity = managed.reduce((sum, zone) => sum + (zone.indoor.humidity ?? 0), 0) / Math.max(managed.length, 1);
-  const riskQueue = [...managed].sort((left, right) => calcZoneHealthScore(left) - calcZoneHealthScore(right));
+function scenarioRecipe(zone) {
+  const isPropagation = zone?.id === "greenhouse-a-propagation";
+  const scenario = zone?.scenario || "baseline-day";
 
-  if (opsSummaryEl) {
-    opsSummaryEl.innerHTML = [
-      metricCard("Managed zones", `${managed.length}`, managed.map((zone) => zone.name).join(" - "), "normal"),
-      metricCard("Focused zone", focused.name, zoneDeviationSummary(focused), severityClass(focused.severity)),
-      metricCard("Average climate", fmt(avgTemp, 1, " C"), `${fmt(avgHumidity, 0, " %")} RH across command scope`, "normal"),
-      metricCard("Assets / alerts", `${totalAssets}`, `${state.alerts.length} active incidents in the command picture`, state.alerts.length ? "warning" : "normal")
-    ].join("");
+  if (isPropagation) {
+    return {
+      name: "Propagation hold",
+      temperature: 24.8,
+      humidity: 74,
+      vpd: 0.82,
+      soilMoisture: 0.37,
+      irrigationFlow: 2.4
+    };
   }
 
-  if (operationsBoardEl) {
+  if (scenario === "high-radiation-stress") {
+    return {
+      name: "High radiation buffer",
+      temperature: 23.2,
+      humidity: 71,
+      vpd: 0.95,
+      soilMoisture: 0.35,
+      irrigationFlow: 2.2
+    };
+  }
+
+  return {
+    name: "Vegetative baseline",
+    temperature: 24,
+    humidity: 68,
+    vpd: 1.1,
+    soilMoisture: 0.32,
+    irrigationFlow: 1.8
+  };
+}
+
+
+function climateDriftProfile(zone) {
+  const recipe = scenarioRecipe(zone);
+
+  return {
+    recipe,
+    temperatureDelta: (zone?.indoor.temperature ?? recipe.temperature) - recipe.temperature,
+    humidityDelta: (zone?.indoor.humidity ?? recipe.humidity) - recipe.humidity,
+    vpdDelta: (zone?.derived.vpd ?? recipe.vpd) - recipe.vpd,
+    soilMoistureDelta: (zone?.soil.moisture ?? recipe.soilMoisture) - recipe.soilMoisture,
+    irrigationFlowDelta: (zone?.soil.irrigationFlow ?? recipe.irrigationFlow) - recipe.irrigationFlow
+  };
+}
+
+function operationPosture(zones, alerts) {
+  const criticalZones = zones.filter((zone) => zone.severity === "critical").length;
+  const warningZones = zones.filter((zone) => zone.severity === "warning").length;
+  const criticalAlerts = alerts.filter((event) => (event.payload?.severity || "normal") === "critical").length;
+
+  if (criticalZones || criticalAlerts) {
+    return {
+      label: "Intervention required",
+      tone: "critical",
+      note: criticalZones + " critical zones need direct operator attention"
+    };
+  }
+
+  if (warningZones || alerts.length) {
+    return {
+      label: "Watch operations",
+      tone: "warning",
+      note: warningZones + " zones drifting outside the recipe envelope"
+    };
+  }
+
+  return {
+    label: "Stable automation",
+    tone: "normal",
+    note: "Climate, irrigation, and incident load are within expected operating bands"
+  };
+}
+
+function automationPosture(zone) {
+  if (!zone) return { label: "Auto", tone: "normal", note: "No focused zone selected." };
+  const maxLoad = Math.max(...zone.assets.map((asset) => asset.load ?? 0), 0);
+
+  if (zone.severity === "critical") {
+    return {
+      label: "Manual assist",
+      tone: "critical",
+      note: "Focused zone is outside the recipe envelope and should be supervised by an operator."
+    };
+  }
+
+  if (zone.severity === "warning" || maxLoad >= 0.72) {
+    return {
+      label: "Assisted auto",
+      tone: "warning",
+      note: "Automation is active, but response authority should stay close to the current drift."
+    };
+  }
+
+  return {
+    label: "Auto",
+    tone: "normal",
+    note: "Automation can hold the zone without immediate intervention."
+  };
+}
+
+function buildInterventionQueue(zones) {
+  return [...zones]
+    .map((zone) => {
+      const drift = climateDriftProfile(zone);
+      const highestLoad = [...zone.assets].sort((left, right) => (right.load ?? 0) - (left.load ?? 0))[0];
+      const rootDry = (zone.soil.moisture ?? 0) < drift.recipe.soilMoisture - 0.03;
+      const airHot = (zone.indoor.temperature ?? 0) > drift.recipe.temperature + 1.2;
+      const humidityLow = (zone.indoor.humidity ?? 0) < drift.recipe.humidity - 6;
+      const humidityHigh = (zone.indoor.humidity ?? 0) > drift.recipe.humidity + 6;
+      const vpdHigh = (zone.derived.vpd ?? 0) > drift.recipe.vpd + 0.18;
+
+      let issue = "Maintain automation hold";
+      let cause = "Zone remains inside the expected recipe envelope.";
+      let action = "Continue monitoring and keep graph comparison anchored to this zone.";
+      let urgencyMinutes = 45;
+      let confidence = 76;
+
+      if (rootDry) {
+        issue = "Root zone drying below target";
+        cause = "Soil moisture is trailing recipe while irrigation demand stays elevated.";
+        action = "Increase irrigation window and confirm manifold flow before the next cycle.";
+        urgencyMinutes = 12;
+        confidence = 91;
+      } else if (airHot && vpdHigh) {
+        issue = "Canopy climate running hot";
+        cause = "Temperature and VPD rose together after ventilation demand increased.";
+        action = "Bias vents and fogging together to cool without collapsing humidity.";
+        urgencyMinutes = 10;
+        confidence = 88;
+      } else if (humidityHigh) {
+        issue = "Humidity accumulation forming";
+        cause = "Humidity is gathering faster than the current vent and fan pattern can clear it.";
+        action = "Increase airflow and review vent staging for condensation risk.";
+        urgencyMinutes = 18;
+        confidence = 83;
+      } else if (humidityLow) {
+        issue = "Humidity deficit reducing comfort";
+        cause = "Dry air is increasing transpiration demand beyond the preferred recipe band.";
+        action = "Trim vent opening and pulse misting to restore the target envelope.";
+        urgencyMinutes = 16;
+        confidence = 80;
+      }
+
+      const score = (100 - calcZoneHealthScore(zone))
+        + (zone.severity === "critical" ? 20 : zone.severity === "warning" ? 8 : 0)
+        + Math.round((highestLoad?.load ?? 0) * 12);
+
+      return {
+        zone,
+        issue,
+        cause,
+        action,
+        urgencyMinutes,
+        confidence,
+        highestLoad,
+        score
+      };
+    })
+    .sort((left, right) => right.score - left.score);
+}
+
+function buildCommandPriorities(zones, alerts, queue) {
+  const rootDryZones = zones.filter((zone) => {
+    const drift = climateDriftProfile(zone);
+    return (zone.soil.moisture ?? 0) < drift.recipe.soilMoisture - 0.03;
+  });
+
+  const thermalStressZones = zones.filter((zone) => {
+    const drift = climateDriftProfile(zone);
+    return (zone.indoor.temperature ?? 0) > drift.recipe.temperature + 1.2
+      && (zone.derived.vpd ?? 0) > drift.recipe.vpd + 0.18;
+  });
+
+  const humidityRiskZones = zones.filter((zone) => {
+    const drift = climateDriftProfile(zone);
+    return (zone.indoor.humidity ?? 0) < drift.recipe.humidity - 6
+      || (zone.indoor.humidity ?? 0) > drift.recipe.humidity + 6;
+  });
+
+  const automationAssistZones = zones.filter((zone) => {
+    const maxLoad = Math.max(...zone.assets.map((asset) => asset.load ?? 0), 0);
+    return zone.severity !== "normal" || maxLoad >= 0.72;
+  });
+
+  const criticalAlerts = alerts.filter((event) => (event.payload?.severity || "normal") === "critical");
+  const warningAlerts = alerts.filter((event) => (event.payload?.severity || "normal") === "warning");
+  const lead = queue[0];
+
+  return [
+    lead
+      ? {
+          title: "Immediate response",
+          tone: severityClass(lead.zone.severity),
+          value: lead.zone.name,
+          note: lead.issue,
+          detail: lead.action
+        }
+      : {
+          title: "Immediate response",
+          tone: "normal",
+          value: "No active queue",
+          note: "Automation is holding the current command picture.",
+          detail: "No direct intervention is required right now."
+        },
+    thermalStressZones.length
+      ? {
+          title: "Climate pressure",
+          tone: thermalStressZones.length > 1 ? "critical" : "warning",
+          value: `${thermalStressZones.length} hot zones`,
+          note: "Temperature and VPD are rising together across the facility.",
+          detail: `Primary watchlist: ${thermalStressZones.slice(0, 3).map((zone) => zone.name).join(", ")}`
+        }
+      : {
+          title: "Climate pressure",
+          tone: humidityRiskZones.length ? "warning" : "normal",
+          value: humidityRiskZones.length ? `${humidityRiskZones.length} humidity drifts` : "Stable envelope",
+          note: humidityRiskZones.length
+            ? "Humidity recovery is now the dominant command-wide climate concern."
+            : "Temperature, humidity, and VPD remain close to the active crop recipes.",
+          detail: humidityRiskZones.length
+            ? `Watch ${humidityRiskZones.slice(0, 3).map((zone) => zone.name).join(", ")}`
+            : "No broad climate correction is currently needed."
+        },
+    rootDryZones.length
+      ? {
+          title: "Water management",
+          tone: rootDryZones.length > 1 ? "critical" : "warning",
+          value: `${rootDryZones.length} dry root zones`,
+          note: "Irrigation demand is concentrated in bays that are trailing recipe moisture targets.",
+          detail: `Prioritize manifold review for ${rootDryZones.slice(0, 3).map((zone) => zone.name).join(", ")}`
+        }
+      : {
+          title: "Water management",
+          tone: "normal",
+          value: "Balanced runtime",
+          note: "Watering demand is currently spread evenly across the command picture.",
+          detail: "No concentrated dry-back risk is visible right now."
+        },
+    criticalAlerts.length || warningAlerts.length || automationAssistZones.length
+      ? {
+          title: "Operator coverage",
+          tone: criticalAlerts.length ? "critical" : "warning",
+          value: `${automationAssistZones.length} assisted zones`,
+          note: `${warningAlerts.length} warning and ${criticalAlerts.length} critical incidents are shaping the active response load.`,
+          detail: criticalAlerts.length
+            ? "Keep escalation paths warm while the queue is being worked."
+            : "Operators can stay in assisted-auto mode while tracking the queue."
+        }
+      : {
+          title: "Operator coverage",
+          tone: "normal",
+          value: "Low supervision",
+          note: "Automation can manage the current load without sustained manual oversight.",
+          detail: "Use this window to verify assets and clear stale incidents."
+        }
+  ];
+}
+function actuatorMode(asset, zoneSeverity) {
+  if ((asset.load ?? 0) >= 0.82 || zoneSeverity === "critical") return { label: "manual assist", tone: "critical" };
+  if ((asset.load ?? 0) >= 0.55 || zoneSeverity === "warning") return { label: "assisted auto", tone: "warning" };
+  return { label: "auto", tone: "normal" };
+}
+
+function actuatorStateLabel(asset) {
+  if ((asset.load ?? 0) >= 0.78) return "High output";
+  if ((asset.load ?? 0) >= 0.45) return "Modulating";
+  if ((asset.load ?? 0) >= 0.18) return "Standby";
+  return "Idle";
+}
+
+function incidentWorkflow(alerts, zones, queue) {
+  const buckets = {
+    new: [],
+    investigating: [],
+    escalated: [],
+    mitigated: []
+  };
+
+  const zoneById = new Map(zones.map((zone) => [zone.id, zone]));
+  const queueRankByZoneId = new Map(queue.map((item, index) => [item.zone.id, index]));
+  const clusterCountByKey = new Map();
+
+  alerts.forEach((event) => {
+    const zoneId = event.payload?.zoneId || "system";
+    const fingerprint = `${zoneId}::${event.payload?.message || event.type}`;
+    clusterCountByKey.set(fingerprint, (clusterCountByKey.get(fingerprint) || 0) + 1);
+  });
+
+  const now = Date.now();
+
+  alerts.forEach((event) => {
+    const severity = event.payload?.severity || "normal";
+    const zoneId = event.payload?.zoneId || "";
+    const zone = zoneById.get(zoneId);
+    const queueRank = queueRankByZoneId.has(zoneId)
+      ? queueRankByZoneId.get(zoneId)
+      : Number.POSITIVE_INFINITY;
+    const fingerprint = `${zoneId || "system"}::${event.payload?.message || event.type}`;
+    const repeatCount = clusterCountByKey.get(fingerprint) || 1;
+    const receivedAt = new Date(event.receivedAt).getTime();
+    const ageMinutes = Number.isFinite(receivedAt)
+      ? Math.max(0, Math.round((now - receivedAt) / 60000))
+      : 0;
+    const recent = ageMinutes <= 8;
+    const zoneCritical = zone?.severity === "critical";
+    const zoneWarning = zone?.severity === "warning";
+    const topQueue = queueRank < 2;
+    const activeQueue = queueRank < 4;
+    const sustained = repeatCount >= 2;
+    const highestLoad = zone?.assets?.reduce((max, asset) => Math.max(max, asset.load ?? 0), 0) ?? 0;
+    const strainedResponse = highestLoad >= 0.72;
+
+    let key = "mitigated";
+
+    if (severity === "critical" || zoneCritical || (topQueue && sustained) || (strainedResponse && activeQueue && sustained)) {
+      key = "escalated";
+    } else if ((severity === "warning" && (activeQueue || sustained || zoneWarning)) || (strainedResponse && recent)) {
+      key = "investigating";
+    } else if (severity === "warning" && recent) {
+      key = "new";
+    }
+
+    buckets[key].push(event);
+  });
+
+  return [
+    { key: "new", title: "New", tone: "normal", items: buckets.new },
+    { key: "investigating", title: "Investigating", tone: "warning", items: buckets.investigating },
+    { key: "escalated", title: "Escalated", tone: "critical", items: buckets.escalated },
+    { key: "mitigated", title: "Mitigated", tone: "normal", items: buckets.mitigated }
+  ];
+}
+
+export function renderOperationsCommandPriorityRail({ state, railEl, managedZones }) {
+  if (!railEl) return;
+  const managed = typeof managedZones === "function" ? managedZones() : managedZones;
+  const facilityZones = state.zones.length ? state.zones : managed;
+  const queue = buildInterventionQueue(facilityZones);
+  const commandPriorities = buildCommandPriorities(facilityZones, state.alerts, queue);
+
+  railEl.innerHTML = commandPriorities.map((item, index) => `
+    <article class="entity-card ${surfaceClass("dark")} ${item.tone}">
+      <div class="entity-header">
+        <div>
+          <span class="priority-rank">${String(index + 1).padStart(2, "0")}</span>
+          <strong class="${surfaceTextToneClass("dark", "strong")}">${item.title}</strong>
+        </div>
+        <span class="pill ${item.tone}">${item.value}</span>
+      </div>
+      <div class="entity-meta ${surfaceTextToneClass("dark", "muted")}">
+        <p>${item.note}</p>
+      </div>
+      <div class="entity-meta ${surfaceTextToneClass("dark", "soft")}">${item.detail}</div>
+    </article>
+  `).join("");
+}
+
+export function renderOperationsWorkspacePage({ state, opsSummaryEl, operationsBoardEl, managedZones, selectedZone, incidentCardHtml }) {
+  const managed = typeof managedZones === "function" ? managedZones() : managedZones;
+  const focused = selectedZone();
+  const facilityZones = state.zones.length ? state.zones : managed;
+  const totalAssets = facilityZones.reduce((sum, zone) => sum + zone.assets.length, 0);
+  const avgTemp = facilityZones.reduce((sum, zone) => sum + (zone.indoor.temperature ?? 0), 0) / Math.max(facilityZones.length, 1);
+  const avgHumidity = facilityZones.reduce((sum, zone) => sum + (zone.indoor.humidity ?? 0), 0) / Math.max(facilityZones.length, 1);
+  const posture = operationPosture(facilityZones, state.alerts);
+  const automation = automationPosture(focused);
+  const queue = buildInterventionQueue(facilityZones);
+  const topQueue = queue[0];
+  const avgHealth = Math.round(facilityZones.reduce((sum, zone) => sum + calcZoneHealthScore(zone), 0) / Math.max(facilityZones.length, 1));
+  const waterToday = facilityZones.reduce((sum, zone) => sum + ((zone.soil.irrigationFlow ?? 0) * 18), 0);
+  const energyLoad = Math.round(facilityZones.reduce((sum, zone) => sum + zone.assets.reduce((assetSum, asset) => assetSum + (asset.load ?? 0), 0), 0) * 2.8);
+  const efficiency = {
+    irrigationRuntime: Math.round(facilityZones.reduce((sum, zone) => sum + ((zone.actuators.irrigation ?? 0) * 28), 0)),
+    ventDuty: Math.round(facilityZones.reduce((sum, zone) => sum + (zone.actuators.vent ?? 0), 0) / Math.max(facilityZones.length, 1) * 100),
+    thermalLoad: Math.round(facilityZones.reduce((sum, zone) => sum + (zone.actuators.heater ?? 0), 0) / Math.max(facilityZones.length, 1) * 100),
+    climateStability: avgHealth
+  };
+  const workflowColumns = incidentWorkflow(state.alerts, facilityZones, queue);
+  const criticalZones = facilityZones.filter((zone) => zone.severity === "critical").length;
+  const warningZones = facilityZones.filter((zone) => zone.severity === "warning").length;
+  const normalZones = Math.max(facilityZones.length - warningZones - criticalZones, 0);
+  const totalZones = Math.max(facilityZones.length, 1);
+  const criticalAlerts = state.alerts.filter((event) => (event.payload?.severity || "normal") === "critical").length;
+  const warningAlerts = state.alerts.filter((event) => (event.payload?.severity || "normal") === "warning").length;
+  const actionableAlerts = Math.max(criticalAlerts + warningAlerts, 1);
+  const automationAssistPct = automation.tone === "critical" ? 100 : automation.tone === "warning" ? 68 : 22;
+  const waterEnergyTotal = Math.max(waterToday + energyLoad, 1);
+
+  if (opsSummaryEl) {
+    opsSummaryEl.innerHTML = `
+      <section class="overview-strip ops-overview-strip">
+        <article class="overview-metric">
+          <span class="overview-label">Operational posture</span>
+          <strong class="overview-value">${posture.label}</strong>
+          <div class="overview-severity-bar">
+            <span class="normal" style="width:${((normalZones / totalZones) * 100).toFixed(1)}%"></span>
+            <span class="warning" style="width:${((warningZones / totalZones) * 100).toFixed(1)}%"></span>
+            <span class="critical" style="width:${((criticalZones / totalZones) * 100).toFixed(1)}%"></span>
+          </div>
+          <span class="overview-note">${normalZones} normal / ${warningZones} warning / ${criticalZones} critical zones</span>
+        </article>
+
+        <article class="overview-metric">
+          <span class="overview-label">Incident load</span>
+          <strong class="overview-value">${state.alerts.length}</strong>
+          <div class="overview-incident-split">
+            <span class="warning" style="width:${((warningAlerts / actionableAlerts) * 100).toFixed(1)}%"></span>
+            <span class="critical" style="width:${((criticalAlerts / actionableAlerts) * 100).toFixed(1)}%"></span>
+          </div>
+          <span class="overview-note">${warningAlerts} warning / ${criticalAlerts} critical in the command queue</span>
+        </article>
+
+        <article class="overview-metric">
+          <span class="overview-label">Automation posture</span>
+          <strong class="overview-value">${automation.label}</strong>
+          <div class="overview-severity-bar">
+            <span class="normal" style="width:${(100 - automationAssistPct).toFixed(1)}%"></span>
+            <span class="warning" style="width:${automation.tone === "warning" ? automationAssistPct.toFixed(1) : "0.0"}%"></span>
+            <span class="critical" style="width:${automation.tone === "critical" ? automationAssistPct.toFixed(1) : "0.0"}%"></span>
+          </div>
+          <span class="overview-note">${focused.name} / ${avgHealth}% facility stability / ${efficiency.climateStability}% climate adherence</span>
+        </article>
+
+        <article class="overview-metric">
+          <span class="overview-label">Water and energy</span>
+          <strong class="overview-value">${fmt(waterToday, 0, " L")}</strong>
+          <div class="overview-incident-split">
+            <span class="normal" style="width:${((waterToday / waterEnergyTotal) * 100).toFixed(1)}%"></span>
+            <span class="warning" style="width:${((energyLoad / waterEnergyTotal) * 100).toFixed(1)}%"></span>
+          </div>
+          <span class="overview-note">${energyLoad} kWh effort / ${totalAssets} assets / ${fmt(avgTemp, 1, " C")} and ${fmt(avgHumidity, 0, " %")}</span>
+        </article>
+      </section>
+    `;
+  }
+
+  if (operationsBoardEl && focused) {
     operationsBoardEl.innerHTML = `
-      <section class="command-strip">
-        <article class="command-card ${surfaceClass("light")} ${severityClass(riskQueue[0]?.severity || "normal")}">
-          <span class="section-label ${textToneClass("soft")}">Highest-risk zone</span>
-          <strong class="${textToneClass("strong")}">${riskQueue[0]?.name || "--"}</strong>
-          <p class="${textToneClass("muted")}">
-            ${riskQueue[0] ? zoneDeviationSummary(riskQueue[0]) : "No zone selected"}
-          </p>
-        </article>  <article class="command-card ${surfaceClass("light")} ${state.alerts.length ? "warning" : "normal"}">
-          <span class="section-label ${textToneClass("soft")}">Incident queue</span>
-          <strong class="${textToneClass("strong")}">${state.alerts.length}</strong>
-          <p class="${textToneClass("muted")}">
-            ${state.alerts.length ? "Use the evidence rail to pivot into graph and asset context." : "No active incidents in managed scope."}
-          </p>
-        </article>  <article class="command-card ${surfaceClass("light")} ${severityClass(focused.severity)}">
-          <span class="section-label ${textToneClass("soft")}">Focused response</span>
-          <strong class="${textToneClass("strong")}">${focused.name}</strong>
-          <p class="${textToneClass("muted")}">
-            ${focused.alerts[0] || "No explicit alarms, continue monitoring asset load and drift."}
-          </p>
-        </article>
-      </section>
-      <section class="operations-layout-grid">
-        <article class="priority-board">
+
+      <section class="ops-decision-grid">
+        <article class="priority-board intervention-queue">
           <div class="panel-head-inline">
-            <div>
-              <span class="section-label">Priority zones</span>
-              <h3>Command ranking</h3>
+            <div ${surfaceClass("dark")}>
+              <span class="section-label">Intervention queue</span>
             </div>
-            <span class="pill warning">triage</span>
+            <span class="pill ${posture.tone}">${queue.length} zones</span>
           </div>
-          <div class="priority-list">
-            ${riskQueue.map((zone, index) => `
-              <article class="priority-item ${severityClass(zone.severity)}">
-                <div>
-                  <span class="priority-rank">0${index + 1}</span>
-                  <strong>${zone.name}</strong>
+          <div class="intervention-list">
+            ${queue.map((item, index) => `
+              <article class="intervention-card ${severityClass(item.zone.severity)}">
+                <div class="intervention-card-top">
+                  <div>
+                    <span class="priority-rank">${String(index + 1).padStart(2, "0")}</span>
+                    <strong>${item.zone.name}</strong>
+                  </div>
+                  <span class="pill ${severityClass(item.zone.severity)}">${item.urgencyMinutes} min</span>
                 </div>
-                <div>
-                  <span>${calcZoneHealthScore(zone)} health</span>
-                  <span>${zoneDeviationSummary(zone)}</span>
+                <div class="intervention-card-body">
+                  <h4>${item.issue}</h4>
+                  <p>${item.cause}</p>
+                </div>
+                <div class="intervention-meta">
+                  <span>${item.action}</span>
+                  <strong>${item.confidence}% confidence</strong>
+                </div>
+                <div class="intervention-foot">
+                  <span>${calcZoneHealthScore(item.zone)} health</span>
+                  <span>${item.highestLoad?.name || "No actuator context"} at ${percent(item.highestLoad?.load ?? 0)}%</span>
                 </div>
               </article>
             `).join("")}
           </div>
         </article>
-        <article class="priority-board">
+      </section>
+
+      <section class="ops-execution-grid">
+        <article class="priority-board actuator-state-board">
           <div class="panel-head-inline">
             <div>
-              <span class="section-label">Recommended drilldowns</span>
-              <h3>Subsystem pressure</h3>
+              <span class="section-label">Actuator state</span>
+              <h3>Execution authority and live output</h3>
             </div>
-            <span class="pill ${severityClass(focused.severity)}">${focused.severity}</span>
+            <span class="pill ${automation.tone}">${automation.label}</span>
           </div>
-          <div class="asset-matrix compact-assets">
-            ${focused.assets.map((asset) => `
-              <article class="asset-load-card ${asset.load >= 0.8 ? "critical" : asset.load >= 0.55 ? "warning" : "normal"}">
-                <div class="asset-load-head"><strong>${asset.name}</strong><span>${asset.type}</span></div>
-                <div class="asset-load-bar"><span style="width:${percent(asset.load)}%"></span></div>
-                <div class="asset-load-meta"><span>${asset.metricLabel}</span><strong>${percent(asset.load)}%</strong></div>
-              </article>
-            `).join("")}
+          <div class="actuator-grid">
+            ${focused.assets.map((asset) => {
+              const mode = actuatorMode(asset, focused.severity);
+              const actual = Math.max(0, Math.min(100, percent(asset.load ?? 0) + ((asset.load ?? 0) >= 0.6 ? -4 : 3)));
+
+              return `
+                <article class="actuator-card ${mode.tone}">
+                  <div class="actuator-card-head">
+                    <div>
+                      <strong>${asset.name}</strong>
+                      <span>${asset.type}</span>
+                    </div>
+                    <span class="pill ${mode.tone}">${mode.label}</span>
+                  </div>
+                  <div class="actuator-card-metrics">
+                    <div><span>State</span><strong>${actuatorStateLabel(asset)}</strong></div>
+                    <div><span>Commanded</span><strong>${percent(asset.load ?? 0)}%</strong></div>
+                    <div><span>Actual</span><strong>${actual}%</strong></div>
+                  </div>
+                  <div class="asset-load-bar"><span style="width:${percent(asset.load ?? 0)}%"></span></div>
+                </article>
+              `;
+            }).join("")}
           </div>
         </article>
       </section>
-      <section class="operations-incident-preview">
+
+      <section class="ops-incident-board">
         <div class="panel-head-inline">
           <div>
-            <span class="section-label">Escalation preview</span>
-            <h3>Recent incidents in command scope</h3>
+            <span class="section-label">Incident workflow</span>
+            <h3>Response board</h3>
           </div>
           <span class="pill ${state.alerts.length ? "warning" : "normal"}">${state.alerts.length} tracked</span>
         </div>
-        <div class="incident-list compact-incidents">
-          ${(state.alerts.slice(0, 4).map((event) => incidentCardHtml({
-            timeLabel: new Date(event.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            scopeLabel: event.payload?.zoneId || "system",
-            severity: event.payload?.severity || "normal",
-            message: event.payload?.message || event.type
-          })).join("")) || "<div class=\"empty-state\">No active incidents in the managed command picture.</div>"}
+        <div class="incident-workflow-grid">
+          ${workflowColumns.map((column) => `
+            <section class="workflow-column ${column.tone}">
+              <div class="workflow-column-head">
+                <div class="workflow-column-copy">
+                  <span class="workflow-column-kicker">${column.key === "new" ? "Awaiting triage" : column.key === "investigating" ? "Active analysis" : column.key === "escalated" ? "Manual response" : "Cooling down"}</span>
+                  <strong>${column.title}</strong>
+                </div>
+                <span class="workflow-count">${column.items.length}</span>
+              </div>
+              <div class="incident-list compact-incidents workflow-column-list">
+                ${column.items.length
+                  ? column.items.map((event) => incidentCardHtml({
+                      timeLabel: new Date(event.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                      scopeLabel: event.payload?.zoneId || "system",
+                      severity: event.payload?.severity || "normal",
+                      message: event.payload?.message || event.type
+                    })).join("")
+                  : "<div class=\"empty-state workflow-empty-state\">No incidents in this workflow state.</div>"}
+              </div>
+            </section>
+          `).join("")}
         </div>
+      </section>
+
+      <section class="ops-efficiency-strip">
+        <article class="ops-efficiency-card ${surfaceClass("light")}">
+          <span class="section-label ${textToneClass("soft")}">Irrigation runtime</span>
+          <strong class="${textToneClass("strong")}">${efficiency.irrigationRuntime} min</strong>
+          <p class="${textToneClass("muted")}">Estimated active watering time across the current command picture.</p>
+        </article>
+        <article class="ops-efficiency-card ${surfaceClass("light")}">
+          <span class="section-label ${textToneClass("soft")}">Vent duty cycle</span>
+          <strong class="${textToneClass("strong")}">${efficiency.ventDuty}%</strong>
+          <p class="${textToneClass("muted")}">Average ventilation authority currently in use across greenhouse zones.</p>
+        </article>
+        <article class="ops-efficiency-card ${surfaceClass("light")}">
+          <span class="section-label ${textToneClass("soft")}">Thermal effort</span>
+          <strong class="${textToneClass("strong")}">${efficiency.thermalLoad}%</strong>
+          <p class="${textToneClass("muted")}">Heating demand relative to recipe protection and canopy recovery.</p>
+        </article>
+        <article class="ops-efficiency-card ${surfaceClass("light")}">
+          <span class="section-label ${textToneClass("soft")}">Climate stability</span>
+          <strong class="${textToneClass("strong")}">${efficiency.climateStability}%</strong>
+          <p class="${textToneClass("muted")}">Facility-wide digital twin confidence in recipe adherence.</p>
+        </article>
       </section>
     `;
   }
@@ -517,6 +989,7 @@ function trendChart(values, color) {
 
 export function renderGraphWorkspacePage({ state, graphGridEl, managedZones, selectedZone, historySlice, graphTimeLabels, createFallbackData }) {
   if (!graphGridEl) return;
+  const managed = typeof managedZones === "function" ? managedZones() : managedZones;
   const zone = selectedZone();
   const baseHistory = state.history.length ? state.history : createFallbackData(4).history;
   const history = historySlice(state, baseHistory);
@@ -570,6 +1043,19 @@ export function renderGraphWorkspacePage({ state, graphGridEl, managedZones, sel
     `;
   }).join("");
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
