@@ -178,6 +178,143 @@
   width: 100%;
 }
 
+.twin-rail-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.twin-rail-sensor-overview {
+  display: grid;
+  gap: 10px;
+}
+
+.page-twin .twin-rail-sensor-overview .entity-card {
+  cursor: default;
+  gap: 6px;
+}
+
+.page-twin .twin-rail-sensor-overview .entity-card:hover {
+  transform: none;
+}
+
+.page-twin .twin-rail-sensor-overview .entity-meta:last-child {
+  margin-bottom: 0;
+}
+
+.page-twin .asset-detail .entity-card {
+  cursor: default;
+}
+
+.page-twin .asset-detail .entity-card:hover {
+  transform: none;
+}
+
+.page-twin .asset-detail .entity-list {
+  display: grid;
+  gap: 10px;
+}
+
+.asset-load-meta-icon span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.asset-load-meta-icon svg {
+  display: block;
+  opacity: 0.9;
+}
+
+.asset-load-meta-ring {
+  justify-content: center;
+}
+
+.asset-load-ring {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  color: var(--accent-green);
+}
+
+.asset-load-ring.warning {
+  color: var(--warning);
+}
+
+.asset-load-ring.critical {
+  color: var(--critical);
+}
+
+.asset-type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--surface-text-soft, var(--text-on-light-soft));
+}
+
+.asset-type-badge svg {
+  width: 16px;
+  height: 16px;
+}
+
+.asset-type-badge.warning {
+  color: var(--warning);
+}
+
+.asset-type-badge.critical {
+  color: var(--critical);
+}
+
+.asset-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 54px;
+  grid-template-rows: auto auto;
+  column-gap: 16px;
+  row-gap: 6px;
+  align-items: center;
+}
+
+.asset-overview-name {
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.asset-overview-icon {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.asset-overview-gauge {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-twin .asset-detail .asset-load-ring {
+  width: 54px;
+  height: 54px;
+}
+
+.asset-type-badge.asset-type-badge-xl {
+  width: 56px;
+  height: 30px;
+}
+
+.asset-type-badge.asset-type-badge-xl svg {
+  width: 28px;
+  height: 28px;
+}
+
+
 .panel-subsection {
   display: grid;
   gap: 10px;
@@ -440,4 +577,38 @@
 
 .overview-incident-split .critical {
   background: linear-gradient(90deg, var(--critical), #d67f7f);
+}
+
+.page-twin .asset-detail .zone-health-block {
+  display: flex;
+  justify-content: center;
+}
+
+.page-twin .asset-detail .asset-load-meta {
+  display: flex;
+  justify-content: center;
+}
+
+.page-twin .asset-detail .asset-load-ring {
+  width: 54px;
+  height: auto;
+}
+
+.asset-gauge-body {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+}
+
+.asset-gauge-body svg {
+  color: inherit;
+}
+
+.asset-gauge-value {
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1;
+  color: currentColor;
 }

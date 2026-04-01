@@ -44,6 +44,24 @@ const simulatorBase = config.simulatorBase || (window.location.origin + "/simula
 const currentPage = resolveCurrentPage(window.location.pathname);
 
 let pendingZoneId = new URLSearchParams(window.location.search).get("zone");
+const ZONE_STORAGE_KEY = "iot-selected-zone-id";
+
+function loadPersistedZoneId() {
+  try {
+    return window.localStorage.getItem(ZONE_STORAGE_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+function persistSelectedZoneId(zoneId) {
+  if (!zoneId) return;
+  try {
+    window.localStorage.setItem(ZONE_STORAGE_KEY, zoneId);
+  } catch {}
+}
+
+const persistedZoneId = loadPersistedZoneId();
 activateNavigation(currentPage);
 
 
@@ -61,7 +79,7 @@ const state = {
   graphRange: "medium",
   graphMetricGroup: "all",
   graphComparisonMode: "managed",
-  selectedZoneId: "greenhouse-a-north",
+  selectedZoneId: pendingZoneId || persistedZoneId || "greenhouse-a-north",
   selectedAssetId: "north-fans"
 };
 
@@ -165,13 +183,45 @@ function assetTypeIcon(type) {
   return `<svg class="asset-icon-svg" ${common}><circle cx="24" cy="24" r="14" fill="rgba(97,208,149,0.12)" stroke="currentColor" stroke-width="2"/></svg>`;
 }
 
+function circularLoadGauge(load, tone = "currentColor", track = "rgba(255,255,255,0.12)") {
+  const safeLoad = Math.max(0, Math.min(load ?? 0, 1));
+  const percent = Math.round(safeLoad * 100);
+
+  return `
+    <span class="asset-gauge-body">
+      <svg width="54" height="54" viewBox="0 0 54 54" fill="none" aria-hidden="true">
+        <circle
+          cx="27"
+          cy="27"
+          r="18"
+          stroke="${track}"
+          stroke-width="6"
+          pathLength="100"
+        />
+        <circle
+          cx="27"
+          cy="27"
+          r="18"
+          stroke="${tone}"
+          stroke-width="6"
+          stroke-linecap="round"
+          pathLength="100"
+          stroke-dasharray="${percent} 100"
+          transform="rotate(-90 27 27)"
+        />
+      </svg>
+      <strong class="asset-gauge-value" style="color:${tone}">${percent}%</strong>
+    </span>
+  `;
+}
+
 function assetSelectionGraphic(asset, zone) {
   const ring = Math.round((asset.load ?? 0) * 100);
   return `
     <svg class="asset-selection-graphic" viewBox="0 0 280 132" aria-hidden="true">
       <rect x="1" y="1" width="278" height="130" rx="18" fill="#111a1d" stroke="rgba(255,255,255,0.08)" />
       <rect x="24" y="28" width="232" height="76" rx="18" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.08)" stroke-dasharray="5 5"/>
-      <circle cx="66" cy="66" r="26" fill="rgba(97,208,149,0.18)" stroke="rgba(97,208,149,0.35)" stroke-width="2"/>
+      <circle cx="66" cy="66" r="26" fill="rgba(97,208,149,0.30)" stroke="rgba(97,208,149,0.35)" stroke-width="2"/>
       <foreignObject x="42" y="42" width="48" height="48">${assetTypeIcon(asset.type)}</foreignObject>
       <g transform="translate(144 66)">
         <circle cx="0" cy="0" r="18" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="6"/>
@@ -198,7 +248,10 @@ function selectEdgeDevice(deviceId) {
   state.selectedEdgeDeviceId = deviceId;
   const allDevices = allTwinGateways(state);
   const device = allDevices.find((item) => item.id === deviceId);
-  if (device?.zoneId) state.selectedZoneId = device.zoneId;
+  if (device?.zoneId) {
+    state.selectedZoneId = device.zoneId;
+    persistSelectedZoneId(device.zoneId);
+  }
   render();
 }
 
@@ -206,12 +259,16 @@ function selectSensor(sensorId) {
   state.selectedSensorId = sensorId;
   const sensor = allSensors().find((item) => item.id === sensorId);
   if (sensor?.deviceId) state.selectedEdgeDeviceId = sensor.deviceId;
-  if (sensor?.zoneId) state.selectedZoneId = sensor.zoneId;
+  if (sensor?.zoneId) {
+    state.selectedZoneId = sensor.zoneId;
+    persistSelectedZoneId(sensor.zoneId);
+  }
   render();
 }
 
 async function focusZone(zoneId, { updateHistory = true } = {}) {
   state.selectedZoneId = zoneId;
+  persistSelectedZoneId(zoneId);
 
   const zone = selectedZone(state);
   if (zone && !(zone.assets || []).find((asset) => asset.id === state.selectedAssetId)) {
@@ -301,88 +358,56 @@ function renderZoneList() {
 
 function renderAssetDetail() {
   const zone = selectedZone(state);
-  const asset = selectedAsset();
-  const assets = (zone?.assets || []).map((item) => ({
-    ...item,
-    zoneId: zone.id,
-    zoneName: zone.name,
-    zoneSeverity: zone.severity,
-    faultContext: zone.alerts[0] || "Nominal"
-  }));
+  const assets = zone?.assets || [];
 
-  if (!zone || !asset) {
-    setSlotHTML("asset-detail", incidentEmptyHtml("No asset selected."));
+  if (!zone || !assets.length) {
+    setSlotHTML("asset-detail", incidentEmptyHtml("No assets available."));
     return;
   }
 
-  const selectorSurface = "light";
-  const detailSurface = "dark";
-
-  const datasetHtml = assets.map((candidate) => `
-    <button
-      class="asset-selector ${surfaceClass(selectorSurface)} ${candidate.id === asset.id ? "active" : ""}"
-      data-asset-id="${candidate.id}"
-      type="button"
-    >
-      <span class="asset-selector-icon" aria-hidden="true">${assetTypeIcon(candidate.type)}</span>
-      <span class="asset-selector-copy">
-        <strong class="${surfaceTextToneClass(selectorSurface, "strong")}">${candidate.name}</strong>
-        <span class="${surfaceTextToneClass(selectorSurface, "muted")}">${candidate.zoneName} · ${candidate.type}</span>
-      </span>
-      <span class="asset-selector-metric ${surfaceTextToneClass(selectorSurface, "strong")}">
-        ${fmt((candidate.load ?? 0) * 100, 0, " %")}
-      </span>
-    </button>
-  `).join("");
-
   const html = `
-    <article class="detail-card ${surfaceClass(detailSurface)}">
-      <div class="detail-head">
-        <div>
-          <span class="section-label ${surfaceTextToneClass(detailSurface, "soft")}">Selected Asset</span>
-          <strong class="${surfaceTextToneClass(detailSurface, "strong")}">${asset.name}</strong>
-        </div>
-        <span class="pill ${severityClass(asset.zoneSeverity || zone.severity)}">${asset.type}</span>
-      </div>
+    <div class="entity-list">
+      ${assets.map((asset) => {
+        const load = asset.load ?? 0;
+        const tone =
+          load >= 0.8 ? "critical" :
+          load >= 0.55 ? "warning" :
+          "normal";
 
-      <p class="detail-copy ${surfaceTextToneClass(detailSurface, "muted")}">
-        ${asset.zoneName || zone.name} · ${asset.metricLabel || "Control load"} · ${assetLoadBand(asset.load ?? 0)}
-      </p>
+        return `
+          <article class="entity-card ${surfaceClass("light")} ${tone}">
+            <div class="asset-overview-grid">
+              <strong class="asset-overview-name ${surfaceTextToneClass("dark", "strong")}">${asset.name}</strong>
 
-      ${assetSelectionGraphic(asset, { name: asset.zoneName || zone.name })}
+              <div class="asset-overview-icon">
+                <span class="asset-type-badge asset-type-badge-xl ${tone}" aria-label="${asset.type}">
+                  ${assetTypeIcon(asset.type)}
+                </span>
+              </div>
 
-      <div class="mini-metric-grid">
-        <div class="mini-metric ${surfaceClass(selectorSurface)}">
-          <span class="${surfaceTextToneClass(selectorSurface, "soft")}">Current load</span>
-          <strong class="${surfaceTextToneClass(selectorSurface, "strong")}">${fmt((asset.load ?? 0) * 100, 0, asset.metricUnit || " %")}</strong>
-        </div>
-        <div class="mini-metric ${surfaceClass(selectorSurface)}">
-          <span class="${surfaceTextToneClass(selectorSurface, "soft")}">Fault context</span>
-          <strong class="${surfaceTextToneClass(selectorSurface, "strong")}">${asset.faultContext || "Nominal"}</strong>
-        </div>
-        <div class="mini-metric ${surfaceClass(selectorSurface)}">
-          <span class="${surfaceTextToneClass(selectorSurface, "soft")}">Dataset</span>
-          <strong class="${surfaceTextToneClass(selectorSurface, "strong")}">${assets.length} assets</strong>
-        </div>
-        <div class="mini-metric ${surfaceClass(selectorSurface)}">
-          <span class="${surfaceTextToneClass(selectorSurface, "soft")}">Health</span>
-          <strong class="${surfaceTextToneClass(selectorSurface, "strong")}">${calcZoneHealthScore(zone)}</strong>
-        </div>
-      </div>
+              <div class="asset-overview-gauge">
+                <span class="asset-load-ring ${tone}" aria-label="Current asset load">
+                  ${circularLoadGauge(
+                    load,
+                    tone === "critical" ? "rgba(214,127,127,1)" :
+                    tone === "warning" ? "rgba(217,161,79,1)" :
+                    "rgba(97,208,149,1)",
+                    "rgba(255,255,255,0.2)"
+                  )}
+                </span>
+              </div>
+            </div>
+          </article>
+        `;
 
-      <div class="asset-selector-list">${datasetHtml}</div>
-    </article>
+      }).join("")}
+    </div>
   `;
 
   setSlotHTML("asset-detail", html);
-  slotEls("asset-detail").forEach((container) => {
-    container.querySelectorAll("[data-asset-id]").forEach((element) => {
-      element.addEventListener("click", () => {
-        selectAsset(element.dataset.assetId);
-      });
-    });
-  });
 }
+
+
 
 
 function renderAlerts() {
@@ -620,8 +645,9 @@ async function loadLiveData() {
   state.scenario = scenario.scenario || state.scenario;
   state.provenance = "live";
 
-  const primaryId = pendingZoneId || state.selectedZoneId;
+  const primaryId = pendingZoneId || loadPersistedZoneId() || state.selectedZoneId;
   state.selectedZoneId = state.zones.find((zone) => zone.id === primaryId)?.id || state.zones[0]?.id || state.selectedZoneId;
+  persistSelectedZoneId(state.selectedZoneId);
   pendingZoneId = null;
 
   const zone = selectedZone(state);
@@ -661,6 +687,7 @@ async function refresh() {
   loadEdgeFallback(fallbackTick);
 
   if (!selectedZone(state)) state.selectedZoneId = state.zones[0]?.id || state.selectedZoneId;
+  persistSelectedZoneId(state.selectedZoneId);
   const zone = selectedZone(state);
   const assets = zone?.assets || [];
   if (zone && !assets.find((asset) => asset.id === state.selectedAssetId)) {
@@ -673,6 +700,18 @@ async function refresh() {
 await refresh();
 setInterval(refresh, 3500);
 setInterval(renderClock, 1000);
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

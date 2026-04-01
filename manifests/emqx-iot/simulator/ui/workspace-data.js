@@ -256,7 +256,15 @@ export function createSyntheticZoneEdgeDevice(zone) {
 }
 
 export function allTwinGateways(state) {
-  if (state.edgeDevices.length) return state.edgeDevices;
+  if (state.edgeDevices.length) {
+    const coveredZoneIds = new Set(state.edgeDevices.map((device) => device.zoneId));
+    const syntheticDevices = state.zones
+      .filter((zone) => !coveredZoneIds.has(zone.id))
+      .map((zone) => createSyntheticZoneEdgeDevice(zone));
+
+    return [...state.edgeDevices, ...syntheticDevices];
+  }
+
   return state.zones.map((zone) => createSyntheticZoneEdgeDevice(zone));
 }
 

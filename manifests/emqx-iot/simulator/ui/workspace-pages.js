@@ -284,7 +284,9 @@ export function renderTwinWorkspacePage({
   }
 
   if (twinGatewayListEl) {
-    twinGatewayListEl.innerHTML = devices.map((device) => `
+    twinGatewayListEl.innerHTML = `
+      <div class="twin-rail-stack">
+        ${devices.map((device) => `
       <button
         type="button"
         class="entity-card ${surfaceClass("light")} ${device.id === activeDevice.id ? "active" : ""} ${edgeSeverityClass(device.status)}"
@@ -308,7 +310,25 @@ export function renderTwinWorkspacePage({
         </div>
 
       </button>
-    `).join("");
+    `).join("")}
+        <section class="twin-rail-sensor-overview">
+          <div class="section-label rail-title">Sensors Overview</div>
+          <div class="entity-list">
+            ${activeDevice.sensors.map((sensor) => `
+              <article class="entity-card ${surfaceClass("light")} ${edgeSeverityClass(sensor.status)}">
+                <div class="entity-header">
+                  <strong class="${textToneClass("strong")}">${sensor.name}</strong>
+                  <span class="pill ${edgeSeverityClass(sensor.status)}">${sensor.status}</span>
+                </div>
+                <div class="entity-meta ${surfaceTextToneClass("light", "soft")}">
+                  <strong class="${surfaceTextToneClass("dark", "strong")}">${sensor.lastReading || "--"}</strong>
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+      </div>
+    `;
 
     twinGatewayListEl.querySelectorAll("[data-twin-gateway-id]").forEach((element) => {
       element.addEventListener("click", () => {
@@ -369,23 +389,7 @@ export function renderTwinWorkspacePage({
           </div>
         </div>
 
-        <div class="panel-subsection">
-          <div class="asset-load-head">
-            <span class="${textToneClass("soft", true)}">Sensors</span>
-          </div>
 
-          <div class="sensor-list-compact">
-            ${activeDevice.sensors.map((sensor) => `
-              <article class="sensor-row twin-mini-metric ${surfaceClass("light")} ${edgeSeverityClass(sensor.status)}">
-                <div class="sensor-row-copy">
-                  <span class="${textToneClass("soft")}">${sensor.name}</span>
-                  <strong class="${textToneClass("strong")}">${sensor.lastReading || sensor.metricType || "--"}</strong>
-                </div>
-                <span class="pill ${edgeSeverityClass(sensor.status)}">${sensor.status}</span>
-              </article>
-            `).join("")}
-          </div>
-        </div>
       </article>
     `;
   }
@@ -566,6 +570,9 @@ export function renderGraphWorkspacePage({ state, graphGridEl, managedZones, sel
     `;
   }).join("");
 }
+
+
+
 
 
 
