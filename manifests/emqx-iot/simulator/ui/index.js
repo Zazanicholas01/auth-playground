@@ -38,6 +38,9 @@ const config = window.__IOT_CONFIG__ || {};
 const apiBase = config.apiBase || (window.location.origin + "/api");
 const simulatorBase = config.simulatorBase || (window.location.origin + "/simulator");
 const dbgateBase = config.dbgateBase || "http://127.0.0.1:3000";
+const grafanaDashboardUrl =
+  config.grafanaDashboardUrl ||
+  (window.location.origin + "/grafana/d/iot-observability/iot-observability?orgId=1&kiosk&from=now-6h&to=now");
 const currentPage = resolveCurrentPage(window.location.pathname);
 
 let pendingZoneId = new URLSearchParams(window.location.search).get("zone");
@@ -60,7 +63,6 @@ function persistSelectedZoneId(zoneId) {
 
 const persistedZoneId = loadPersistedZoneId();
 activateNavigation(currentPage);
-
 
 const state = {
   summary: null,
@@ -123,6 +125,7 @@ const opsSummaryEl = document.getElementById("ops-summary");
 const operationsBoardEl = document.getElementById("operations-board");
 const twinGatewayListEl = document.getElementById("twin-gateway-list");
 const dbgateFrameEl = document.getElementById("dbgate-frame");
+const grafanaFrameEl = document.getElementById("grafana-frame");
 
 const mapPhotoUrl = "/dev-assets/map.png";
 const twinPhotoUrl = "/dev-assets/greenhouse-twin.png";
@@ -130,13 +133,12 @@ const twinPhotoUrl = "/dev-assets/greenhouse-twin.png";
 const twinZonePanelEl = document.getElementById("twin-zone-panel");
 const commandPriorityRailEls = () => slotEls("command-priority-rail");
 
-let publishSuccessTotal = 0;
-let publishFailureTotal = 0;
-let scenarioChangesTotal = 0;
-let lastLoopStartedAt = Date.now();
-
 if (currentPage === "dbgate" && dbgateFrameEl) {
   dbgateFrameEl.src = dbgateBase;
+}
+
+if (currentPage === "observability" && grafanaFrameEl) {
+  grafanaFrameEl.src = grafanaDashboardUrl;
 }
 
 function renderMetrics() {

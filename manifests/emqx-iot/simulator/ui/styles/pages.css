@@ -1111,47 +1111,38 @@
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 body[data-page="dbgate"] .status-strip,
-body[data-page="dbgate"] .workspace-rail {
+body[data-page="dbgate"] .workspace-rail,
+body[data-page="observability"] .status-strip,
+body[data-page="observability"] .workspace-rail {
   display: none;
 }
 
-body[data-page="dbgate"] .workspace-shell {
+body[data-page="dbgate"] .workspace-shell,
+body[data-page="observability"] .workspace-shell {
   grid-template-columns: minmax(0, 1fr);
 }
 
-body[data-page="dbgate"] .workspace-main {
+body[data-page="dbgate"] .workspace-main,
+body[data-page="observability"] .workspace-main {
   min-height: calc(100vh - 180px);
 }
 
-.dbgate-shell {
+.dbgate-shell,
+.observability-shell {
   min-height: calc(100vh - 180px);
   padding: 0;
   overflow: hidden;
   border-radius: var(--radius-xl);
 }
 
-.dbgate-frame-wrap {
+.dbgate-frame-wrap,
+.observability-frame-wrap {
   min-height: inherit;
 }
 
-.dbgate-frame {
+.dbgate-frame,
+.observability-frame {
   display: block;
   width: 100%;
   min-height: calc(100vh - 180px);

@@ -54,6 +54,18 @@
               </div>
             </a>
 
+            <a href="/observability" data-nav="observability">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 18h16"></path>
+                <path d="M7 14l3-3 3 2 4-5"></path>
+                <path d="M18 8h2v2"></path>
+              </svg>
+              <div>
+                <span>Observability</span>
+                <small>Live dashboards</small>
+              </div>
+            </a>
+
             <a href="/dbgate" data-nav="dbgate">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="4" y="5" width="16" height="14" rx="2"></rect>
@@ -156,6 +168,20 @@
             </div>
           </section>
 
+          <section id="page-observability" class="page-layout page-observability">
+            <div class="observability-shell panel">
+              <div class="observability-frame-wrap">
+                <iframe
+                  id="grafana-frame"
+                  class="observability-frame"
+                  title="Observability Dashboard"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                ></iframe>
+              </div>
+            </div>
+          </section>
+
           <section id="page-dbgate" class="page-layout page-dbgate">
             <div class="dbgate-shell panel">
               <div class="dbgate-frame-wrap">
@@ -192,7 +218,10 @@
       window.__IOT_CONFIG__ = window.__IOT_CONFIG__ || {
         apiBase: window.location.origin + "/api",
         simulatorBase: window.location.origin + "/simulator",
-        dbgateBase: "http://127.0.0.1:3000"
+        dbgateBase: "http://127.0.0.1:3000",
+        grafanaDashboardUrl:
+          window.location.origin +
+          "/grafana/d/iot-observability/iot-observability?orgId=1&kiosk&from=now-6h&to=now"
       };
 
       if (window.location.hash.includes("figmacapture=")) {

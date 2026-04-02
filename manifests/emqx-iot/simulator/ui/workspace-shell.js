@@ -37,6 +37,19 @@ const PAGE_META = {
     contextCopy: "Use the evidence rail for incidents, selected assets, and the operational narrative behind each alarm.",
     modeLabel: "Operations"
   },
+  observability: {
+    pillar: "Tools",
+    workspaceEyebrow: "Observability",
+    workspaceTitle: "Embedded Monitoring Workspace",
+    workspaceCopy: "Track runtime health, throughput, and scrape signals without leaving the operator cockpit.",
+    scopeEyebrow: "Tools",
+    scopeTitle: "Dashboard Access",
+    scopeCopy: "Grafana is embedded directly into the main workspace for read-only monitoring.",
+    contextEyebrow: "Tools",
+    contextTitle: "Monitoring Context",
+    contextCopy: "Use the embedded dashboard for live service health, pipeline activity, and observability triage.",
+    modeLabel: "Observability"
+  },
   dbgate: {
     pillar: "Tools",
     workspaceEyebrow: "DB Console",
@@ -82,6 +95,7 @@ export function resolveCurrentPage(pathname) {
   if (pathname === "/" || pathname === "/map") return "map";
   if (pathname === "/twin") return "twin";
   if (pathname === "/operations") return "operations";
+  if (pathname === "/observability") return "observability";
   if (pathname === "/dbgate") return "dbgate";
   return "map";
 }
@@ -115,5 +129,3 @@ export function applyWorkspaceChrome({ currentPage, elements, selectedZoneName, 
   if (elements.contextCopyEl) elements.contextCopyEl.textContent = meta.contextCopy;
   if (elements.workspaceFocusPathEl) elements.workspaceFocusPathEl.textContent = focusPath || `${meta.pillar} / ${focusLabel || "--"}`;
 }
-
-
