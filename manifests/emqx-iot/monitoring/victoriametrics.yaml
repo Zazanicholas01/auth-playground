@@ -32,7 +32,8 @@ spec:
       
       volumes:
         - name: storage
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: victoriametrics-data
         - name: config
           configMap:
             name: victoriametrics-scrape-config
