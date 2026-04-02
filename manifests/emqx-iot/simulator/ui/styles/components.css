@@ -681,6 +681,7 @@
 .page-general,
 .page-map,
 .page-twin,
+.page-dbgate,
 .page-operations {
   display: none;
 }
@@ -688,6 +689,7 @@
 body[data-page="map"] #page-map,
 body[data-page="twin"] #page-twin,
 body[data-page="operations"] #page-operations,
+body[data-page="dbgate"] #page-dbgate,
 body[data-page="map"] .page-general,
 body[data-page="operations"] .page-general,
 body[data-page="map"] .page-map,
@@ -695,3 +697,5 @@ body[data-page="twin"] .page-twin,
 body[data-page="operations"] .page-operations {
   display: grid;
 }
+
+

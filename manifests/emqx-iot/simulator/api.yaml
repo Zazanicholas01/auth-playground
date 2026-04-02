@@ -52,6 +52,9 @@ spec:
                 secretKeyRef:
                   name: iot-timescaledb-secret
                   key: password
+            - name: ENABLE_METRICS
+              value: "true"
+              
           readinessProbe:
             httpGet:
               path: /health
@@ -77,6 +80,10 @@ kind: Service
 metadata:
   name: iot-api
   namespace: iot-playground
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
 spec:
   selector:
     app: iot-api

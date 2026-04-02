@@ -3,6 +3,10 @@ kind: Deployment
 metadata:
   name: iot-simulator
   namespace: iot-playground
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
 spec:
   replicas: 1
   selector:

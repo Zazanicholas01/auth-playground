@@ -16,6 +16,12 @@ resources:
   - simulator/timescaledb.yaml
   - simulator/dbgate.yaml
   - simulator/bronze-silver-cron.yaml
+  - monitoring/victoriametrics-scrape-config.yaml
+  - monitoring/victoriametrics.yaml
+  - monitoring/grafana-datasources.yaml
+  - monitoring/grafana.yaml
+  - monitoring/grafana-dashboard-provider.yaml
+  - monitoring/grafana-dashboards.yaml
 
 configMapGenerator:
   - name: iot-sql-scripts

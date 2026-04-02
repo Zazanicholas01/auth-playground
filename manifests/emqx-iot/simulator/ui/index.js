@@ -37,6 +37,7 @@ import {
 const config = window.__IOT_CONFIG__ || {};
 const apiBase = config.apiBase || (window.location.origin + "/api");
 const simulatorBase = config.simulatorBase || (window.location.origin + "/simulator");
+const dbgateBase = config.dbgateBase || "http://127.0.0.1:3000";
 const currentPage = resolveCurrentPage(window.location.pathname);
 
 let pendingZoneId = new URLSearchParams(window.location.search).get("zone");
@@ -121,6 +122,7 @@ const zoneNetworkBadgesEl = document.getElementById("zone-network-badges");
 const opsSummaryEl = document.getElementById("ops-summary");
 const operationsBoardEl = document.getElementById("operations-board");
 const twinGatewayListEl = document.getElementById("twin-gateway-list");
+const dbgateFrameEl = document.getElementById("dbgate-frame");
 
 const mapPhotoUrl = "/dev-assets/map.png";
 const twinPhotoUrl = "/dev-assets/greenhouse-twin.png";
@@ -128,6 +130,34 @@ const twinPhotoUrl = "/dev-assets/greenhouse-twin.png";
 const twinZonePanelEl = document.getElementById("twin-zone-panel");
 const commandPriorityRailEls = () => slotEls("command-priority-rail");
 
+let publishSuccessTotal = 0;
+let publishFailureTotal = 0;
+let scenarioChangesTotal = 0;
+let lastLoopStartedAt = Date.now();
+
+if (currentPage === "dbgate" && dbgateFrameEl) {
+  dbgateFrameEl.src = dbgateBase;
+}
+
+function renderMetrics() {
+  return [
+    "# HELP iot_simulator_publish_success_total Total successful MQTT publishes",
+    "# TYPE iot_simulator_publish_success_total counter",
+    `iot_simulator_publish_success_total ${publishSuccessTotal}`,
+
+    "# HELP iot_simulator_publish_failure_total Total failed MQTT publishes",
+    "# TYPE iot_simulator_publish_failure_total counter",
+    `iot_simulator_publish_failure_total ${publishFailureTotal}`,
+
+    "# HELP iot_simulator_scenario_changes_total Total scenario changes",
+    "# TYPE iot_simulator_scenario_changes_total counter",
+    `iot_simulator_scenario_changes_total ${scenarioChangesTotal}`,
+
+    "# HELP iot_simulator_loop_last_started_at_ms Last loop start timestamp in ms",
+    "# TYPE iot_simulator_loop_last_started_at_ms gauge",
+    `iot_simulator_loop_last_started_at_ms ${lastLoopStartedAt}`,
+  ].join("\n");
+}
 
 function incidentCardHtml({ timeLabel, scopeLabel, severity, message, actionHtml = "", dataAttrs = "" }) {
   const severityTone = severityClass(severity);
@@ -606,6 +636,8 @@ async function refresh() {
 await refresh();
 setInterval(refresh, 3500);
 setInterval(renderClock, 1000);
+
+
 
 
 

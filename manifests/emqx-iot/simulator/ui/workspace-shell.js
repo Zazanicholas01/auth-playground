@@ -37,6 +37,19 @@ const PAGE_META = {
     contextCopy: "Use the evidence rail for incidents, selected assets, and the operational narrative behind each alarm.",
     modeLabel: "Operations"
   },
+  dbgate: {
+    pillar: "Tools",
+    workspaceEyebrow: "DB Console",
+    workspaceTitle: "Embedded DBGate Workspace",
+    workspaceCopy: "Query, inspect, and manage the database without leaving the operator cockpit.",
+    scopeEyebrow: "Tools",
+    scopeTitle: "Database Access",
+    scopeCopy: "DBGate is embedded directly into the main workspace.",
+    contextEyebrow: "Tools",
+    contextTitle: "Database Context",
+    contextCopy: "Use the embedded UI for SQL, schema browsing, and data inspection.",
+    modeLabel: "DBGate"
+  },
   "edge-devices": {
     pillar: "Fleet",
     workspaceEyebrow: "Gateway Fleet",
@@ -69,6 +82,7 @@ export function resolveCurrentPage(pathname) {
   if (pathname === "/" || pathname === "/map") return "map";
   if (pathname === "/twin") return "twin";
   if (pathname === "/operations") return "operations";
+  if (pathname === "/dbgate") return "dbgate";
   return "map";
 }
 
@@ -101,3 +115,5 @@ export function applyWorkspaceChrome({ currentPage, elements, selectedZoneName, 
   if (elements.contextCopyEl) elements.contextCopyEl.textContent = meta.contextCopy;
   if (elements.workspaceFocusPathEl) elements.workspaceFocusPathEl.textContent = focusPath || `${meta.pillar} / ${focusLabel || "--"}`;
 }
+
+

@@ -54,6 +54,18 @@
               </div>
             </a>
 
+            <a href="/dbgate" data-nav="dbgate">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="4" y="5" width="16" height="14" rx="2"></rect>
+                <path d="M8 9h8"></path>
+                <path d="M8 13h5"></path>
+              </svg>
+              <div>
+                <span>DBGate</span>
+                <small>SQL workspace</small>
+              </div>
+            </a>
+
           </nav>
 
         <div class="status-strip">
@@ -144,6 +156,20 @@
             </div>
           </section>
 
+          <section id="page-dbgate" class="page-layout page-dbgate">
+            <div class="dbgate-shell panel">
+              <div class="dbgate-frame-wrap">
+                <iframe
+                  id="dbgate-frame"
+                  class="dbgate-frame"
+                  title="DBGate"
+                  loading="lazy"
+                  referrerpolicy="no-referrer"
+                ></iframe>
+              </div>
+            </div>
+          </section>
+
         </main>
 
         <aside class="workspace-rail evidence-rail">
@@ -165,7 +191,8 @@
     <script>
       window.__IOT_CONFIG__ = window.__IOT_CONFIG__ || {
         apiBase: window.location.origin + "/api",
-        simulatorBase: window.location.origin + "/simulator"
+        simulatorBase: window.location.origin + "/simulator",
+        dbgateBase: "http://127.0.0.1:3000"
       };
 
       if (window.location.hash.includes("figmacapture=")) {
@@ -178,5 +205,7 @@
     <script src="/index.js" type="module"></script>
   </body>
 </html>
+
+
 
 

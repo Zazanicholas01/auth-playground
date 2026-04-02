@@ -30,6 +30,34 @@ let scenario = process.env.SCENARIO || "baseline-day";
 let tick = 0;
 let publishTimer = null;
 
+let publishSuccessTotal = 0;
+let publishFailureTotal = 0;
+let mqttReconnectsTotal = 0;
+
+function renderMetrics() {
+  return [
+    "# HELP iot_simulator_publish_success_total Total successful MQTT publishes",
+    "# TYPE iot_simulator_publish_success_total counter",
+    `iot_simulator_publish_success_total ${publishSuccessTotal}`,
+
+    "# HELP iot_simulator_publish_failure_total Total failed MQTT publishes",
+    "# TYPE iot_simulator_publish_failure_total counter",
+    `iot_simulator_publish_failure_total ${publishFailureTotal}`,
+
+    "# HELP iot_simulator_mqtt_connected Whether the simulator MQTT client is currently connected",
+    "# TYPE iot_simulator_mqtt_connected gauge",
+    `iot_simulator_mqtt_connected ${client.connected ? 1 : 0}`,
+
+    "# HELP iot_simulator_mqtt_reconnects_total Total MQTT reconnect attempts",
+    "# TYPE iot_simulator_mqtt_reconnects_total counter",
+    `iot_simulator_mqtt_reconnects_total ${mqttReconnectsTotal}`,
+
+    "# HELP iot_simulator_tick Current simulator tick",
+    "# TYPE iot_simulator_tick gauge",
+    `iot_simulator_tick ${tick}`,
+  ].join("\n");
+}
+
 const allowedScenarios = new Set([
   "baseline-day",
   "hot-humid-afternoon",
@@ -590,25 +618,31 @@ function publishAll() {
       ts: telemetry.ts,
     };
 
-    client.publish(`${topicRoot}/${zoneConfig.zoneId}/telemetry`, JSON.stringify(telemetry));
-    client.publish(`${topicRoot}/${zoneConfig.zoneId}/status`, JSON.stringify(status));
+    try {
+      client.publish(`${topicRoot}/${zoneConfig.zoneId}/telemetry`, JSON.stringify(telemetry));
+      client.publish(`${topicRoot}/${zoneConfig.zoneId}/status`, JSON.stringify(status));
+      publishSuccessTotal += 2;
 
-    for (const alert of telemetry.alerts) {
-      client.publish(
-        `${topicRoot}/${zoneConfig.zoneId}/alerts`,
-        JSON.stringify({
-          zoneId: zoneConfig.zoneId,
-          deviceId: zoneConfig.zoneId,
-          severity: alert.severity,
-          code: alert.code,
-          message: alert.message,
-          scenario,
-          ts: telemetry.ts,
-        }),
-      );
+      for (const alert of telemetry.alerts) {
+        client.publish(
+          `${topicRoot}/${zoneConfig.zoneId}/alerts`,
+          JSON.stringify({
+            zoneId: zoneConfig.zoneId,
+            deviceId: zoneConfig.zoneId,
+            severity: alert.severity,
+            code: alert.code,
+            message: alert.message,
+            scenario,
+            ts: telemetry.ts,
+          }),
+        );
+        publishSuccessTotal += 1;
+      }
+    } catch (error) {
+      publishFailureTotal += 1;
+      console.error("simulator publish error:", error.message);
     }
   }
-
   console.log("simulator published greenhouse batch for zones:", zoneConfigs.map((zone) => zone.zoneId).join(", "));
 }
 
@@ -622,6 +656,7 @@ client.on("connect", () => {
 });
 
 client.on("reconnect", () => {
+  mqttReconnectsTotal += 1;
   console.log("simulator reconnecting to mqtt broker:", mqttUrl);
 });
 
@@ -726,6 +761,16 @@ Bun.serve({
 
       resetStateForScenario(next);
       return json({ ok: true, scenario });
+    }
+
+    if (request.method === "GET" && url.pathname === "/metrics") {
+      return new Response(renderMetrics(), {
+        status: 200,
+        headers: {
+          "content-type": "text/plain; version=0.0.4; charset=utf-8",
+          "cache-control": "no-store",
+        },
+      });
     }
 
     return json({ error: "not found" }, 404);

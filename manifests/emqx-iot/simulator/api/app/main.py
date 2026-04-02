@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.bootstrap import init_db_with_retry
 from app.container import build_container
@@ -44,6 +45,12 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(router)
+
+    Instrumentator(
+        should_group_status_codes=False,
+        should_ignore_untemplated=True
+    ).instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
+
     return app
 
 

@@ -38,3 +38,16 @@ manifests/emqx-iot/simulator/local_ui_dev/run-local-api.sh
 ```bash
 IOT_UPSTREAM_BASE=http://127.0.0.1:8080 manifests/emqx-iot/simulator/local_ui_dev/run-local-ui.sh
 ```
+
+## Flux Commands
+
+### 1. Reconcile Active app + Git Repo source
+```bash
+flux reconcile kustomization active-app -n flux-system --with-source
+```
+
+### 2. Reconcile Image Automation after push
+```bash
+flux reconcile image repository greenhouse-iot-ui -n flux-system
+flux reconcile image update playground-manifests -n flux-system
+```

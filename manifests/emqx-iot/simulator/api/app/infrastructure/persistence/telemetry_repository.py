@@ -2,6 +2,7 @@ import json
 from datetime import date, datetime
 
 from app.infrastructure.persistence.db import db
+from app.infrastructure.metrics import db_write_seconds
 
 
 def decode_json(value):
@@ -23,54 +24,57 @@ def json_safe(value):
 class PostgresTelemetryRepository:
     async def persist_bronze_event(self, event: dict) -> None:
         payload = event.get("payload", {})
-        await db.execute(
-            """
-            INSERT INTO bronze.events_raw (
-                source_topic, event_type, device_id, zone_id, event_ts, payload
-            ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)
-            """,
-            event["topic"],
-            event["type"],
-            payload.get("deviceId") or payload.get("zoneId"),
-            payload.get("zoneId") or payload.get("deviceId"),
-            event["receivedAt"],
-            json.dumps(json_safe(payload)),
-        )
+        with db_write_seconds.time():
+            await db.execute(
+                """
+                INSERT INTO bronze.events_raw (
+                    source_topic, event_type, device_id, zone_id, event_ts, payload
+                ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)
+                """,
+                event["topic"],
+                event["type"],
+                payload.get("deviceId") or payload.get("zoneId"),
+                payload.get("zoneId") or payload.get("deviceId"),
+                event["receivedAt"],
+                json.dumps(json_safe(payload)),
+            )
 
     async def persist_bronze_telemetry(self, topic: str, normalized: dict) -> None:
-        await db.execute(
-            """
-            INSERT INTO bronze.telemetry_raw (
-                source_topic, message_type, device_id, zone_id, event_ts, payload
-            ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)
-            """,
-            topic,
-            "telemetry",
-            normalized["deviceId"],
-            normalized["zoneId"],
-            normalized["ts"],
-            json.dumps(json_safe(normalized)),
-        )
+        with db_write_seconds.time():
+            await db.execute(
+                """
+                INSERT INTO bronze.telemetry_raw (
+                    source_topic, message_type, device_id, zone_id, event_ts, payload
+                ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)
+                """,
+                topic,
+                "telemetry",
+                normalized["deviceId"],
+                normalized["zoneId"],
+                normalized["ts"],
+                json.dumps(json_safe(normalized)),
+            )
 
     async def upsert_device_state(self, device: dict) -> None:
-        await db.execute(
-            """
-            INSERT INTO silver.device_state_latest (
-                device_id, zone_id, last_topic, last_seen, state
+        with db_write_seconds.time():
+            await db.execute(
+                """
+                INSERT INTO silver.device_state_latest (
+                    device_id, zone_id, last_topic, last_seen, state
+                )
+                VALUES ($1, $2, $3, $4, $5::jsonb)
+                ON CONFLICT (device_id) DO UPDATE SET
+                    zone_id = EXCLUDED.zone_id,
+                    last_topic = EXCLUDED.last_topic,
+                    last_seen = EXCLUDED.last_seen,
+                    state = EXCLUDED.state
+                """,
+                device["deviceId"],
+                device["zoneId"],
+                device.get("lastTopic"),
+                device["lastSeen"],
+                json.dumps(json_safe(device)),
             )
-            VALUES ($1, $2, $3, $4, $5::jsonb)
-            ON CONFLICT (device_id) DO UPDATE SET
-                zone_id = EXCLUDED.zone_id,
-                last_topic = EXCLUDED.last_topic,
-                last_seen = EXCLUDED.last_seen,
-                state = EXCLUDED.state
-            """,
-            device["deviceId"],
-            device["zoneId"],
-            device.get("lastTopic"),
-            device["lastSeen"],
-            json.dumps(json_safe(device)),
-        )
 
     async def load_device_states(self) -> dict[str, dict]:
         rows = await db.fetch(

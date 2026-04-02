@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: victoriametrics-scrape-config
+  namespace: iot-playground
+data:
+  promscrape.yaml: |
+    global:
+      scrape_interval: 15s
+  
+    scrape_configs:
+      - job_name: "iot-api"
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["iot-api.iot-playground.svc.cluster.local:8080"]
+      
+      - job_name: "iot-simulator"
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["iot-simulator.iot-playground.svc.cluster.local:8080"]
