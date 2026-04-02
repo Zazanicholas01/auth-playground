@@ -105,34 +105,6 @@ class PostgresTelemetryRepository:
             for row in rows
         ]
 
-    async def telemetry_history(self, device_id: str, limit: int) -> list[dict]:
-        rows = await db.fetch(
-            """
-            SELECT
-                ts,
-                scenario,
-                severity,
-                temperature,
-                humidity,
-                co2,
-                par,
-                pressure,
-                dew_point AS "dewPoint",
-                vpd,
-                soil_moisture AS "soilMoisture",
-                soil_temperature AS "soilTemperature",
-                tank_level AS "tankLevel",
-                irrigation_flow AS "irrigationFlow"
-            FROM silver.telemetry
-            WHERE device_id = $1
-            ORDER BY ts DESC
-            LIMIT $2
-            """,
-            device_id,
-            limit,
-        )
-        return [dict(row) for row in reversed(rows)]
-
     async def load_recent_alerts(self, limit: int) -> list[dict]:
         rows = await db.fetch(
             """
@@ -198,4 +170,3 @@ class PostgresTelemetryRepository:
             limit,
         )
         return [dict(row) for row in rows]
-

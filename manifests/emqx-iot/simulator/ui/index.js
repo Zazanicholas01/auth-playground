@@ -3,7 +3,6 @@ import {
   allTwinGateways,
   createFallbackData,
   createFallbackEdgeDevices,
-  mapHistoryPoint,
   normalizeZone,
   zoneNames
 } from "./workspace-data.js";
@@ -15,8 +14,6 @@ import {
   edgeSeverityClass,
   fmt,
   focusPathLabel,
-  graphTimeLabels,
-  historySlice,
   managedAssets,
   managedZones,
   selectedEdgeDevice as getSelectedEdgeDevice,
@@ -31,13 +28,11 @@ import {
 } from "./workspace-helpers.js";
 
 import {
-  renderGraphWorkspacePage,
   renderMapWorkspacePage,
   renderOperationsCommandPriorityRail,
   renderOperationsWorkspacePage,
   renderTwinWorkspacePage
 } from "./workspace-pages.js";
-import { renderEdgeWorkspacePage, renderSensorWorkspacePage } from "./workspace-edge.js";
 
 const config = window.__IOT_CONFIG__ || {};
 const apiBase = config.apiBase || (window.location.origin + "/api");
@@ -70,16 +65,12 @@ const state = {
   summary: null,
   zones: [],
   alerts: [],
-  history: [],
   edgeDevices: [],
   edgeAlerts: [],
   provenance: "live",
   selectedEdgeDeviceId: null,
   selectedSensorId: null,
   scenario: "baseline-day",
-  graphRange: "medium",
-  graphMetricGroup: "all",
-  graphComparisonMode: "managed",
   selectedZoneId: pendingZoneId || persistedZoneId || "greenhouse-a-north",
   selectedAssetId: "north-fans"
 };
@@ -127,23 +118,9 @@ const mapZonePanelEl = document.getElementById("map-zone-panel");
 const twinZoneSummaryEl = document.getElementById("twin-zone-summary");
 const zoneNetworkMapEl = document.getElementById("zone-network-map");
 const zoneNetworkBadgesEl = document.getElementById("zone-network-badges");
-const graphGridEl = document.getElementById("graph-grid");
-const graphRangeToggleEl = document.getElementById("graph-range-toggle");
-const graphMetricToggleEl = document.getElementById("graph-metric-toggle");
-const graphCompareToggleEl = document.getElementById("graph-compare-toggle");
 const opsSummaryEl = document.getElementById("ops-summary");
 const operationsBoardEl = document.getElementById("operations-board");
 const twinGatewayListEl = document.getElementById("twin-gateway-list");
-const edgeFleetSummaryEl = document.getElementById("edge-fleet-summary");
-const edgeDeviceListEl = document.getElementById("edge-device-list");
-const edgeSummaryEl = document.getElementById("edge-summary");
-const edgeSensorDetailEl = document.getElementById("edge-sensor-detail");
-const edgeAlertListEl = document.getElementById("edge-alert-list");
-const sensorFleetSummaryEl = document.getElementById("sensor-fleet-summary");
-const sensorListEl = document.getElementById("sensor-list");
-const sensorSummaryEl = document.getElementById("sensor-summary");
-const sensorDetailEl = document.getElementById("sensor-detail");
-const sensorAlertListEl = document.getElementById("sensor-alert-list");
 
 const mapPhotoUrl = "/dev-assets/map.png";
 const twinPhotoUrl = "/dev-assets/greenhouse-twin.png";
@@ -236,10 +213,6 @@ function assetSelectionGraphic(asset, zone) {
     </svg>`;
 }
 
-async function loadHistoryForZone(zoneId) {
-  const history = await fetch(apiBase + "/history/" + zoneId).then((response) => response.json()).catch(() => []);
-  state.history = history.map(mapHistoryPoint);
-}
 
 function selectAsset(assetId) {
   state.selectedAssetId = assetId;
@@ -268,7 +241,7 @@ function selectSensor(sensorId) {
   render();
 }
 
-async function focusZone(zoneId, { updateHistory = true } = {}) {
+function focusZone(zoneId) {
   state.selectedZoneId = zoneId;
   persistSelectedZoneId(zoneId);
 
@@ -277,7 +250,6 @@ async function focusZone(zoneId, { updateHistory = true } = {}) {
     state.selectedAssetId = zone.assets[0]?.id || state.selectedAssetId;
   }
 
-  if (updateHistory && zone?.id) await loadHistoryForZone(zone.id);
   render();
 }
 
@@ -350,8 +322,8 @@ function renderZoneList() {
   setSlotHTML("zone-list", listHtml);
   slotEls("zone-list").forEach((container) => {
     container.querySelectorAll("[data-zone-id]").forEach((element) => {
-      element.addEventListener("click", async () => {
-        await focusZone(element.dataset.zoneId);
+      element.addEventListener("click", () => {
+        focusZone(element.dataset.zoneId);
       });
     });
   });
@@ -435,9 +407,9 @@ function renderAlerts() {
   setSlotHTML("alert-list", `<div class="incident-list">${rows || incidentEmptyHtml("No active incidents in the current scope.")}</div>`);
   slotEls("alert-list").forEach((container) => {
     container.querySelectorAll("[data-alert-zone-id]").forEach((element) => {
-      element.addEventListener("click", async (event) => {
+      element.addEventListener("click", (event) => {
         if (event.target.closest(".text-link")) return;
-        await focusZone(element.dataset.alertZoneId);
+        focusZone(element.dataset.alertZoneId);
       });
     });
   });
@@ -461,30 +433,6 @@ function renderProvenance() {
     `;
   }
 }
-function renderToggleGroup(root, options, activeValue, dataAttr, onSelect) {
-  if (!root) return;
-  root.innerHTML = options.map(([value, label]) => `
-    <button type="button" class="toggle-chip ${activeValue === value ? "active" : ""}" ${dataAttr}="${value}">${label}</button>
-  `).join("");
-  root.querySelectorAll(`[${dataAttr}]`).forEach((element) => {
-    element.addEventListener("click", () => onSelect(element.getAttribute(dataAttr)));
-  });
-}
-
-function renderGraphControls() {
-  renderToggleGroup(graphRangeToggleEl, [["short", "6 points"], ["medium", "12 points"], ["long", "All"]], state.graphRange, "data-graph-range", (value) => {
-    state.graphRange = value;
-    render();
-  });
-  renderToggleGroup(graphMetricToggleEl, [["all", "All metrics"], ["climate", "Climate"], ["root", "Root zone"]], state.graphMetricGroup, "data-graph-metric", (value) => {
-    state.graphMetricGroup = value;
-    render();
-  });
-  renderToggleGroup(graphCompareToggleEl, [["managed", "Managed zones"], ["focused", "Focused zone"]], state.graphComparisonMode, "data-graph-compare", (value) => {
-    state.graphComparisonMode = value;
-    render();
-  });
-}
 
 function renderClock() {
   if (!timePillEl) return;
@@ -501,9 +449,7 @@ function renderStatus() {
   const focusPath = focusPathLabel({ currentPage, zone, edgeDevice: twinDevice, sensor, asset: activeAsset });
 
   if (selectedZonePillEl) {
-    if (currentPage === "edge-devices") selectedZonePillEl.textContent = `Zone ${selectedEdgeDevice()?.zoneName || zone?.name || "--"}`;
-    else if (currentPage === "sensors") selectedZonePillEl.textContent = `Zone ${sensor?.zoneName || zone?.name || "--"}`;
-    else selectedZonePillEl.textContent = `Zone ${selectedZoneLabel(state)}`;
+    selectedZonePillEl.textContent = `Zone ${selectedZoneLabel(state)}`;
   }
 
   applyWorkspaceChrome({
@@ -530,48 +476,13 @@ function renderStatus() {
   });
 }
 
-function renderFleetPages() {
-  if (currentPage === "edge-devices") {
-    renderEdgeWorkspacePage({
-      state,
-      edgeFleetSummaryEl,
-      edgeDeviceListEl,
-      edgeSummaryEl,
-      edgeSensorDetailEl,
-      edgeAlertListEl,
-      selectedEdgeDevice,
-      render,
-      zoneNames,
-      incidentCardHtml,
-      incidentEmptyHtml,
-      selectEdgeDevice
-    });
-  }
-
-  if (currentPage === "sensors") {
-    renderSensorWorkspacePage({
-      state,
-      sensorFleetSummaryEl,
-      sensorListEl,
-      sensorSummaryEl,
-      sensorDetailEl,
-      sensorAlertListEl,
-      allSensors,
-      selectedSensor,
-      incidentCardHtml,
-      incidentEmptyHtml,
-      selectSensor
-    });
-  }
-}
 
 function render() {
   renderClock();
   renderProvenance();
   renderStatus();
 
-  if (currentPage === "operations" || currentPage === "graphs") renderGraphControls();
-  if (!["edge-devices", "sensors", "operations"].includes(currentPage)) renderZoneList();
+  if (currentPage !== "operations") renderZoneList();
 
   if (currentPage === "map") {
     renderMapWorkspacePage({
@@ -620,24 +531,12 @@ function render() {
     });
   }
 
-  if (currentPage === "graphs") {
-    renderGraphWorkspacePage({
-      state,
-      graphGridEl,
-      managedZones: () => managedZones(state),
-      selectedZone: () => selectedZone(state),
-      historySlice,
-      graphTimeLabels,
-      createFallbackData
-    });
-  }
 
-  if (["map", "twin", "operations", "graphs"].includes(currentPage)) {
+  if (["map", "twin", "operations"].includes(currentPage)) {
     renderAssetDetail();
     renderAlerts();
   }
 
-  renderFleetPages();
 }
 
 async function loadLiveData() {
@@ -660,8 +559,6 @@ async function loadLiveData() {
   persistSelectedZoneId(state.selectedZoneId);
   pendingZoneId = null;
 
-  const zone = selectedZone(state);
-  if (zone?.id) await loadHistoryForZone(zone.id);
 
   brokerPillEl.className = `pill ${health.mqttConnected ? "normal" : "critical"}`;
   brokerPillEl.textContent = health.mqttConnected ? "Broker linked" : "Broker lost";
@@ -674,7 +571,6 @@ function loadFallback(tick) {
   state.summary = fallback.summary;
   state.zones = fallback.devices.map((zone, index) => normalizeZone(zone, fallback.scenario, index));
   state.alerts = fallback.alerts;
-  state.history = fallback.history;
   state.scenario = fallback.scenario;
   state.provenance = "synthetic";
   brokerPillEl.className = "pill warning";

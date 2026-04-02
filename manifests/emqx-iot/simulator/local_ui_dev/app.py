@@ -122,11 +122,6 @@ async def operations() -> FileResponse:
     return _static_response(STATIC_DIR / "index.html")
 
 
-@app.get("/graphs")
-async def graphs() -> FileResponse:
-    return _static_response(STATIC_DIR / "index.html")
-
-
 @app.get("/dev-assets/{asset_path:path}")
 async def dev_asset(asset_path: str) -> FileResponse:
     return _static_response(_safe_dev_asset_path(asset_path))

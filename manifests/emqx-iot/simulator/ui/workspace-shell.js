@@ -37,19 +37,6 @@ const PAGE_META = {
     contextCopy: "Use the evidence rail for incidents, selected assets, and the operational narrative behind each alarm.",
     modeLabel: "Operations"
   },
-  graphs: {
-    pillar: "Operations",
-    workspaceEyebrow: "Trend Analysis",
-    workspaceTitle: "Comparison And Drift Analysis",
-    workspaceCopy: "Compare focused-zone behavior against the managed envelope without leaving the operator workflow.",
-    scopeEyebrow: "Control Rail",
-    scopeTitle: "Trend Controls",
-    scopeCopy: "Adjust comparison range, metric family, and scope before reading the charts.",
-    contextEyebrow: "Evidence Rail",
-    contextTitle: "Analysis Context",
-    contextCopy: "Keep the selected zone, asset context, and supporting incidents beside the charts.",
-    modeLabel: "Analysis"
-  },
   "edge-devices": {
     pillar: "Fleet",
     workspaceEyebrow: "Gateway Fleet",
@@ -82,9 +69,6 @@ export function resolveCurrentPage(pathname) {
   if (pathname === "/" || pathname === "/map") return "map";
   if (pathname === "/twin") return "twin";
   if (pathname === "/operations") return "operations";
-  if (pathname === "/graphs") return "graphs";
-  if (pathname === "/edge-devices") return "edge-devices";
-  if (pathname === "/sensors") return "sensors";
   return "map";
 }
 
@@ -101,11 +85,7 @@ export function activateNavigation(currentPage) {
 
 export function applyWorkspaceChrome({ currentPage, elements, selectedZoneName, selectedEdgeDeviceName, selectedSensorName, focusPath }) {
   const meta = PAGE_META[currentPage] || PAGE_META.map;
-  const focusLabel = currentPage === "edge-devices"
-    ? selectedEdgeDeviceName
-    : currentPage === "sensors"
-      ? selectedSensorName
-      : selectedZoneName;
+  const focusLabel = selectedZoneName;
 
   if (elements.workspaceEyebrowEl) elements.workspaceEyebrowEl.textContent = meta.workspaceEyebrow;
   if (elements.workspaceTitleEl) elements.workspaceTitleEl.textContent = meta.workspaceTitle;

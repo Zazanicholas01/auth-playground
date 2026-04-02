@@ -681,27 +681,17 @@
 .page-general,
 .page-map,
 .page-twin,
-.page-operations,
-.page-graphs,
-.page-edge-devices,
-.page-sensors {
+.page-operations {
   display: none;
 }
 
 body[data-page="map"] #page-map,
 body[data-page="twin"] #page-twin,
 body[data-page="operations"] #page-operations,
-body[data-page="graphs"] #page-graphs,
-body[data-page="edge-devices"] #page-edge-devices,
-body[data-page="sensors"] #page-sensors,
 body[data-page="map"] .page-general,
 body[data-page="operations"] .page-general,
-body[data-page="graphs"] .page-general,
 body[data-page="map"] .page-map,
 body[data-page="twin"] .page-twin,
-body[data-page="operations"] .page-operations,
-body[data-page="graphs"] .page-graphs,
-body[data-page="edge-devices"] .page-edge-devices,
-body[data-page="sensors"] .page-sensors {
+body[data-page="operations"] .page-operations {
   display: grid;
 }

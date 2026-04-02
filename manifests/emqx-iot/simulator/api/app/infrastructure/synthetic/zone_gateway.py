@@ -1,6 +1,4 @@
-from datetime import datetime, timedelta, timezone
-from math import cos, sin
-
+from datetime import datetime, timezone
 
 SYNTHETIC_ZONE_IDS = [
     "greenhouse-a-north",
@@ -50,22 +48,3 @@ class SyntheticService:
             if zone_id not in merged:
                 merged[zone_id] = self.seed_zone_snapshot(zone_id)
         return sorted(merged.values(), key=lambda item: item.get("deviceId", ""))
-
-    def synthetic_history_for(self, device_id: str) -> list[dict]:
-        now = datetime.now(timezone.utc)
-        history = []
-        for idx in range(18):
-            ts = now - timedelta(minutes=(17 - idx) * 5)
-            history.append(
-                {
-                    "ts": ts.isoformat(),
-                    "scenario": "baseline-day",
-                    "severity": "normal",
-                    "temperature": 22 + sin(idx / 4),
-                    "humidity": 65 + cos(idx / 5) * 2,
-                    "co2": 600 + sin(idx / 3) * 40,
-                    "soilMoisture": 0.31 + cos(idx / 6) * 0.01,
-                    "deviceId": device_id,
-                }
-            )
-        return history

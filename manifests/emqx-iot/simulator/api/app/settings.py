@@ -8,7 +8,6 @@ class Settings(BaseSettings):
     mqtt_url: str = Field(default="mqtt://emqx-listeners:1883", alias="MQTT_URL")
     mqtt_topic_root: str = Field(default="site/alpha/devices", alias="MQTT_TOPIC_ROOT")
     event_history_size: int = Field(default=250, alias="EVENT_HISTORY_SIZE")
-    history_points: int = Field(default=300, alias="HISTORY_POINTS")
 
     db_host: str = Field(default="iot-timescaledb", alias="DB_HOST")
     db_port: int = Field(default=5432, alias="DB_PORT")

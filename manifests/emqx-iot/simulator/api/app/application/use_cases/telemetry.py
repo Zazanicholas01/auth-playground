@@ -11,7 +11,6 @@ from app.domain.ports import TelemetryRepository, SyntheticGateway
 @dataclass(slots=True)
 class TelemetryConfig:
     event_history_size: int
-    history_points: int
 
 
 @dataclass(slots=True)
@@ -114,10 +113,6 @@ class TelemetryUseCase:
 
     async def list_events(self):
         return await self._repo.recent_events(self._config.event_history_size)
-
-    async def get_history(self, device_id: str):
-        rows = await self._repo.telemetry_history(device_id, self._config.history_points)
-        return rows if rows else self._synthetic.synthetic_history_for(device_id)
 
     async def get_zone(self, device_id: str):
         devices = await self._repo.load_device_states()

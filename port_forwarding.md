@@ -23,13 +23,13 @@ kubectl -n iot-playground delete pvc iot-timescaledb-data
 
 ### 1. Start Port Forwards
 
-
 ```bash
 kubectl -n iot-playground port-forward svc/iot-timescaledb 5432:5432
 kubectl -n iot-playground port-forward svc/emqx-listeners 1884:1883
 ```
 
 ### 2. Run Local API
+
 ```bash
 manifests/emqx-iot/simulator/local_ui_dev/run-local-api.sh
 ```

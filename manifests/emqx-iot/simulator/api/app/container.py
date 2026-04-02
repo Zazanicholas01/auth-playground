@@ -28,7 +28,6 @@ def build_container(mqtt_status) -> Container:
         state=TelemetryState(devices={}, events=[]),
         config=TelemetryConfig(
             event_history_size=settings.event_history_size,
-            history_points=settings.history_points,
         ),
     )
 

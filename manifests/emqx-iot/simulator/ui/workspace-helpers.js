@@ -81,26 +81,6 @@ export function selectedSensor(state) {
   return sensors.find((sensor) => sensor.id === state.selectedSensorId) || sensors[0] || null;
 }
 
-export function historySlice(state, history) {
-  if (state.graphRange === "short") return history.slice(-6);
-  if (state.graphRange === "medium") return history.slice(-12);
-  return history;
-}
-
-export function formatTimeLabel(ts) {
-  if (!ts) return "--";
-  const date = new Date(ts);
-  if (Number.isNaN(date.getTime())) return "--";
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-export function graphTimeLabels(history) {
-  if (!history.length) return ["--", "--", "--"];
-  const first = history[0];
-  const middle = history[Math.floor((history.length - 1) / 2)];
-  const last = history[history.length - 1];
-  return [formatTimeLabel(first.ts), formatTimeLabel(middle.ts), formatTimeLabel(last.ts)];
-}
 
 export function calcZoneHealthScore(zone) {
   if (!zone) return 0;

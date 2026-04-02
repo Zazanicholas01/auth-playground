@@ -27,11 +27,6 @@ async def summary(telemetry: TelemetryUseCase = Depends(get_telemetry_use_case))
     return await telemetry.get_summary()
 
 
-@router.get("/history/{device_id}")
-async def history(device_id: str, telemetry: TelemetryUseCase = Depends(get_telemetry_use_case)):
-    return await telemetry.get_history(device_id)
-
-
 @router.get("/zone/{device_id}")
 async def zone(device_id: str, telemetry: TelemetryUseCase = Depends(get_telemetry_use_case)):
     zone_data = await telemetry.get_zone(device_id)

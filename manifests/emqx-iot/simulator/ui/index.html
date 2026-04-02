@@ -54,42 +54,6 @@
               </div>
             </a>
 
-            <a href="/graphs" data-nav="graphs">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 19h16"></path>
-                <path d="M7 15 11 11 14 13 19 7"></path>
-                <path d="M19 7v4"></path>
-              </svg>
-              <div>
-                <span>Graphs</span>
-                <small>Trend analysis</small>
-              </div>
-            </a>
-
-            <a href="/edge-devices" data-nav="edge-devices">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="4" y="6" width="16" height="10" rx="2"></rect>
-                <path d="M8 20h8"></path>
-                <path d="M9 10h6"></path>
-              </svg>
-              <div>
-                <span>Gateways</span>
-                <small>Edge fleet</small>
-              </div>
-            </a>
-
-            <a href="/sensors" data-nav="sensors">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 18a2.5 2.5 0 1 0 0.01 0"></path>
-                <path d="M12 14V6"></path>
-                <path d="M8.5 9.5a5 5 0 0 1 7 0"></path>
-                <path d="M6 7a8.5 8.5 0 0 1 12 0"></path>
-              </svg>
-              <div>
-                <span>Sensors</span>
-                <small>Telemetry health</small>
-              </div>
-            </a>
           </nav>
 
         <div class="status-strip">
@@ -123,7 +87,7 @@
       <div class="workspace-shell">
         <aside class="workspace-rail scope-rail">
 
-          <section class="rail-section page-general page-map page-graphs">
+          <section class="rail-section page-general page-map">
             <div data-slot="zone-list" class="entity-list"></div>
           </section>
 
@@ -137,40 +101,6 @@
             <div id="twin-gateway-list" class="entity-list"></div>
           </section>
 
-          <section class="rail-section page-edge-devices">
-            <div class="section-label">Gateway Fleet</div>
-            <div id="edge-fleet-summary" class="scope-summary"></div>
-          </section>
-
-          <section class="rail-section page-edge-devices">
-            <div class="section-label">Gateways</div>
-            <div id="edge-device-list" class="entity-list"></div>
-          </section>
-
-          <section class="rail-section page-sensors">
-            <div class="section-label">Sensor Fleet</div>
-            <div id="sensor-fleet-summary" class="scope-summary"></div>
-          </section>
-
-          <section class="rail-section page-sensors">
-            <div class="section-label">Sensors</div>
-            <div id="sensor-list" class="asset-selector-list"></div>
-          </section>
-
-          <section class="rail-section page-operations page-graphs">
-            <div class="section-label">Time Range</div>
-            <div id="graph-range-toggle" class="toggle-row" aria-label="Graph time range"></div>
-          </section>
-
-          <section class="rail-section page-operations page-graphs">
-            <div class="section-label">Metric Grouping</div>
-            <div id="graph-metric-toggle" class="toggle-row" aria-label="Graph metric grouping"></div>
-          </section>
-
-          <section class="rail-section page-operations page-graphs">
-            <div class="section-label">Comparison Mode</div>
-            <div id="graph-compare-toggle" class="toggle-row" aria-label="Graph comparison mode"></div>
-          </section>
         </aside>
 
         <main class="workspace-main">
@@ -214,74 +144,20 @@
             </div>
           </section>
 
-          <section id="page-graphs" class="page-layout page-graphs mission-stack">
-            <div class="main-stage panel">
-              <div class="stage-head">
-                <div>
-                  <div class="eyebrow">Trend Analysis</div>
-                  <h3>Comparison-First Telemetry</h3>
-                </div>
-              </div>
-              <div id="graph-grid" class="chart-grid"></div>
-            </div>
-          </section>
-
-          <section id="page-edge-devices" class="page-layout page-edge-devices mission-stack">
-            <div class="main-stage panel">
-              <div class="stage-head">
-                <div>
-                  <div class="eyebrow">Fleet Workspace</div>
-                  <h3>Gateway Health And Topology</h3>
-                </div>
-              </div>
-              <div id="edge-summary"></div>
-            </div>
-          </section>
-
-          <section id="page-sensors" class="page-layout page-sensors mission-stack">
-            <div class="main-stage panel">
-              <div class="stage-head">
-                <div>
-                  <div class="eyebrow">Fleet Workspace</div>
-                  <h3>Sensor Reliability And Freshness</h3>
-                </div>
-              </div>
-              <div id="sensor-summary"></div>
-            </div>
-          </section>
         </main>
 
         <aside class="workspace-rail evidence-rail">
 
-          <section class="rail-section page-twin page-operations page-graphs">
+          <section class="rail-section page-twin page-operations">
             <div class="section-label">Assets Overview</div>
             <div data-slot="asset-detail" class="asset-detail"></div>
           </section>
 
-          <section class="rail-section page-general page-map page-twin page-operations page-graphs">
+          <section class="rail-section page-general page-map page-twin page-operations">
             <div class="section-label">Incident Stream</div>
             <div data-slot="alert-list" class="alert-list"></div>
           </section>
 
-          <section class="rail-section page-edge-devices">
-            <div class="section-label">Sensor Batch</div>
-            <div id="edge-sensor-detail" class="asset-detail"></div>
-          </section>
-
-          <section class="rail-section page-edge-devices">
-            <div class="section-label">Gateway Incidents</div>
-            <div id="edge-alert-list" class="alert-list"></div>
-          </section>
-
-          <section class="rail-section page-sensors">
-            <div class="section-label">Sensor Detail</div>
-            <div id="sensor-detail" class="asset-detail"></div>
-          </section>
-
-          <section class="rail-section page-sensors">
-            <div class="section-label">Sensor Incidents</div>
-            <div id="sensor-alert-list" class="alert-list"></div>
-          </section>
         </aside>
       </div>
     </div>
