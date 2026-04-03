@@ -79,16 +79,6 @@
             </a>
           </nav>
 
-          <div class="auth-cluster">
-            <button id="auth-open-button" class="auth-trigger" type="button">Sign In</button>
-            <div id="auth-session" class="auth-session" hidden>
-              <div class="auth-session-copy">
-                <strong id="auth-session-name">Operator</strong>
-                <small id="auth-session-role">guest</small>
-              </div>
-              <button id="auth-logout-button" class="auth-logout" type="button">Logout</button>
-            </div>
-          </div>
 
           <div class="status-strip">
             <article class="status-card">
@@ -111,9 +101,18 @@
               <span class="status-label">Provenance</span>
               <div id="provenance-pill" class="pill normal">Live telemetry</div>
             </article>
-            <article class="status-card">
-              <span class="status-label">Time</span>
-              <div id="time-pill" class="pill normal">--:--</div>
+            <article class="status-card status-card-auth">
+              <span class="status-label">Logout</span>
+              <div class="status-auth-control">
+                <button id="auth-open-button" class="auth-trigger" type="button">Sign In</button>
+                <div id="auth-session" class="auth-session" hidden>
+                  <div class="auth-session-copy">
+                    <strong id="auth-session-name">Operator</strong>
+                    <small id="auth-session-role">guest</small>
+                  </div>
+                  <button id="auth-logout-button" class="auth-logout" type="button">Logout</button>
+                </div>
+              </div>
             </article>
           </div>
       </header>
@@ -329,3 +328,4 @@
     <script src="/index.js" type="module"></script>
   </body>
 </html>
+

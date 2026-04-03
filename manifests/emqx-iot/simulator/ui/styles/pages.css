@@ -1287,12 +1287,26 @@ body[data-page="observability"] .workspace-main {
   background: #ffffff;
 }
 
-.auth-cluster {
+.status-card-auth {
+  min-width: 220px;
+}
+
+.status-auth-control {
   display: flex;
-  align-items: center;
   justify-content: flex-end;
-  gap: 10px;
-  margin-left: auto;
+}
+
+.status-card-auth .auth-trigger,
+.status-card-auth .auth-session {
+  width: 100%;
+}
+
+.status-card-auth .auth-trigger {
+  justify-content: center;
+}
+
+.status-card-auth .auth-session {
+  justify-content: space-between;
 }
 
 .auth-trigger,
@@ -1435,9 +1449,11 @@ body[data-page="observability"] .workspace-main {
 }
 
 @media (max-width: 980px) {
-  .auth-cluster {
-    width: 100%;
+  .status-card-auth {
+    min-width: 100%;
+  }
+
+  .status-auth-control {
     justify-content: flex-start;
   }
 }
-
