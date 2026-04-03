@@ -1,3 +1,7 @@
+[hidden] {
+  display: none !important;
+}
+
 .main-stage {
   display: grid;
   gap: 14px;
@@ -1436,3 +1440,4 @@ body[data-page="observability"] .workspace-main {
     justify-content: flex-start;
   }
 }
+
