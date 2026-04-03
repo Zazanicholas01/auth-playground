@@ -1,0 +1,19 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: iot-jwt-auth-route
+spec:
+  parentRefs:
+    - name: my-gateway
+      namespace: default
+      sectionName: iot-http
+  hostnames:
+    - iot.local
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api/auth/jwt
+      backendRefs:
+        - name: iot-jwt-auth-service
+          port: 80

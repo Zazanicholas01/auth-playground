@@ -8,6 +8,9 @@ resources:
   - emqx/emqx.yaml
   - emqx/emqx-route.yaml
 #  - emqx/mqtt-tcp-route.yaml
+  - auth/jwt-postgres.yaml
+  - auth/jwt-auth-server.yaml
+  - auth/jwt-auth-route.yaml
   - simulator/api.yaml
   - simulator/simulator.yaml
   - simulator/ui-client.yaml
@@ -35,3 +38,4 @@ configMapGenerator:
       - simulator/api/app/sql/01-init.sql
       - simulator/api/app/sql/03-gold-layer.sql
       - simulator/api/app/sql/04-gold-continuous-aggregates.sql
+

@@ -23,8 +23,25 @@ spec:
           env:
             - name: UI_PORT
               value: "8080"
-            - name: API_BASE
+            - name: IOT_API_BASE
               value: http://iot-api:8080
+            - name: IOT_SIMULATOR_BASE
+              value: http://iot-simulator:8080
+            - name: IOT_GRAFANA_BASE
+              value: http://grafana:3000
+            - name: IOT_DBGATE_BASE
+              value: http://dbgate:3000
+            - name: IOT_AUTH_BASE
+              value: http://iot-jwt-auth-service
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: iot-jwt-auth-secret
+                  key: jwt-secret
+            - name: JWT_ISSUER
+              value: "iot.local"
+            - name: JWT_AUDIENCE
+              value: "iot-ui"
 ---
 apiVersion: v1
 kind: Service

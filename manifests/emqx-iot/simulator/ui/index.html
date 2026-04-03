@@ -77,40 +77,49 @@
                 <small>SQL workspace</small>
               </div>
             </a>
-
           </nav>
 
-        <div class="status-strip">
-          <article class="status-card">
-            <span class="status-label">Broker</span>
-            <div id="broker-pill" class="pill normal">Broker linked</div>
-          </article>
-          <article class="status-card">
-            <span class="status-label">Database</span>
-            <div id="database-pill" class="pill normal">DB linked</div>
-          </article>
-          <article class="status-card">
-            <span class="status-label">Scenario</span>
-            <div id="scenario-pill" class="pill normal">Scenario baseline day</div>
-          </article>
-          <article class="status-card">
-            <span class="status-label">Focus</span>
-            <div id="selected-zone-pill" class="pill normal">Zone North Bay</div>
-          </article>
-          <article class="status-card">
-            <span class="status-label">Provenance</span>
-            <div id="provenance-pill" class="pill normal">Live telemetry</div>
-          </article>
-          <article class="status-card">
-            <span class="status-label">Time</span>
-            <div id="time-pill" class="pill normal">--:--</div>
-          </article>
-        </div>
+          <div class="auth-cluster">
+            <button id="auth-open-button" class="auth-trigger" type="button">Sign In</button>
+            <div id="auth-session" class="auth-session" hidden>
+              <div class="auth-session-copy">
+                <strong id="auth-session-name">Operator</strong>
+                <small id="auth-session-role">guest</small>
+              </div>
+              <button id="auth-logout-button" class="auth-logout" type="button">Logout</button>
+            </div>
+          </div>
+
+          <div class="status-strip">
+            <article class="status-card">
+              <span class="status-label">Broker</span>
+              <div id="broker-pill" class="pill normal">Broker linked</div>
+            </article>
+            <article class="status-card">
+              <span class="status-label">Database</span>
+              <div id="database-pill" class="pill normal">DB linked</div>
+            </article>
+            <article class="status-card">
+              <span class="status-label">Scenario</span>
+              <div id="scenario-pill" class="pill normal">Scenario baseline day</div>
+            </article>
+            <article class="status-card">
+              <span class="status-label">Focus</span>
+              <div id="selected-zone-pill" class="pill normal">Zone North Bay</div>
+            </article>
+            <article class="status-card">
+              <span class="status-label">Provenance</span>
+              <div id="provenance-pill" class="pill normal">Live telemetry</div>
+            </article>
+            <article class="status-card">
+              <span class="status-label">Time</span>
+              <div id="time-pill" class="pill normal">--:--</div>
+            </article>
+          </div>
       </header>
 
       <div class="workspace-shell">
         <aside class="workspace-rail scope-rail">
-
           <section class="rail-section page-general page-map">
             <div data-slot="zone-list" class="entity-list"></div>
           </section>
@@ -124,11 +133,9 @@
             <div class="section-label rail-title">Gateway Overview</div>
             <div id="twin-gateway-list" class="entity-list"></div>
           </section>
-
         </aside>
 
         <main class="workspace-main">
-
           <section id="page-map" class="page-layout page-map mission-stack">
             <div id="overview-kpis" class="kpi-grid"></div>
 
@@ -217,11 +224,9 @@
               </div>
             </div>
           </section>
-
         </main>
 
         <aside class="workspace-rail evidence-rail">
-
           <section class="rail-section page-twin page-operations">
             <div class="section-label">Assets Overview</div>
             <div data-slot="asset-detail" class="asset-detail"></div>
@@ -231,9 +236,45 @@
             <div class="section-label">Incident Stream</div>
             <div data-slot="alert-list" class="alert-list"></div>
           </section>
-
         </aside>
       </div>
+    </div>
+
+    <div id="auth-overlay" class="auth-overlay" hidden>
+      <section class="auth-card panel" role="dialog" aria-labelledby="auth-title" aria-modal="true">
+        <div class="auth-card-copy">
+          <span class="eyebrow">Identity Access</span>
+          <h2 id="auth-title">Sign in to the operator cockpit</h2>
+          <p>Guests can browse the facility, technicians can open operations, and admins can open DBGate.</p>
+        </div>
+        <form id="auth-form" class="auth-form">
+          <label class="auth-field">
+            <span>Username or email</span>
+            <input id="auth-username-input" name="username" type="text" autocomplete="username" required />
+          </label>
+          <label class="auth-field">
+            <span>Email for registration</span>
+            <input id="auth-email-input" name="email" type="email" autocomplete="email" />
+          </label>
+          <label class="auth-field">
+            <span>Password</span>
+            <input id="auth-password-input" name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <label class="auth-field">
+            <span>Registration role</span>
+            <select id="auth-role-input" name="role">
+              <option value="guest">Guest</option>
+              <option value="technician">Technician</option>
+              <option value="admin">Admin</option>
+            </select>
+          </label>
+          <p id="auth-status" class="auth-status" hidden></p>
+          <div class="auth-actions-row">
+            <button class="auth-submit" type="submit">Sign In</button>
+            <button id="auth-register-button" class="auth-secondary" type="button">Register</button>
+          </div>
+        </form>
+      </section>
     </div>
 
     <script>
@@ -241,40 +282,40 @@
         ...(window.__IOT_CONFIG__ || {}),
         apiBase: (window.__IOT_CONFIG__ && window.__IOT_CONFIG__.apiBase) || (window.location.origin + "/api"),
         simulatorBase: (window.__IOT_CONFIG__ && window.__IOT_CONFIG__.simulatorBase) || (window.location.origin + "/simulator"),
-        dbgateBase: "http://127.0.0.1:3000",
+        dbgateBase: (window.__IOT_CONFIG__ && window.__IOT_CONFIG__.dbgateBase) || (window.location.origin + "/dbgate"),
         grafanaDashboards: [
           {
             id: "iot-platform",
             label: "Platform",
             category: "platform",
-            url: "http://iot.local/grafana/d/iot-platform/iot-platform?orgId=1&kiosk&from=now-6h&to=now&refresh=6s"
+            url: window.location.origin + "/grafana/d/iot-platform/iot-platform?orgId=1&kiosk&from=now-6h&to=now&refresh=6s"
           },
           {
             id: "iot-ingestion",
             label: "Ingestion",
             category: "ingestion",
-            url: "http://iot.local/grafana/d/iot-ingestion/iot-ingestion?orgId=1&kiosk&from=now-6h&to=now&refresh=6s"
+            url: window.location.origin + "/grafana/d/iot-ingestion/iot-ingestion?orgId=1&kiosk&from=now-6h&to=now&refresh=6s"
           },
           {
             id: "iot-fleet",
             label: "Fleet",
             category: "fleet",
-            url: "http://iot.local/grafana/d/iot-fleet/iot-fleet?orgId=1&kiosk&from=now-6h&to=now&refresh=6s"
+            url: window.location.origin + "/grafana/d/iot-fleet/iot-fleet?orgId=1&kiosk&from=now-6h&to=now&refresh=6s"
           },
           {
             id: "iot-storage",
             label: "Storage",
             category: "storage",
-            url: "http://iot.local/grafana/d/iot-storage/iot-storage?orgId=1&kiosk&from=now-6h&to=now&refresh=6s"
+            url: window.location.origin + "/grafana/d/iot-storage/iot-storage?orgId=1&kiosk&from=now-6h&to=now&refresh=6s"
           },
           {
             id: "iot-scenarios",
             label: "Scenarios",
             category: "scenarios",
-            url: "http://iot.local/grafana/d/iot-scenarios/iot-scenarios?orgId=1&kiosk&from=now-6h&to=now&refresh=6s"
+            url: window.location.origin + "/grafana/d/iot-scenarios/iot-scenarios?orgId=1&kiosk&from=now-6h&to=now&refresh=6s"
           }
         ],
-        grafanaDashboardUrl: "http://iot.local/grafana/d/iot-platform/iot-platform?orgId=1&kiosk&from=now-6h&to=now&refresh=6s"
+        grafanaDashboardUrl: window.location.origin + "/grafana/d/iot-platform/iot-platform?orgId=1&kiosk&from=now-6h&to=now&refresh=6s"
       };
 
       if (window.location.hash.includes("figmacapture=")) {
@@ -285,11 +326,6 @@
       }
     </script>
 
-
     <script src="/index.js" type="module"></script>
   </body>
 </html>
-
-
-
-

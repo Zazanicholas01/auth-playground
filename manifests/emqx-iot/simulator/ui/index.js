@@ -37,7 +37,7 @@ import {
 const config = window.__IOT_CONFIG__ || {};
 const apiBase = config.apiBase || (window.location.origin + "/api");
 const simulatorBase = config.simulatorBase || (window.location.origin + "/simulator");
-const dbgateBase = config.dbgateBase || "http://127.0.0.1:3000";
+const dbgateBase = config.dbgateBase || (window.location.origin + "/dbgate");
 const grafanaDashboards =
   config.grafanaDashboards ||
   [
@@ -85,6 +85,31 @@ function persistSelectedZoneId(zoneId) {
 
 const persistedZoneId = loadPersistedZoneId();
 activateNavigation(currentPage);
+
+const ROLE_PAGE_ACCESS = {
+  guest: new Set(["map", "twin", "observability"]),
+  technician: new Set(["map", "twin", "operations", "observability"]),
+  admin: new Set(["map", "twin", "operations", "observability", "dbgate"])
+};
+
+const authState = {
+  session: null
+};
+
+function normalizeRole(role) {
+  if (["guest", "technician", "admin"].includes(role)) return role;
+  return "guest";
+}
+
+function canAccessPage(role, page = currentPage) {
+  return ROLE_PAGE_ACCESS[normalizeRole(role)]?.has(page) || false;
+}
+
+function defaultPagePathForRole(role) {
+  const normalizedRole = normalizeRole(role);
+  if (ROLE_PAGE_ACCESS[normalizedRole]?.has("map")) return "/map";
+  return "/map";
+}
 
 function loadPersistedGrafanaDashboardId() {
   try {
@@ -190,9 +215,167 @@ const commandPriorityRailEls = () => slotEls("command-priority-rail");
 const grafanaDashboardTriggerEl = document.getElementById("grafana-dashboard-trigger");
 const grafanaDashboardTriggerLabelEl = document.getElementById("grafana-dashboard-trigger-label");
 const grafanaDashboardMenuEl = document.getElementById("grafana-dashboard-menu");
+const authOverlayEl = document.getElementById("auth-overlay");
+const authOpenButtonEl = document.getElementById("auth-open-button");
+const authSessionEl = document.getElementById("auth-session");
+const authSessionNameEl = document.getElementById("auth-session-name");
+const authSessionRoleEl = document.getElementById("auth-session-role");
+const authLogoutButtonEl = document.getElementById("auth-logout-button");
+const authFormEl = document.getElementById("auth-form");
+const authUsernameInputEl = document.getElementById("auth-username-input");
+const authEmailInputEl = document.getElementById("auth-email-input");
+const authPasswordInputEl = document.getElementById("auth-password-input");
+const authRoleInputEl = document.getElementById("auth-role-input");
+const authRegisterButtonEl = document.getElementById("auth-register-button");
+const authStatusEl = document.getElementById("auth-status");
 
-if (currentPage === "dbgate" && dbgateFrameEl) {
-  dbgateFrameEl.src = dbgateBase;
+
+function currentUser() {
+  return authState.session?.user || null;
+}
+
+function setAuthStatus(message = "", tone = "info") {
+  if (!authStatusEl) return;
+  authStatusEl.hidden = !message;
+  authStatusEl.textContent = message;
+  authStatusEl.dataset.tone = tone;
+}
+
+function showAuthOverlay(message = "Sign in to continue.") {
+  if (authOverlayEl) authOverlayEl.hidden = false;
+  setAuthStatus(message, "info");
+}
+
+function hideAuthOverlay() {
+  if (authOverlayEl) authOverlayEl.hidden = true;
+  setAuthStatus("");
+}
+
+function applyRoleAwareNavigation(user = currentUser()) {
+  document.querySelectorAll("[data-nav]").forEach((link) => {
+    const allowed = user ? canAccessPage(user.role, link.dataset.nav) : false;
+    link.hidden = !allowed;
+  });
+}
+
+function updateAuthUI(user = currentUser()) {
+  applyRoleAwareNavigation(user);
+
+  if (user) {
+    if (authSessionNameEl) authSessionNameEl.textContent = user.username || user.email || "Operator";
+    if (authSessionRoleEl) authSessionRoleEl.textContent = normalizeRole(user.role);
+    if (authSessionEl) authSessionEl.hidden = false;
+    if (authOpenButtonEl) authOpenButtonEl.hidden = true;
+  } else {
+    if (authSessionEl) authSessionEl.hidden = true;
+    if (authOpenButtonEl) authOpenButtonEl.hidden = false;
+  }
+}
+
+async function authRequest(path, payload = null) {
+  const response = await fetch(path, {
+    method: payload ? "POST" : "GET",
+    credentials: "include",
+    headers: {
+      accept: "application/json",
+      ...(payload ? { "content-type": "application/json" } : {})
+    },
+    body: payload ? JSON.stringify(payload) : undefined
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data?.error || data?.detail || "Authentication failed");
+    error.status = response.status;
+    throw error;
+  }
+
+  return data;
+}
+
+async function loadSession() {
+  try {
+    const data = await authRequest("/auth/session");
+    return data;
+  } catch (error) {
+    if (error.status === 401) return null;
+    throw error;
+  }
+}
+
+async function refreshSession() {
+  try {
+    const data = await authRequest("/auth/refresh", {});
+    return data;
+  } catch (error) {
+    if (error.status === 401) return null;
+    throw error;
+  }
+}
+
+async function ensureSession() {
+  const session = await loadSession();
+  if (session) return session;
+  return refreshSession();
+}
+
+async function submitAuth(mode) {
+  const username = authUsernameInputEl?.value?.trim();
+  const email = authEmailInputEl?.value?.trim();
+  const password = authPasswordInputEl?.value || "";
+  const role = authRoleInputEl?.value || "guest";
+
+  if (!username || !password) {
+    setAuthStatus("Username and password are required.", "error");
+    return;
+  }
+
+  setAuthStatus(mode === "register" ? "Creating account..." : "Signing in...");
+
+  try {
+    if (mode === "register") {
+      if (!email) {
+        setAuthStatus("Email is required for registration.", "error");
+        return;
+      }
+
+      await authRequest("/auth/register", { username, email, password, role });
+    } else {
+      await authRequest("/auth/login", { username, password });
+    }
+
+    window.location.reload();
+  } catch (error) {
+    setAuthStatus(error.message || "Unable to authenticate.", "error");
+  }
+}
+
+if (authOpenButtonEl) {
+  authOpenButtonEl.addEventListener("click", () => {
+    showAuthOverlay("Sign in with guest, technician, or admin access.");
+  });
+}
+
+if (authFormEl) {
+  authFormEl.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await submitAuth("login");
+  });
+}
+
+if (authRegisterButtonEl) {
+  authRegisterButtonEl.addEventListener("click", async () => {
+    await submitAuth("register");
+  });
+}
+
+if (authLogoutButtonEl) {
+  authLogoutButtonEl.addEventListener("click", async () => {
+    try {
+      await authRequest("/auth/logout", {});
+    } catch {}
+    window.location.reload();
+  });
 }
 
 function closeGrafanaDashboardMenu() {
@@ -703,13 +886,43 @@ function render() {
 
 }
 
+async function fetchJson(url, options = {}, retry = true) {
+  const response = await fetch(url, {
+    credentials: "include",
+    headers: {
+      accept: "application/json",
+      ...(options.headers || {})
+    },
+    ...options
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if ((response.status === 401 || response.status === 403) && retry) {
+    const refreshed = await refreshSession();
+    if (refreshed) {
+      authState.session = refreshed;
+      updateAuthUI();
+      return fetchJson(url, options, false);
+    }
+  }
+
+  if (!response.ok) {
+    const error = new Error(payload?.error || payload?.detail || "Request failed");
+    error.status = response.status;
+    throw error;
+  }
+
+  return payload;
+}
+
 async function loadLiveData() {
   const [health, devices, summary, alerts, scenario] = await Promise.all([
-    fetch(apiBase + "/health").then((response) => response.json()),
-    fetch(apiBase + "/devices").then((response) => response.json()),
-    fetch(apiBase + "/summary").then((response) => response.json()),
-    fetch(apiBase + "/alerts").then((response) => response.json()),
-    fetch(simulatorBase + "/scenario").then((response) => response.json()).catch(() => ({ scenario: "baseline-day" }))
+    fetchJson(apiBase + "/health"),
+    fetchJson(apiBase + "/devices"),
+    fetchJson(apiBase + "/summary"),
+    fetchJson(apiBase + "/alerts"),
+    fetchJson(simulatorBase + "/scenario").catch(() => ({ scenario: "baseline-day" }))
   ]);
 
   state.summary = summary;
@@ -722,7 +935,6 @@ async function loadLiveData() {
   state.selectedZoneId = state.zones.find((zone) => zone.id === primaryId)?.id || state.zones[0]?.id || state.selectedZoneId;
   persistSelectedZoneId(state.selectedZoneId);
   pendingZoneId = null;
-
 
   brokerPillEl.className = `pill ${health.mqttConnected ? "normal" : "critical"}`;
   brokerPillEl.textContent = health.mqttConnected ? "Broker linked" : "Broker lost";
@@ -749,6 +961,13 @@ async function refresh() {
   try {
     await loadLiveData();
   } catch (error) {
+    if (error.status === 401 || error.status === 403) {
+      authState.session = null;
+      updateAuthUI();
+      showAuthOverlay("Your session expired. Sign in again.");
+      return;
+    }
+
     fallbackTick += 1;
     loadFallback(fallbackTick);
   }
@@ -767,9 +986,47 @@ async function refresh() {
   render();
 }
 
-await refresh();
-setInterval(refresh, 3500);
-setInterval(renderClock, 1000);
+async function bootstrap() {
+  renderClock();
+  setInterval(renderClock, 1000);
+
+  const session = await ensureSession();
+  authState.session = session;
+  updateAuthUI();
+
+  if (!session?.user) {
+    showAuthOverlay("Sign in with guest, technician, or admin access.");
+    return;
+  }
+
+  hideAuthOverlay();
+
+  if (!canAccessPage(session.user.role, currentPage)) {
+    window.location.replace(defaultPagePathForRole(session.user.role));
+    return;
+  }
+
+  if (currentPage === "dbgate" && dbgateFrameEl) {
+    dbgateFrameEl.src = dbgateBase;
+  }
+
+  if (currentPage === "observability" && grafanaFrameEl) {
+    updateGrafanaFrame();
+  }
+
+  await refresh();
+  setInterval(refresh, 3500);
+}
+
+await bootstrap();
+
+
+
+
+
+
+
+
 
 
 

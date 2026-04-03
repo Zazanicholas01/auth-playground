@@ -54,6 +54,15 @@ spec:
                   key: password
             - name: ENABLE_METRICS
               value: "true"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: iot-jwt-auth-secret
+                  key: jwt-secret
+            - name: JWT_ISSUER
+              value: "iot.local"
+            - name: JWT_AUDIENCE
+              value: "iot-ui"
           readinessProbe:
             httpGet:
               path: /health

@@ -1,6 +1,7 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
@@ -18,6 +19,10 @@ class Settings(BaseSettings):
     db_bootstrap_sql_dir: str = Field(default="/app/sql", alias="DB_BOOTSTRAP_SQL_DIR")
     db_bootstrap_max_attempts: int = Field(default=20, alias="DB_BOOTSTRAP_MAX_ATTEMPTS")
     db_bootstrap_retry_delay_ms: int = Field(default=3000, alias="DB_BOOTSTRAP_RETRY_DELAY_MS")
+
+    jwt_secret: str = Field(default="change-me-super-secret-jwt-key", alias="JWT_SECRET")
+    jwt_issuer: str = Field(default="iot.local", alias="JWT_ISSUER")
+    jwt_audience: str = Field(default="iot-ui", alias="JWT_AUDIENCE")
 
 
 settings = Settings()

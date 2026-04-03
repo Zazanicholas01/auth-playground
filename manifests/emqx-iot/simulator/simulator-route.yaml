@@ -15,28 +15,16 @@ spec:
         - path:
             type: PathPrefix
             value: /api
-      filters:
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: /
       backendRefs:
-        - name: iot-api
+        - name: iot-ui
           port: 8080
 
     - matches:
         - path:
             type: PathPrefix
             value: /simulator
-      filters:
-        - type: URLRewrite
-          urlRewrite:
-            path:
-              type: ReplacePrefixMatch
-              replacePrefixMatch: /
       backendRefs:
-        - name: iot-simulator
+        - name: iot-ui
           port: 8080
 
     - matches:
@@ -44,8 +32,16 @@ spec:
             type: PathPrefix
             value: /grafana
       backendRefs:
-        - name: grafana
-          port: 3000
+        - name: iot-ui
+          port: 8080
+
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /dbgate
+      backendRefs:
+        - name: iot-ui
+          port: 8080
 
     - matches:
         - path:
