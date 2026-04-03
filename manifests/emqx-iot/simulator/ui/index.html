@@ -173,12 +173,24 @@
               <div class="observability-toolbar">
                 <div class="observability-toolbar-copy">
                   <div class="eyebrow">Dashboard View</div>
-                  <h3>Grafana Workspace Selector</h3>
                 </div>
-                <label class="observability-selector" for="grafana-dashboard-select">
-                  <span>Dashboard</span>
-                  <select id="grafana-dashboard-select"></select>
-                </label>
+                <div class="observability-selector" id="grafana-dashboard-picker">
+                  <button
+                    id="grafana-dashboard-trigger"
+                    class="observability-selector-trigger"
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                  >
+                    <span id="grafana-dashboard-trigger-label">Platform</span>
+                  </button>
+                  <div
+                    id="grafana-dashboard-menu"
+                    class="observability-selector-menu"
+                    role="listbox"
+                    hidden
+                  ></div>
+                </div>
               </div>
               <div class="observability-frame-wrap">
                 <iframe
@@ -225,55 +237,44 @@
     </div>
 
     <script>
-      window.__IOT_CONFIG__ = window.__IOT_CONFIG__ || {
-        apiBase: window.location.origin + "/api",
-        simulatorBase: window.location.origin + "/simulator",
+      window.__IOT_CONFIG__ = {
+        ...(window.__IOT_CONFIG__ || {}),
+        apiBase: (window.__IOT_CONFIG__ && window.__IOT_CONFIG__.apiBase) || (window.location.origin + "/api"),
+        simulatorBase: (window.__IOT_CONFIG__ && window.__IOT_CONFIG__.simulatorBase) || (window.location.origin + "/simulator"),
         dbgateBase: "http://127.0.0.1:3000",
         grafanaDashboards: [
           {
-            id: "iot-observability",
+            id: "iot-platform",
             label: "Platform",
             category: "platform",
-            url:
-              window.location.origin +
-              "/grafana/d/iot-observavility/iot-observavility?orgId=1&kiosk&from=now-6h&to=now"
+            url: "http://iot.local/grafana/d/iot-platform/iot-platform?orgId=1&kiosk&from=now-6h&to=now"
           },
           {
             id: "iot-ingestion",
             label: "Ingestion",
             category: "ingestion",
-            url:
-              window.location.origin +
-              "/grafana/d/iot-ingestion/iot-ingestion?orgId=1&kiosk&from=now-6h&to=now"
+            url: "http://iot.local/grafana/d/iot-ingestion/iot-ingestion?orgId=1&kiosk&from=now-6h&to=now"
           },
           {
             id: "iot-fleet",
             label: "Fleet",
             category: "fleet",
-            url:
-              window.location.origin +
-              "/grafana/d/iot-fleet/iot-fleet?orgId=1&kiosk&from=now-6h&to=now"
+            url: "http://iot.local/grafana/d/iot-fleet/iot-fleet?orgId=1&kiosk&from=now-6h&to=now"
           },
           {
             id: "iot-storage",
             label: "Storage",
             category: "storage",
-            url:
-              window.location.origin +
-              "/grafana/d/iot-storage/iot-storage?orgId=1&kiosk&from=now-6h&to=now"
+            url: "http://iot.local/grafana/d/iot-storage/iot-storage?orgId=1&kiosk&from=now-6h&to=now"
           },
           {
             id: "iot-scenarios",
             label: "Scenarios",
             category: "scenarios",
-            url:
-              window.location.origin +
-              "/grafana/d/iot-scenarios/iot-scenarios?orgId=1&kiosk&from=now-6h&to=now"
+            url: "http://iot.local/grafana/d/iot-scenarios/iot-scenarios?orgId=1&kiosk&from=now-6h&to=now"
           }
         ],
-        grafanaDashboardUrl:
-          window.location.origin +
-          "/grafana/d/iot-observability/iot-observability?orgId=1&kiosk&from=now-6h&to=now"
+        grafanaDashboardUrl: "http://iot.local/grafana/d/iot-platform/iot-platform?orgId=1&kiosk&from=now-6h&to=now"
       };
 
       if (window.location.hash.includes("figmacapture=")) {
@@ -283,6 +284,8 @@
         document.head.appendChild(script);
       }
     </script>
+
+
     <script src="/index.js" type="module"></script>
   </body>
 </html>

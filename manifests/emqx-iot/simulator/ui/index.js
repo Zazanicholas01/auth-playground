@@ -187,28 +187,87 @@ const twinPhotoUrl = "/dev-assets/greenhouse-twin.png";
 const twinZonePanelEl = document.getElementById("twin-zone-panel");
 const commandPriorityRailEls = () => slotEls("command-priority-rail");
 
-const grafanaDashboardSelectEl = document.getElementById("grafana-dashboard-select");
+const grafanaDashboardTriggerEl = document.getElementById("grafana-dashboard-trigger");
+const grafanaDashboardTriggerLabelEl = document.getElementById("grafana-dashboard-trigger-label");
+const grafanaDashboardMenuEl = document.getElementById("grafana-dashboard-menu");
 
 if (currentPage === "dbgate" && dbgateFrameEl) {
   dbgateFrameEl.src = dbgateBase;
 }
 
-if (grafanaDashboardSelectEl) {
-  grafanaDashboardSelectEl.innerHTML = grafanaDashboards
-    .map(
-      (dashboard) =>
-        `<option value="${dashboard.id}">${dashboard.label}</option>`
-    )
+function closeGrafanaDashboardMenu() {
+  if (!grafanaDashboardMenuEl || !grafanaDashboardTriggerEl) return;
+  grafanaDashboardMenuEl.hidden = true;
+  grafanaDashboardTriggerEl.setAttribute("aria-expanded", "false");
+}
+
+function openGrafanaDashboardMenu() {
+  if (!grafanaDashboardMenuEl || !grafanaDashboardTriggerEl) return;
+  grafanaDashboardMenuEl.hidden = false;
+  grafanaDashboardTriggerEl.setAttribute("aria-expanded", "true");
+}
+
+function renderGrafanaDashboardMenu() {
+  if (!grafanaDashboardMenuEl || !grafanaDashboardTriggerLabelEl) return;
+
+  const selected = selectedGrafanaDashboard();
+  grafanaDashboardTriggerLabelEl.textContent = selected.label;
+
+  grafanaDashboardMenuEl.innerHTML = grafanaDashboards
+    .map((dashboard) => {
+      const active = dashboard.id === selected.id ? "active" : "";
+      const selectedAttr = dashboard.id === selected.id ? "true" : "false";
+      return `
+        <button
+          type="button"
+          class="observability-selector-option ${active}"
+          data-dashboard-id="${dashboard.id}"
+          role="option"
+          aria-selected="${selectedAttr}"
+        >
+          ${dashboard.label}
+        </button>
+      `;
+    })
     .join("");
 
-  grafanaDashboardSelectEl.value = selectedGrafanaDashboard().id;
-
-  grafanaDashboardSelectEl.addEventListener("change", (event) => {
-    state.selectedGrafanaDashboardId = event.target.value;
-    persistGrafanaDashboardId(state.selectedGrafanaDashboardId);
-    updateGrafanaFrame();
+  grafanaDashboardMenuEl.querySelectorAll("[data-dashboard-id]").forEach((element) => {
+    element.addEventListener("click", () => {
+      state.selectedGrafanaDashboardId = element.dataset.dashboardId;
+      persistGrafanaDashboardId(state.selectedGrafanaDashboardId);
+      renderGrafanaDashboardMenu();
+      updateGrafanaFrame();
+      closeGrafanaDashboardMenu();
+    });
   });
 }
+
+if (grafanaDashboardTriggerEl && grafanaDashboardMenuEl) {
+  renderGrafanaDashboardMenu();
+  closeGrafanaDashboardMenu();
+
+  grafanaDashboardTriggerEl.addEventListener("click", () => {
+    const isOpen = !grafanaDashboardMenuEl.hidden;
+    if (isOpen) {
+      closeGrafanaDashboardMenu();
+    } else {
+      openGrafanaDashboardMenu();
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    if (
+      grafanaDashboardMenuEl.hidden ||
+      grafanaDashboardMenuEl.contains(event.target) ||
+      grafanaDashboardTriggerEl.contains(event.target)
+    ) {
+      return;
+    }
+    closeGrafanaDashboardMenu();
+  });
+}
+
+
 
 if (currentPage === "observability" && grafanaFrameEl) {
   updateGrafanaFrame();

@@ -1110,11 +1110,9 @@
   color: currentColor;
 }
 
-
-body[data-page="dbgate"] .status-strip,
 body[data-page="dbgate"] .workspace-rail,
-body[data-page="observability"] .status-strip,
-body[data-page="observability"] .workspace-rail {
+body[data-page="observability"] .workspace-rail,
+body[data-page="observability"] .status-strip {
   display: none;
 }
 
@@ -1144,8 +1142,8 @@ body[data-page="observability"] .workspace-main {
 .observability-toolbar {
   display: flex;
   align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
+  justify-content: flex-start;
+  gap: 1.25rem;
   padding: 1.1rem 1.25rem 1rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.16);
   background:
@@ -1153,33 +1151,123 @@ body[data-page="observability"] .workspace-main {
     radial-gradient(circle at top left, rgba(97, 208, 149, 0.16), transparent 40%);
 }
 
+.observability-toolbar-copy .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.85rem 2.4rem;
+  border: 1px solid rgba(97, 208, 149, 0.28);
+  border-radius: 999px;
+  background: rgba(97, 208, 149, 0.12);
+  color: #9ff0bf;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+
 .observability-toolbar-copy h3 {
   margin: 0.2rem 0 0;
 }
 
 .observability-selector {
+  position: relative;
   display: grid;
-  gap: 0.35rem;
-  min-width: 220px;
+  gap: 0;
+  min-width: 240px;
+  max-width: 280px;
 }
 
-.observability-selector span {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(226, 232, 240, 0.72);
-}
-
-.observability-selector select {
-  appearance: none;
-  border: 1px solid rgba(148, 163, 184, 0.25);
+.observability-selector-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  border: 1px solid rgba(97, 208, 149, 0.3);
   border-radius: 0.95rem;
-  background: rgba(15, 23, 42, 0.72);
-  color: #e2e8f0;
-  padding: 0.75rem 0.95rem;
+  background: linear-gradient(180deg, rgba(20, 30, 46, 0.92), rgba(10, 18, 30, 0.96));
+  color: #f8fafc;
+  padding: 0.8rem 0.95rem;
   font: inherit;
+  font-weight: 700;
+  line-height: 1.2;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 18px rgba(0, 0, 0, 0.16);
+  cursor: pointer;
 }
+
+.observability-selector-trigger::after {
+  content: "";
+  width: 0.7rem;
+  height: 0.7rem;
+  border-right: 2px solid #9ff0bf;
+  border-bottom: 2px solid #9ff0bf;
+  transform: rotate(45deg) translateY(-2px);
+  flex: 0 0 auto;
+}
+
+.observability-selector-trigger:hover {
+  border-color: rgba(97, 208, 149, 0.48);
+}
+
+.observability-selector-trigger:focus {
+  outline: none;
+  border-color: rgba(159, 240, 191, 0.8);
+  box-shadow:
+    0 0 0 3px rgba(97, 208, 149, 0.16),
+    0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.observability-selector-menu[hidden] {
+  display: none !important;
+}
+
+.observability-selector-menu {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.45rem;
+  border: 1px solid rgba(97, 208, 149, 0.18);
+  border-radius: 1rem;
+  background: rgba(9, 15, 24, 0.98);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+}
+
+
+.observability-selector-option {
+  border: 0;
+  border-radius: 0.8rem;
+  background: transparent;
+  color: #e2e8f0;
+  padding: 0.75rem 0.85rem;
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.observability-selector-option:hover,
+.observability-selector-option:focus {
+  outline: none;
+  background: rgba(97, 208, 149, 0.12);
+  color: #f8fafc;
+}
+
+.observability-selector-option.active {
+  background: rgba(97, 208, 149, 0.16);
+  color: #9ff0bf;
+}
+
 
 .dbgate-frame-wrap,
 .observability-frame-wrap {
