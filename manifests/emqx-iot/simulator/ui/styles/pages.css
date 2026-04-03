@@ -1136,6 +1136,51 @@ body[data-page="observability"] .workspace-main {
   border-radius: var(--radius-xl);
 }
 
+.observability-shell {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.observability-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  background:
+    linear-gradient(180deg, rgba(10, 19, 31, 0.9), rgba(10, 19, 31, 0.72)),
+    radial-gradient(circle at top left, rgba(97, 208, 149, 0.16), transparent 40%);
+}
+
+.observability-toolbar-copy h3 {
+  margin: 0.2rem 0 0;
+}
+
+.observability-selector {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 220px;
+}
+
+.observability-selector span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.observability-selector select {
+  appearance: none;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 0.95rem;
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  padding: 0.75rem 0.95rem;
+  font: inherit;
+}
+
 .dbgate-frame-wrap,
 .observability-frame-wrap {
   min-height: inherit;
@@ -1149,3 +1194,4 @@ body[data-page="observability"] .workspace-main {
   border: 0;
   background: #ffffff;
 }
+

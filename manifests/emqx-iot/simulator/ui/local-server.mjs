@@ -5,6 +5,8 @@ import { extname, join } from "node:path";
 const port = Number(process.env.UI_PORT || 8081);
 const root = new URL(".", import.meta.url).pathname;
 const upstreamBase = process.env.IOT_UPSTREAM_BASE || "http://127.0.0.1:8080";
+const grafanaBase = process.env.IOT_GRAFANA_BASE || upstreamBase;
+const proxyPrefixes = ["/api", "/simulator", "/grafana"];
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -16,7 +18,26 @@ const mimeTypes = {
 createServer(async (req, res) => {
   try {
     const pathname = req.url || "/";
-    const path = pathname === "/" || !pathname.includes(".") ? "/index.html" : pathname;
+
+    if (proxyPrefixes.some((prefix) => pathname.startsWith(prefix))) {
+      const targetBase = pathname.startsWith("/grafana") ? grafanaBase : upstreamBase;
+      const upstreamUrl = new URL(pathname, upstreamBase);
+      const upstream = await fetch(upstreamUrl, {
+        method: req.method,
+        headers: req.headers,
+      });
+
+      res.writeHead(upstream.status, {
+        "content-type": upstream.headers.get("content-type") || "application/octet-stream",
+        "cache-control": "no-store"
+      });
+      res.end(Buffer.from(await upstream.arrayBuffer()));
+      return;
+    }
+
+    const path = pathname === "/" || !pathname.includes(".")
+      ? "/index.html"
+      : pathname;
     const filePath = join(root, decodeURIComponent(path));
     let body = await readFile(filePath);
 
@@ -24,6 +45,7 @@ createServer(async (req, res) => {
       const configScript = `
 <script>
 window.__IOT_CONFIG__ = {
+  ...(window.__IOT_CONFIG__ || {}),
   apiBase: ${JSON.stringify(upstreamBase)},
   simulatorBase: ${JSON.stringify(upstreamBase)}
 };
@@ -47,4 +69,5 @@ window.__IOT_CONFIG__ = {
 }).listen(port, "0.0.0.0", () => {
   console.log(`listening on http://0.0.0.0:${port}`);
   console.log(`apiBase -> ${upstreamBase}`);
+  console.log(`grafanaBase -> ${grafanaBase}`);
 });

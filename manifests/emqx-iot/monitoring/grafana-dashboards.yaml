@@ -85,3 +85,359 @@ data:
       "uid": "iot-observability",
       "version": 1
     }
+
+  iot-scenarios.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "graphTooltip": 0,
+      "panels": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+          "id": 1,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "expr": "max(iot_simulator_mqtt_connected)",
+              "refId": "A"
+            }
+          ],
+          "title": "Simulator MQTT Connected",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "expr": "max(iot_simulator_tick)",
+              "refId": "A"
+            }
+          ],
+          "title": "Current Tick",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "expr": "max(iot_simulator_resets_total)",
+              "refId": "A"
+            }
+          ],
+          "title": "Scenario Resets",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+          "id": 4,
+          "options": {
+            "showHeader": true
+          },
+          "targets": [
+            {
+              "expr": "iot_simulator_active_scenario == 1",
+              "format": "table",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "title": "Active Scenario",
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "excludeByName": {
+                  "Time": true,
+                  "Value": false,
+                  "__name__": true,
+                  "instance": true,
+                  "job": true
+                },
+                "renameByName": {
+                  "Value": "active",
+                  "scenario": "scenario"
+                }
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "id": 5,
+          "targets": [
+            {
+              "expr": "rate(iot_simulator_publish_success_total[5m])",
+              "legendFormat": "success",
+              "refId": "A"
+            },
+            {
+              "expr": "rate(iot_simulator_publish_failure_total[5m])",
+              "legendFormat": "failure",
+              "refId": "B"
+            }
+          ],
+          "title": "Publish Success vs Failure",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "id": 6,
+          "targets": [
+            {
+              "expr": "rate(iot_simulator_mqtt_reconnects_total[15m])",
+              "legendFormat": "reconnects",
+              "refId": "A"
+            }
+          ],
+          "title": "MQTT Reconnect Trend",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 10, "w": 12, "x": 0, "y": 14 },
+          "id": 7,
+          "targets": [
+            {
+              "expr": "rate(iot_simulator_messages_total[5m])",
+              "legendFormat": "{{zone_id}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Messages Emitted by Zone",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 10, "w": 12, "x": 12, "y": 14 },
+          "id": 8,
+          "options": {
+            "displayMode": "gradient",
+            "orientation": "horizontal",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+            "showUnfilled": true
+          },
+          "targets": [
+            {
+              "expr": "iot_simulator_messages_total",
+              "legendFormat": "{{zone_id}}",
+              "refId": "A"
+            }
+          ],
+          "title": "Total Messages by Zone",
+          "type": "bargauge"
+        }
+      ],
+      "schemaVersion": 39,
+      "style": "dark",
+      "tags": ["iot", "victoriametrics", "scenarios"],
+      "templating": { "list": [] },
+      "time": { "from": "now-6h", "to": "now" },
+      "timezone": "browser",
+      "title": "IoT Scenarios",
+      "uid": "iot-scenarios",
+      "version": 1
+    }
+
+  iot-platform.json: |
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "graphTooltip": 0,
+      "panels": [
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+          "id": 1,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "expr": "max(iot_api_mqtt_connected)",
+              "refId": "A"
+            }
+          ],
+          "title": "API MQTT Connected",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "expr": "max(iot_simulator_mqtt_connected)",
+              "refId": "A"
+            }
+          ],
+          "title": "Simulator MQTT Connected",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total[5m]))",
+              "refId": "A"
+            }
+          ],
+          "title": "API Requests/sec",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+          "id": 4,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(iot_api_mqtt_processing_failures_total[5m]))",
+              "refId": "A"
+            }
+          ],
+          "title": "MQTT Failures/sec",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+          "id": 5,
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total[5m])) by (status)",
+              "legendFormat": "status {{status}}",
+              "refId": "A"
+            }
+          ],
+          "title": "API Requests by Status",
+          "type": "timeseries"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+          "id": 6,
+          "targets": [
+            {
+              "expr": "rate(iot_api_mqtt_messages_total[5m])",
+              "legendFormat": "{{event_type}}",
+              "refId": "A"
+            }
+          ],
+          "title": "MQTT Messages/sec",
+          "type": "timeseries"
+        }
+      ],
+      "schemaVersion": 39,
+      "style": "dark",
+      "tags": ["iot", "victoriametrics", "platform"],
+      "templating": { "list": [] },
+      "time": { "from": "now-6h", "to": "now" },
+      "timezone": "browser",
+      "title": "IoT Platform",
+      "uid": "iot-platform",
+      "version": 1
+    }
+

@@ -38,9 +38,31 @@ const config = window.__IOT_CONFIG__ || {};
 const apiBase = config.apiBase || (window.location.origin + "/api");
 const simulatorBase = config.simulatorBase || (window.location.origin + "/simulator");
 const dbgateBase = config.dbgateBase || "http://127.0.0.1:3000";
-const grafanaDashboardUrl =
-  config.grafanaDashboardUrl ||
-  (window.location.origin + "/grafana/d/iot-observability/iot-observability?orgId=1&kiosk&from=now-6h&to=now");
+const grafanaDashboards =
+  config.grafanaDashboards ||
+  [
+    {
+      id: "iot-observability",
+      label: "Overview",
+      url:
+        window.location.origin +
+        "/grafana/d/iot-observability/iot-observability?orgId=1&kiosk&from=now-6h&to=now",
+    },
+  ];
+
+const defaultGrafanaDashboard =
+  grafanaDashboards.find((dashboard) => dashboard.url === config.grafanaDashboardUrl) ||
+  grafanaDashboards[0] ||
+  {
+    id: "iot-observability",
+    label: "Overview",
+    url:
+      config.grafanaDashboardUrl ||
+      (window.location.origin + "/grafana/d/iot-observability/iot-observability?orgId=1&kiosk&from=now-6h&to=now"),
+  };
+
+const GRAFANA_DASHBOARD_STORAGE_KEY = "iot-selected-grafana-dashboard";
+
 const currentPage = resolveCurrentPage(window.location.pathname);
 
 let pendingZoneId = new URLSearchParams(window.location.search).get("zone");
@@ -64,6 +86,37 @@ function persistSelectedZoneId(zoneId) {
 const persistedZoneId = loadPersistedZoneId();
 activateNavigation(currentPage);
 
+function loadPersistedGrafanaDashboardId() {
+  try {
+    return window.localStorage.getItem(GRAFANA_DASHBOARD_STORAGE_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+function persistGrafanaDashboardId(dashboardId) {
+  if (!dashboardId) return;
+  try {
+    window.localStorage.setItem(GRAFANA_DASHBOARD_STORAGE_KEY, dashboardId);
+  } catch {}
+}
+
+function selectedGrafanaDashboard() {
+  return (
+    grafanaDashboards.find((dashboard) => dashboard.id === state.selectedGrafanaDashboardId) ||
+    defaultGrafanaDashboard
+  );
+}
+
+function updateGrafanaFrame() {
+  if (!grafanaFrameEl) return;
+  const dashboard = selectedGrafanaDashboard();
+  if (dashboard?.url) {
+    grafanaFrameEl.src = dashboard.url;
+  }
+}
+
+
 const state = {
   summary: null,
   zones: [],
@@ -75,7 +128,8 @@ const state = {
   selectedSensorId: null,
   scenario: "baseline-day",
   selectedZoneId: pendingZoneId || persistedZoneId || "greenhouse-a-north",
-  selectedAssetId: "north-fans"
+  selectedAssetId: "north-fans",
+  selectedGrafanaDashboardId: loadPersistedGrafanaDashboardId() || defaultGrafanaDashboard.id
 };
 
 const selectedEdgeDevice = () => getSelectedEdgeDevice(state);
@@ -133,12 +187,31 @@ const twinPhotoUrl = "/dev-assets/greenhouse-twin.png";
 const twinZonePanelEl = document.getElementById("twin-zone-panel");
 const commandPriorityRailEls = () => slotEls("command-priority-rail");
 
+const grafanaDashboardSelectEl = document.getElementById("grafana-dashboard-select");
+
 if (currentPage === "dbgate" && dbgateFrameEl) {
   dbgateFrameEl.src = dbgateBase;
 }
 
+if (grafanaDashboardSelectEl) {
+  grafanaDashboardSelectEl.innerHTML = grafanaDashboards
+    .map(
+      (dashboard) =>
+        `<option value="${dashboard.id}">${dashboard.label}</option>`
+    )
+    .join("");
+
+  grafanaDashboardSelectEl.value = selectedGrafanaDashboard().id;
+
+  grafanaDashboardSelectEl.addEventListener("change", (event) => {
+    state.selectedGrafanaDashboardId = event.target.value;
+    persistGrafanaDashboardId(state.selectedGrafanaDashboardId);
+    updateGrafanaFrame();
+  });
+}
+
 if (currentPage === "observability" && grafanaFrameEl) {
-  grafanaFrameEl.src = grafanaDashboardUrl;
+  updateGrafanaFrame();
 }
 
 function renderMetrics() {

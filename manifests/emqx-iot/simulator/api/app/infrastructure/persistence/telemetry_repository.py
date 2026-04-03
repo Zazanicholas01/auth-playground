@@ -2,8 +2,12 @@ import json
 from datetime import date, datetime
 
 from app.infrastructure.persistence.db import db
-from app.infrastructure.metrics import db_write_seconds
-
+from app.infrastructure.metrics import (
+    db_write_failures_total,
+    db_write_seconds,
+    telemetry_end_to_end_seconds,
+    telemetry_persisted_total,
+)
 
 def decode_json(value):
     if isinstance(value, str):
@@ -24,36 +28,61 @@ def json_safe(value):
 class PostgresTelemetryRepository:
     async def persist_bronze_event(self, event: dict) -> None:
         payload = event.get("payload", {})
-        with db_write_seconds.time():
-            await db.execute(
-                """
-                INSERT INTO bronze.events_raw (
-                    source_topic, event_type, device_id, zone_id, event_ts, payload
-                ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)
-                """,
-                event["topic"],
-                event["type"],
-                payload.get("deviceId") or payload.get("zoneId"),
-                payload.get("zoneId") or payload.get("deviceId"),
-                event["receivedAt"],
-                json.dumps(json_safe(payload)),
-            )
+        zone_id = str(payload.get("zoneId") or payload.get("deviceId") or "Unknown")
+        event_type = event.get("type", "Unknown")
+
+        try:
+            with db_write_seconds.time():
+                await db.execute(
+                    """
+                    INSERT INTO bronze.events_raw (
+                        source_topic, event_type, device_id, zone_id, event_ts, payload
+                    ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)
+                    """,
+                    event["topic"],
+                    event["type"],
+                    payload.get("deviceId") or payload.get("zoneId"),
+                    payload.get("zoneId") or payload.get("deviceId"),
+                    event["receivedAt"],
+                    json.dumps(json_safe(payload)),
+                )
+            
+            telemetry_persisted_total.labels(
+                zone_id=zone_id,
+                event_type=event_type,
+            ).inc()
+        
+        except Exception:
+            db_write_failures_total.labels(operation="persist_bronze_event").inc()
+            raise
 
     async def persist_bronze_telemetry(self, topic: str, normalized: dict) -> None:
-        with db_write_seconds.time():
-            await db.execute(
-                """
-                INSERT INTO bronze.telemetry_raw (
-                    source_topic, message_type, device_id, zone_id, event_ts, payload
-                ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)
-                """,
-                topic,
-                "telemetry",
-                normalized["deviceId"],
-                normalized["zoneId"],
-                normalized["ts"],
-                json.dumps(json_safe(normalized)),
-            )
+        zone_id = str(normalized.get("zoneId", "Unknown"))
+
+        try:
+            with db_write_seconds.time():
+                await db.execute(
+                    """
+                    INSERT INTO bronze.telemetry_raw (
+                        source_topic, message_type, device_id, zone_id, event_ts, payload
+                    ) VALUES ($1, $2, $3, $4, $5, $6::jsonb)
+                    """,
+                    topic,
+                    "telemetry",
+                    normalized["deviceId"],
+                    normalized["zoneId"],
+                    normalized["ts"],
+                    json.dumps(json_safe(normalized)),
+                )
+            
+            telemetry_persisted_total.labels(
+                zone_id=zone_id,
+                event_type="telemetry",
+            ).inc()
+
+        except Exception:
+            db_write_failures_total.labels(operation="persiste_bronze_telemetry").inc()
+            raise
 
     async def upsert_device_state(self, device: dict) -> None:
         with db_write_seconds.time():

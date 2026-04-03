@@ -33,8 +33,19 @@ let publishTimer = null;
 let publishSuccessTotal = 0;
 let publishFailureTotal = 0;
 let mqttReconnectsTotal = 0;
+let simulatorResetsTotal = 0;
+let messagesByZone = Object.fromEntries(zoneConfigs.map((zone) => [zone.zoneId, 0]));
 
 function renderMetrics() {
+  const scenarioLines = Array.from(allowedScenarios).map((scenarioName) => {
+    const active = scenario === scenarioName ? 1 : 0;
+    return `iot_simulator_active_scenario{scenario="${scenarioName}"} ${active}`;
+  });
+
+  const zoneLines = Object.entries(messagesByZone).map(
+    ([zoneId, total]) => `iot_simulator_messages_total{zone_id="${zoneId}"} ${total}`
+  );
+
   return [
     "# HELP iot_simulator_publish_success_total Total successful MQTT publishes",
     "# TYPE iot_simulator_publish_success_total counter",
@@ -55,7 +66,19 @@ function renderMetrics() {
     "# HELP iot_simulator_tick Current simulator tick",
     "# TYPE iot_simulator_tick gauge",
     `iot_simulator_tick ${tick}`,
-  ].join("\n");
+
+    "# HELP iot_simulator_resets_total Number of simulator scenario resets",
+    "# TYPE iot_simulator_resets_total counter",
+    `iot_simulator_resets_total ${simulatorResetsTotal}`,
+
+    "# HELP iot_simulator_active_scenario One-hot current scenario indicator",
+    "# TYPE iot_simulator_active_scenario gauge",
+    ...scenarioLines,
+
+    "# HELP iot_simulator_messages_total Messages emitted by zone",
+    "# TYPE iot_simulator_messages_total counter",
+    ...zoneLines,
+  ].join("\n") + "\n";
 }
 
 const allowedScenarios = new Set([
@@ -186,6 +209,7 @@ let zoneStates = buildInitialZoneStates();
 function resetStateForScenario(nextScenario) {
   scenario = nextScenario;
   tick = 0;
+  simulatorResetsTotal += 1;
   zoneStates = buildInitialZoneStates();
 }
 
@@ -622,6 +646,7 @@ function publishAll() {
       client.publish(`${topicRoot}/${zoneConfig.zoneId}/telemetry`, JSON.stringify(telemetry));
       client.publish(`${topicRoot}/${zoneConfig.zoneId}/status`, JSON.stringify(status));
       publishSuccessTotal += 2;
+      messagesByZone[zoneConfig.zoneId] = (messagesByZone[zoneConfig.zoneId] || 0) + 2;
 
       for (const alert of telemetry.alerts) {
         client.publish(
@@ -637,6 +662,7 @@ function publishAll() {
           }),
         );
         publishSuccessTotal += 1;
+        messagesByZone[zoneConfig.zoneId] = (messagesByZone[zoneConfig.zoneId] || 0) + 1;
       }
     } catch (error) {
       publishFailureTotal += 1;
