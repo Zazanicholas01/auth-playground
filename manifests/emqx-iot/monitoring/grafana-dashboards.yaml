@@ -475,7 +475,7 @@ data:
           ],
           "title": "Simulator Publish Failures (15m)",
           "type": "timeseries"
-        },
+        }
       ],
       "schemaVersion": 39,
       "style": "dark",
@@ -805,7 +805,7 @@ data:
           ],
           "title": "Ingested But Not Persisted/sec",
           "type": "timeseries"
-        },
+        }
       ],
       "schemaVersion": 39,
       "style": "dark",
