@@ -496,7 +496,7 @@ data:
             "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
           },
           "targets": [
-            { "expr": "sum(rate(iot_api_invalid_payloads_total[5m]))", "refId": "A" }
+            { "expr": "sum(rate(iot_api_invalid_payloads_total[5m])) or vector(0)", "refId": "A" }
           ],
           "title": "Invalid Payloads/sec",
           "type": "stat"
@@ -515,7 +515,7 @@ data:
           },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(iot_api_telemetry_end_to_end_seconds_bucket[5m])) by (le))",
+              "expr": "histogram_quantile(0.95, sum(rate(iot_api_telemetry_end_to_end_seconds_bucket[5m])) by (le)) or vector(0)",
               "refId": "A"
             }
           ],
@@ -658,7 +658,7 @@ data:
           "id": 1,
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(iot_api_db_write_seconds_bucket[5m])) by (le))",
+              "expr": "histogram_quantile(0.95, sum(rate(iot_api_db_write_seconds_bucket[5m])) by (le)) or vector(0)",
               "refId": "A"
             }
           ],
@@ -672,7 +672,7 @@ data:
           "id": 2,
           "targets": [
             {
-              "expr": "sum(rate(iot_api_db_write_failures_total[5m]))",
+              "expr": "sum(rate(iot_api_db_write_failures_total[5m])) or vector(0)",
               "refId": "A"
             }
           ],
