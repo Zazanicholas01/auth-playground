@@ -622,6 +622,7 @@ const client = mqtt.connect(mqttUrl, {
 
 function publishAll() {
   if (!client.connected) {
+    publishFailureTotal += zoneConfigs.length * 2;
     console.log("simulator skipped publish because mqtt is not connected");
     return;
   }

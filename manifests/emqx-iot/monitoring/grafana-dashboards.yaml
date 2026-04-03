@@ -428,7 +428,54 @@ data:
           ],
           "title": "MQTT Messages/sec",
           "type": "timeseries"
-        }
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 1 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 14 },
+          "id": 7,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "expr": "(1 - max(iot_simulator_mqtt_connected)) or vector(0)",
+              "refId": "A"
+            }
+          ],
+          "title": "Simulator Broker Down",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 8, "w": 18, "x": 6, "y": 14 },
+          "id": 8,
+          "targets": [
+            {
+              "expr": "sum(increase(iot_simulator_publish_failure_total[15m])) or vector(0)",
+              "legendFormat": "publish failures",
+              "refId": "A"
+            }
+          ],
+          "title": "Simulator Publish Failures (15m)",
+          "type": "timeseries"
+        },
       ],
       "schemaVersion": 39,
       "style": "dark",
@@ -715,14 +762,50 @@ data:
           "id": 5,
           "targets": [
             {
-              "expr": "rate(iot_api_db_write_failures_total[5m])",
+              "expr": "rate(iot_api_db_write_failures_total[5m]) or vector(0)",
               "legendFormat": "{{operation}}",
               "refId": "A"
             }
           ],
           "title": "DB Write Failures by Operation",
           "type": "timeseries"
-        }
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 6, "w": 8, "x": 0, "y": 16 },
+          "id": 6,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "center",
+            "orientation": "auto",
+            "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(iot_api_db_write_failures_total[15m])) or vector(0)",
+              "refId": "A"
+            }
+          ],
+          "title": "DB Write Failures (15m)",
+          "type": "stat"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "victoriametrics" },
+          "fieldConfig": { "defaults": {}, "overrides": [] },
+          "gridPos": { "h": 10, "w": 16, "x": 8, "y": 16 },
+          "id": 7,
+          "targets": [
+            {
+              "expr": "clamp_min(sum(rate(iot_api_telemetry_ingested_total[5m])) - sum(rate(iot_api_telemetry_persisted_total[5m])), 0) or vector(0)",
+              "legendFormat": "not persisted",
+              "refId": "A"
+            }
+          ],
+          "title": "Ingested But Not Persisted/sec",
+          "type": "timeseries"
+        },
       ],
       "schemaVersion": 39,
       "style": "dark",
@@ -734,3 +817,4 @@ data:
       "uid": "iot-storage",
       "version": 1
     }
+
