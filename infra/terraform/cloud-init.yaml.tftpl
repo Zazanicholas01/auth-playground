@@ -1,0 +1,33 @@
+#cloud-config
+hostname: ${hostname}
+manage_etc_hosts: true
+
+users:
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin, sudo
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+
+package_update: true
+package_upgrade: false
+
+packages:
+  - qemu-guest-agent
+  - curl
+
+write_files:
+  - path: /etc/rancher/k3s/config.yaml
+    permissions: "0644"
+    owner: root:root
+    content: |
+      write-kubeconfig-mode: "0644"
+      tls-san:
+        - 127.0.0.1
+
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+  - curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=${k3s_channel} sh -
+  - systemctl enable --now k3s
+  - cloud-init status --wait
