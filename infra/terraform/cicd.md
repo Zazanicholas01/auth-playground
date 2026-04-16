@@ -140,3 +140,8 @@ Install the operator:
 ```bash
 kubectl -n keycloak apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/26.6.1/kubernetes/kubernetes.yml
 ```
+
+Then reconcile:
+```bash
+flux reconcile kustomization active-app -n flux-system --with-source
+```
