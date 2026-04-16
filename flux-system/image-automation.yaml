@@ -73,6 +73,31 @@ spec:
       order: asc
 ---
 apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImageRepository
+metadata:
+  name: greenhouse-iot-jwt-auth-server
+  namespace: flux-system
+spec:
+  image: ghcr.io/zazanicholas01/greenhouse-iot-jwt-auth-server
+  interval: 1m
+---
+apiVersion: image.toolkit.fluxcd.io/v1
+kind: ImagePolicy
+metadata:
+  name: greenhouse-iot-jwt-auth-server
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: greenhouse-iot-jwt-auth-server
+  filterTags:
+    pattern: '^run-(?P<num>[0-9]{1,4})$'
+    extract: '$num'
+
+  policy:
+    numerical:
+      order: asc
+---
+apiVersion: image.toolkit.fluxcd.io/v1
 kind: ImageUpdateAutomation
 metadata:
   name: playground-manifests

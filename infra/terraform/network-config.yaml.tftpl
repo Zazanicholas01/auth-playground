@@ -1,0 +1,17 @@
+version: 2
+ethernets:
+  static0:
+    match:
+      macaddress: "${vm_mac}"
+    dhcp4: false
+    dhcp6: false
+    addresses:
+      - ${vm_ip}/${vm_prefix_length}
+    routes:
+      - to: default
+        via: ${vm_gateway}
+    nameservers:
+      addresses:
+%{ for dns in vm_dns_servers ~}
+        - ${dns}
+%{ endfor ~}

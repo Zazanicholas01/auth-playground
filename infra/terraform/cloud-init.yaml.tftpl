@@ -24,10 +24,14 @@ write_files:
     content: |
       write-kubeconfig-mode: "0644"
       tls-san:
-        - 127.0.0.1
+        - "${hostname}"
+        - "${vm_ip}"
+      flannel-backend: "none"
+      disable-network-policy: true
+      disable:
+        - servicelb
+        - traefik
 
 runcmd:
-  - systemctl enable --now qemu-guest-agent
-  - curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=${k3s_channel} sh -
-  - systemctl enable --now k3s
-  - cloud-init status --wait
+  - systemctl start qemu-guest-agent
+  - curl -sfL https://get.k3s.io | sh -

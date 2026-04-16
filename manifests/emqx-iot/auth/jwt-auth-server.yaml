@@ -636,7 +636,7 @@ spec:
     spec:
       containers:
         - name: node
-          image: jwt-auth-server-bun:1.0.0
+          image: ghcr.io/zazanicholas01/greenhouse-iot-jwt-auth-server:run-1 # {"$imagepolicy": "flux-system:greenhouse-iot-jwt-auth-server"}
           imagePullPolicy: IfNotPresent
           command: ["bun", "/app/index.js"]
           env:
