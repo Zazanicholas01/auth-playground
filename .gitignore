@@ -99,7 +99,53 @@ k3s.yaml
 # OS / editor junk
 .DS_Store
 Thumbs.db
+# Terraform core
+.terraform/
 
+# Terraform state (NEVER commit these)
+*.tfstate
+*.tfstate.*
+
+# Crash logs
+crash.log
+crash.*.log
+
+# Sensitive variable files
+*.tfvars
+*.tfvars.json
+
+# Override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI config
+.terraformrc
+terraform.rc
+
+# Local kubeconfig (contains cluster creds)
+k3s.yaml
+.kube/
+
+# SSH keys (just in case)
+*.pem
+*.key
+*.pub
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+
+# VS Code (optional)
+.vscode/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
 # VS Code (optional)
 .vscode/
 
